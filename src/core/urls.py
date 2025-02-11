@@ -35,5 +35,5 @@ urlpatterns = [
     path('auth/', include('authApp.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('broadcast/', include('broadcast.urls')),
-    path('qrcode/', include('qrcode.urls')),
+    path('qrcode/', include('qrcodeApp.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
