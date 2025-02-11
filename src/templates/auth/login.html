@@ -3,13 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <form action="{% url 'login' %}" method="post">
-        {% csrf_token %}
-        {{ form }}
-        <button type="submit">Login</button>
-    </form>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+    <!-- Login Container -->
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+        <h2 class="text-2xl font-semibold text-center text-gray-800">Login</h2>
+        
+        <!-- Form -->
+        <form class="mt-4 space-y-4" action="{% url 'login' %}" method="post">
+            {% csrf_token %}
+            <!-- Email Input -->
+            <div>
+                <label for="id_username" class="block text-gray-600">Email</label>
+                <input type="email" name="username" id="id_username" placeholder="Enter your email"
+                       class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                       required>
+            </div>
+        
+            <!-- Password Input -->
+            <div class="relative">
+                <label for="id_password" class="block text-gray-600">Password</label>
+                <input type="password" name="password" id="id_password" placeholder="Enter your password"
+                       class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                       required>
+            </div>
+        
+            <!-- Login Button -->
+            <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">
+                Login
+            </button>
+        </form>
+
+        <!-- Register Link -->
+        <p class="text-sm text-center text-gray-600 mt-4">
+            Don't have an account? <a href="{% url 'register' %}" class="text-blue-500 hover:underline">Sign Up</a>
+        </p>
+    </div>
+
+    <script>
+        function togglePassword() {
+            let passwordField = document.getElementById("password");
+            passwordField.type = passwordField.type === "password" ? "text" : "password";
+        }
+    </script>
+
 </body>
 </html>
