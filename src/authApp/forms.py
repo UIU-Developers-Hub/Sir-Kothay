@@ -21,6 +21,8 @@ class EmailAuthenticationForm(AuthenticationForm):
 class RegisterForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
     confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
+    email = forms.EmailField(label="Email")
+    username = forms.CharField(label="Full Name")
 
     class Meta:
         model = get_user_model()
@@ -34,3 +36,9 @@ class RegisterForm(forms.ModelForm):
             raise ValidationError("Passwords do not match")
 
         return confirm_password
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if ' ' in username:
+            username = username.replace(' ', '_')
+        return username

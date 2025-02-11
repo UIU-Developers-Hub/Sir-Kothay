@@ -30,3 +30,7 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = ['username']  # Keep username required for creating user in admin
 
     objects = CustomUserManager()
+    
+    @property
+    def readable_name(self):
+        return " ".join(self.username.split('_')).title()
