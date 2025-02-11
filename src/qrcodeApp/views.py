@@ -14,16 +14,20 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 import os
 
+from dashboard.models import UserDetails
+
 
 @login_required(login_url='login')
 def generate_qr_code_with_logo(request):
+    slug = get_object_or_404(UserDetails, user=request.user).slug
+    
     # Check if the user already has a QR code
     if QRCode.objects.filter(user=request.user).exists():
         messages.info(request, "You already have your one-time QR code.")
         return redirect(reverse('home'))
     
     # Build the URL using the URL name
-    url_to_encode = request.build_absolute_uri(reverse('home'))
+    url_to_encode = request.build_absolute_uri(reverse('show_broadcast_messages', kwargs={'user_slug': slug}))
 
     # Generate the QR code
     qr = qrcode.QRCode(

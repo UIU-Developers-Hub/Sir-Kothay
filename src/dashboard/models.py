@@ -27,7 +27,7 @@ class UserDetails(models.Model):
         
     def save(self, *args, **kwargs):
         if not self._slug:
-            self._slug = f"{self.user.username}-{self.id}"
+            self._slug = f"{self.user.username}-{self.pk}"
         super().save(*args, **kwargs)
 
     def __str__(self):
