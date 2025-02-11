@@ -41,6 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'authApp',
+    'qrcode',
+    'dashboard',
+    'broadcast',
 ]
 
 MIDDLEWARE = [
@@ -128,6 +132,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = '/media/'  # URL to access media files
 MEDIA_ROOT = BASE_DIR / 'media'  # Physical location on the server
+
+AUTH_USER_MODEL = 'authApp.CustomUser'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
