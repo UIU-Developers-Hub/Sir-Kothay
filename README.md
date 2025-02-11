@@ -1,10 +1,10 @@
-# 📌 Sir Kothay Achen  
+# Sir Kothay Achen  
 
 *"Sir Kothay Achen"* is a lightweight web application that allows users to leave messages for others via a unique, shareable URL. Each message will have a dedicated page, and a QR code will be generated for easy sharing.  
 
 The platform is built using **Django** and **Tailwind CSS**, hosted on **PythonAnywhere**. Future updates will include scheduling and a messaging system.  
 
-## 🚀 Tech Stack  
+## Tech Stack  
 
 - **Backend:** Django (Python)  
 - **Frontend:** Tailwind CSS  
@@ -12,7 +12,7 @@ The platform is built using **Django** and **Tailwind CSS**, hosted on **PythonA
 - **Hosting:** PythonAnywhere  
 - **Additional Features:** QR Code Generation  
 
-## 🌟 Core Features (Phase 1)  
+## Core Features (Phase 1)  
 
 ✅ **Message Creation** – Users can write and save a message.  
 ✅ **Unique URL Generation** – Each message will have a unique URL.  
@@ -21,7 +21,7 @@ The platform is built using **Django** and **Tailwind CSS**, hosted on **PythonA
 ✅ **User Profiles** – Users can register and manage messages.  
 
 
-## 📄 Required Pages  
+## Required Pages  
 
 ### **Public Pages**  
 - ✅ **1. Home Page (`/`)**  
@@ -58,15 +58,15 @@ The platform is built using **Django** and **Tailwind CSS**, hosted on **PythonA
   - Logs the user out and redirects to home.  
 
 
-## 🔮 Future Enhancements (Phase 2 & Beyond)  
+## Future Enhancements (Phase 2 & Beyond)  
 
 - **Scheduling Messages** – Set messages to appear at specific times.  
 - **Messaging System** – Users can send direct messages.  
 - **Dashboard (`/dashboard/`)** – Logged-in users can manage all their messages.  
 
 
-## 🎯 Conclusion  
+## Conclusion  
 
 *"Sir Kothay Achen"* provides a seamless way to share messages via unique URLs and QR codes. With **Django** and **Tailwind CSS**, it is lightweight yet powerful. **PythonAnywhere** will handle hosting. Initially, the platform will focus on anonymous message sharing, with future updates introducing **user accounts, scheduling, and direct messaging**.  
 
-💡 **Contributions & feedback are welcome!**  
+**Contributions & feedback are welcome!**  
