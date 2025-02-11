@@ -10,6 +10,10 @@ from django.contrib.auth.decorators import login_required
 from .models import QRCode
 from django.urls import reverse
 
+from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404
+import os
+
 
 @login_required
 def generate_qr_code_with_logo(request):
@@ -73,3 +77,22 @@ def generate_qr_code_with_logo(request):
     messages.success(request, "QR Code with logo generated successfully!")
 
     return redirect(reverse('home'))
+
+@login_required
+def download_qr_code(request):
+    # Get the QR code for the logged-in user or return 404 if not found
+    qr_code = get_object_or_404(QRCode, user=request.user)
+
+    # Get the file path
+    qr_code_path = qr_code.image.path
+
+    # Ensure the file exists before serving
+    if not os.path.exists(qr_code_path):
+        raise Http404("QR code file not found.")
+
+    # Open file and set headers to force download
+    response = FileResponse(open(qr_code_path, 'rb'))
+    response['Content-Type'] = 'application/octet-stream'  # Ensures it's always downloaded
+    response['Content-Disposition'] = 'attachment; filename="qr_code.png"'
+
+    return response
