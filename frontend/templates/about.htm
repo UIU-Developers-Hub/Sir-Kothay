@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | Sir Kothay</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .brand-color {
+            color: rgb(245, 103, 33);
+        }
+        .brand-bg {
+            background-color: rgb(245, 103, 33);
+        }
+        .hover-scale {
+            transition: transform 0.2s ease-in-out;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Header -->
+    <header class="bg-white shadow-lg">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold brand-color hover-scale">Sir Kothay</h1>
+            <nav class="space-x-4">
+                <a href="/" class="text-gray-700 hover:text-gray-900 hover:underline">Home</a>
+                <a href="/about" class="text-gray-700 hover:text-gray-900 hover:underline">About</a>
+                <a href="/signup" class="text-gray-700 hover:text-gray-900 hover:underline">Sign Up</a>
+                <a href="/login" class="text-gray-700 hover:text-gray-900 hover:underline">Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-12">
+        <section class="bg-white p-8 rounded-xl shadow-lg">
+            <h2 class="text-4xl font-bold mb-8 brand-color text-center">About Sir Kothay</h2>
+            <p class="text-gray-700 mb-8 text-lg text-center">
+                <span class="font-bold brand-color">"Sir Kothay Achen"</span> is a lightweight web application designed to make sharing messages simple and efficient. Whether you want to leave a quick note, share a thought, or send a message to someone, <span class="font-bold brand-color">Sir Kothay</span> provides a unique, shareable URL and a QR code for easy access.
+            </p>
+
+            <!-- How It Works Section -->
+            <div class="mb-12">
+                <h3 class="text-3xl font-bold mb-6 brand-color text-center">How It Works</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-gray-100 p-6 rounded-lg hover-scale">
+                        <h4 class="text-xl font-bold mb-4 brand-color">1. Create a Message</h4>
+                        <p class="text-gray-700">Write your message on the home page and save it.</p>
+                    </div>
+                    <div class="bg-gray-100 p-6 rounded-lg hover-scale">
+                        <h4 class="text-xl font-bold mb-4 brand-color">2. Generate a Unique URL</h4>
+                        <p class="text-gray-700">Each message gets a dedicated page with a unique URL.</p>
+                    </div>
+                    <div class="bg-gray-100 p-6 rounded-lg hover-scale">
+                        <h4 class="text-xl font-bold mb-4 brand-color">3. Share via QR Code</h4>
+                        <p class="text-gray-700">A QR code is automatically generated for quick sharing.</p>
+                    </div>
+                    <div class="bg-gray-100 p-6 rounded-lg hover-scale">
+                        <h4 class="text-xl font-bold mb-4 brand-color">4. View the Message</h4>
+                        <p class="text-gray-700">Anyone with the link or QR code can view your message instantly.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tech Stack Section -->
+            <div class="mb-12">
+                <h3 class="text-3xl font-bold mb-6 brand-color text-center">Tech Stack</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-gray-100 p-6 rounded-lg hover-scale">
+                        <h 4 class="text-xl font-bold mb-4 brand-color">Backend</h4>
+                        <p class="text-gray-700">Django (Python)</p>
+                    </div>
+                    <div class="bg-gray-100 p-6 rounded-lg hover-scale">
+                        <h4 class="text-xl font-bold mb-4 brand-color">Frontend</h4>
+                        <p class="text-gray-700">Tailwind CSS</p>
+                    </div>
+                    <div class="bg-gray-100 p-6 rounded-lg hover-scale">
+                        <h4 class="text-xl font-bold mb-4 brand-color">Database</h4>
+                        <p class="text-gray-700">SQLite (initially, can be upgraded)</p>
+                    </div>
+                    <div class="bg-gray-100 p-6 rounded-lg hover-scale">
+                        <h4 class="text-xl font-bold mb-4 brand-color">Hosting</h4>
+                        <p class="text-gray-700">PythonAnywhere</p>
+                    </div>
+                    <div class="bg-gray-100 p-6 rounded-lg hover-scale">
+                        <h4 class="text-xl font-bold mb-4 brand-color">Additional Features</h4>
+                        <p class="text-gray-700">QR Code Generation</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Core Features Section -->
+            <div class="mb-12">
+                <h3 class="text-3xl font-bold mb-6 brand-color text-center">Core Features (Phase 1)</h3>
+                <ul class="list-disc list-inside text-gray-700 mb-6">
+                    <li class="mb-2"><span class="font-bold">Message Creation</span>: Write and save your message.</li>
+                    <li class="mb-2"><span class="font-bold">Unique URL Generation</span>: Each message gets a unique link.</li>
+                    <li class="mb-2"><span class="font-bold">QR Code Support</span>: Share messages easily with a QR code.</li>
+                    <li class="mb-2"><span class="font-bold">Message Viewing</span>: Anyone with the link can view the message.</li>
+                    <li class="mb-2"><span class="font-bold">User  Profiles</span>: Register and manage your messages.</li>
+                </ul>
+            </div>
+
+            <!-- Future Enhancements Section -->
+            <div class="mb-12">
+                <h3 class="text-3xl font-bold mb-6 brand-color text-center">Future Enhancements (Phase 2 & Beyond)</h3>
+                <ul class="list-disc list-inside text-gray-700 mb-6">
+                    <li class="mb-2"><span class="font-bold">Scheduling Messages</span>: Set messages to appear at specific times.</li>
+                    <li class="mb-2"><span class="font-bold">Messaging System</span>: Send direct messages to other users.</li>
+                    <li class="mb-2"><span class="font-bold">Dashboard (`/dashboard/`)</span>: Manage all your messages in one place.</li>
+                </ul>
+            </div>
+
+            <!-- Conclusion Section -->
+            <h3 class="text-3xl font-bold mb-6 brand-color text-center">Conclusion</h3>
+            <p class="text-gray-700 mb-6 text-lg text-center">
+                <span class="font-bold brand-color">"Sir Kothay Achen"</span> is your go-to platform for sharing messages quickly and efficiently. With its unique URLs, QR codes, and user-friendly design, it’s perfect for both personal and professional use. Stay tuned for exciting updates like <span class="font-bold">scheduling, direct messaging, and a user dashboard</span>!
+            </p>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white shadow-lg mt-8">
+        <div class="container mx-auto px-6 py-4 text-center">
+            <p class="text-gray-700">&copy; 2023 Sir Kothay. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

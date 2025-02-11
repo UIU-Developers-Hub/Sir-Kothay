@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success - Sir Kothay</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
+        <!-- Success Icon -->
+        <div class="mb-6">
+            <svg class="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+
+        <!-- Success Message -->
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">Message Created Successfully!</h1>
+        <p class="text-gray-600 mb-6">Your message has been saved and is ready to share.</p>
+
+        <!-- Generated Link -->
+        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+            <p class="text-sm text-gray-600">Your unique link:</p>
+            <p id="generatedLink" class="text-blue-500 font-medium break-all">https://sirkothay.com/m/12345</p>
+        </div>
+
+        <!-- QR Code Placeholder -->
+        <div class="mb-6">
+            <img src="https://via.placeholder.com/150" alt="QR Code" class="mx-auto">
+        </div>
+
+        <!-- Copy Button -->
+        <button id="copyButton" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+            Copy Link
+        </button>
+
+        <!-- Back to Home -->
+        <p class="mt-6 text-gray-600">
+            <a href="/" class="text-blue-500 hover:underline">Create another message</a>
+        </p>
+    </div>
+
+    <!-- JavaScript for Copy Functionality -->
+    <script>
+        document.getElementById('copyButton').addEventListener('click', function() {
+            const link = document.getElementById('generatedLink').innerText;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('Link copied to clipboard!');
+            });
+        });
+    </script>
+</body>
+</html>
