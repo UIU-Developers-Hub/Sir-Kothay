@@ -1,13 +1,112 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index</title>
-</head>
-<body>
-    <h1>Hello There :D</h1>
-    <a href="{% url 'login' %}">Login</a>
-    <a href="{% url 'register' %}">Register</a>
+{% extends 'base.html'%}
+{% load static %}
+
+{% block 'title' %} Sir Kothay? {% endblock %}
+
+{% block body %}
+<body class="leading-normal tracking-normal text-indigo-400 m-6 bg-cover bg-fixed" style="background-image: url('{% static "images/header.png" %}');">
+    <div class="h-full">
+      <!--Nav-->
+      <div class="w-full container mx-auto">
+        <div class="w-full flex items-center justify-between">
+          <a class="flex items-center text-indigo-400 no-underline hover:no-underline font-bold text-2xl" href="#">
+            <img src="{% static 'images/nav-logo.png' %}" width="45%" alt="">
+          </a>
+
+          <div class="flex w-1/2 justify-end content-center">
+            <a class="inline-block text-blue-300 no-underline hover:text-pink-500 hover:text-underline text-center h-12 p-4 md:h-auto md:p-6 transform hover:scale-125 duration-300 ease-in-out text-2xl" href="https://github.com/UIU-Developers-Hub"><i class="bi bi-github"></i>
+            </a>
+            <a
+              class="inline-block text-blue-300 no-underline hover:text-pink-500 hover:text-underline text-center h-10 p-2 md:h-auto md:p-4 transform hover:scale-125 duration-300 ease-in-out text-2xl"
+              href="https://www.facebook.com/uiudevelopershub"
+            ><i class="bi bi-facebook"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!--Main-->
+      <div class="container pt-14 md:pt-18 mx-auto flex flex-wrap flex-col md:flex-row items-center">
+        <!--Left Col-->
+        <div class="flex flex-col w-full xl:w-2/5 justify-center lg:items-start overflow-y-hidden">
+          <h3 class="my-4 text-2xl md:text-3xl text-white opacity-75 font-bold leading-tight text-center md:text-left">
+            No Need to Worry!
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">
+            Leave Notes Effortlessly for Anyone Who Needs you 
+            </span>
+            While You're Away! ✨
+          </h3>
+
+          <form class="bg-gray-900 opacity-75 w-full shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4" action="{% url 'register' %}" method="post">
+            {% csrf_token %}
+            <div class="mb-4">
+              <input
+                class="shadow appearance-none border rounded w-full p-3 text-gray-700 leading-tight focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                id="username"
+                name="username"
+                type="text"
+                placeholder="Your Full Name"
+                required
+              />
+            </div>
+          
+            <div class="mb-4">
+              <input
+                class="shadow appearance-none border rounded w-full p-3 text-gray-700 leading-tight focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@somewhere.com"
+                required
+              />
+            </div>
+          
+            <div class="mb-4">
+              <input
+                class="shadow appearance-none border rounded w-full p-3 text-gray-700 leading-tight focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                id="password"
+                name="password"
+                type="password"
+                placeholder="********"
+                required
+              />
+            </div>
+          
+            <div class="mb-4">
+              <input
+                class="shadow appearance-none border rounded w-full p-3 text-gray-700 leading-tight focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                id="confirm_password"
+                name="confirm_password"
+                type="password"
+                placeholder="********"
+                required
+              />
+            </div>
+          
+            <div class="flex items-center justify-between pt-4">
+              <button
+                class="bg-gradient-to-r from-purple-800 to-green-500 hover:from-pink-500 hover:to-green-500 text-white font-bold py-2 px-4 rounded focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                type="submit"
+              >
+                Sign Up
+              </button>
+            </div>
+          </form>
+          <a href="{% url 'login' %}"> <i class="bi bi-info-circle-fill"></i> Already Have a account ? Login !</a>
+        </div>
+
+        <!--Right Col-->
+        <div class="w-full xl:w-3/5 p-12 overflow-hidden">
+          <img class="mx-auto w-full md:w-4/5 transform -rotate-6 transition hover:scale-105 duration-700 ease-in-out hover:rotate-6 border-4 border-transparent hover:border-gradient-to-r hover:from-green-400 hover:via-pink-500 hover:to-purple-500" src="{% static 'images/card.jpeg' %}" />
+        </div>
+
+        <!--Footer-->
+        <div class="w-full pt-16 pb-6 text-sm text-center md:text-left fade-in">
+          <a class="text-gray-500 no-underline hover:no-underline" href="#">&copy; UIUDH 2025</a>
+          - Developed by
+          <a class="text-gray-500 no-underline hover:no-underline" href="https://github.com/UIU-Developers-Hub">UIU Developers Hub</a>
+        </div>
+      </div>
+    </div>
 </body>
-</html>
+{% endblock %}

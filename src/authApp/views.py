@@ -30,7 +30,7 @@ def register_view(request):
     else:
         form = RegisterForm()
 
-    return render(request, 'auth/register.html', {'form': form})
+    return render(request, 'index.html', {'form': form})
 
 def login_view(request):
     if request.user.is_authenticated:
