@@ -9,10 +9,12 @@ class EmailAuthenticationForm(AuthenticationForm):
 
     def clean_username(self):
         email = self.cleaned_data.get('username')
+        
         try:
             user = get_user_model().objects.get(email=email)
         except get_user_model().DoesNotExist:
             raise forms.ValidationError("This email does not exist.")
+        
         return email
     
 
