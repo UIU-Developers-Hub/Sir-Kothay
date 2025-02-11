@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | Sir Kothay</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .brand-color {
+            color: rgb(245, 103, 33);
+        }
+        .hover-scale {
+            transition: transform 0.2s ease-in-out;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Header -->
+    <header class="bg-white shadow-lg">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold brand-color hover-scale">Sir Kothay</h1>
+            <nav class="space-x-4">
+                <a href="/" class="text-gray-700 hover:text-gray-900 hover:underline">Home</a>
+                <a href="/about" class="text-gray-700 hover:text-gray-900 hover:underline">About</a>
+                <a href="/signup" class="text-gray-700 hover:text-gray-900 hover:underline">Sign Up</a>
+                <a href="/login" class="text-gray-700 hover:text-gray-900 hover:underline">Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-12">
+        <section class="bg-white p-8 rounded-xl shadow-lg text-center">
+            <h2 class="text-4xl font-bold mb-4 brand-color">404 - Page Not Found</h2>
+            <p class="text-gray-700 mb-6 text-lg">
+                Oops! The page you're looking for doesn't exist.
+            </p>
+            <img src="https://via.placeholder.com/400" alt="404 Illustration" class="mx-auto mb-6">
+            <p class="text-gray-600 mb-6">
+                It seems we can't find what you're looking for. This might be due to a broken link or an incorrect URL.
+            </p>
+            <a href="/" class="bg-brand-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition duration-200">Go Back to Home</a>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white shadow-lg mt-8">
+        <div class="container mx-auto px-6 py-4 text-center">
+            <p class="text-gray-700">&copy; 2023 Sir Kothay. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

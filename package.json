@@ -1,4 +1,36 @@
 {
+  "scripts": {
+    "dev": "npx tailwindcss -i ./src/css/tailwind.css -o ./src/css/output.css --watch"
+  },
+  "name": "sir-kothay",
+  "version": "1.0.0",
+  "description": "*\"Sir Kothay Achen\"* is a lightweight web application that allows users to leave messages for others via a unique, shareable URL. Each message will have a dedicated page, and a QR code will be generated for easy sharing.",
+  "main": "tailwind.config.js",
+  "dependencies": {
+    "browserslist": "^4.24.4",
+    "caniuse-lite": "^1.0.30001699",
+    "electron-to-chromium": "^1.5.97",
+    "escalade": "^3.2.0",
+    "fraction.js": "^4.3.7",
+    "nanoid": "^3.3.8",
+    "node-releases": "^2.0.19",
+    "normalize-range": "^0.1.2",
+    "picocolors": "^1.1.1",
+    "postcss-value-parser": "^4.2.0",
+    "source-map-js": "^1.2.1",
+    "update-browserslist-db": "^1.1.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UIU-Developers-Hub/Sir-Kothay.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/UIU-Developers-Hub/Sir-Kothay/issues"
+  },
+  "homepage": "https://github.com/UIU-Developers-Hub/Sir-Kothay#readme",
   "devDependencies": {
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.2",
