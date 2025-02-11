@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'authApp',
-    'qrcode',
+    'qrcodeApp',
     'dashboard',
     'broadcast',
 ]

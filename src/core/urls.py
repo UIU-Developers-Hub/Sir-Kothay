@@ -17,16 +17,23 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+
 from django.conf import settings
 from django.conf.urls.static import static
 
 from django.views.generic import TemplateView
+from django.shortcuts import redirect
+
+def redirect_authenticated_user(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+    return TemplateView.as_view(template_name='index.html')(request)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', TemplateView.as_view(template_name='index.html')),
+    path('', redirect_authenticated_user, name='index'),
     path('auth/', include('authApp.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('broadcast/', include('broadcast.urls')),
-    path('qrcode/', include('qrcode.urls')),
+    path('qrcode/', include('qrcodeApp.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

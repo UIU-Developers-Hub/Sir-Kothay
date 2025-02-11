@@ -1,9 +1,10 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 
-from .forms import EmailAuthenticationForm, RegisterForm
+from .forms import EmailAuthenticationForm, RegisterForm, UserPasswordUpdateForm
 
 
 def register_view(request):
@@ -55,3 +56,15 @@ def logout_view(request):
     logout(request)
     messages.success(request, "Logout successful! You are now logged out.")
     return redirect('login')  # redirect to your desired page
+
+@login_required(login_url='login')
+def update_password(request):
+    if request.method == 'POST':
+        form = UserPasswordUpdateForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your password has been updated successfully!")
+        else:
+            messages.error(request, "There was an error updating your password. Please try again.")
+    
+    return redirect(reverse('home'))
