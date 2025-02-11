@@ -25,7 +25,7 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='index.html')),
-    path('auth/', include('auth.urls')),
+    path('auth/', include('authApp.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('broadcast/', include('broadcast.urls')),
     path('qrcode/', include('qrcode.urls')),
