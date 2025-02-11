@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
 # Create your views here.
@@ -13,4 +14,4 @@ def user_detail_view(request):
         # to do
         pass
     
-    return render(request, 'dashboard/home.html')
+    return redirect(reverse('home'))

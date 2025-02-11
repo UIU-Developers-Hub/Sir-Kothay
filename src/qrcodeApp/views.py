@@ -15,7 +15,7 @@ from django.shortcuts import get_object_or_404
 import os
 
 
-@login_required
+@login_required(login_url='login')
 def generate_qr_code_with_logo(request):
     # Check if the user already has a QR code
     if QRCode.objects.filter(user=request.user).exists():
@@ -78,7 +78,7 @@ def generate_qr_code_with_logo(request):
 
     return redirect(reverse('home'))
 
-@login_required
+@login_required(login_url='login')
 def download_qr_code(request):
     # Get the QR code for the logged-in user or return 404 if not found
     qr_code = get_object_or_404(QRCode, user=request.user)

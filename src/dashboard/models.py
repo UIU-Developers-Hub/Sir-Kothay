@@ -14,6 +14,8 @@ class UserDetails(models.Model):
     
     @property
     def slug(self):
+        if not self._slug:
+            self.save()
         return self._slug
     
     @property
@@ -22,6 +24,11 @@ class UserDetails(models.Model):
             return self.profile_image.url   
         else:
             return None
+        
+    def save(self, *args, **kwargs):
+        if not self._slug:
+            self._slug = f"{self.user.username}-{self.id}"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.designation} at {self.organization}"
