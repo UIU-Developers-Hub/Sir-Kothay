@@ -55,7 +55,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     messages.success(request, "Logout successful! You are now logged out.")
-    return redirect('index')  # redirect to your desired page
+    return redirect('login')  # redirect to your desired page
 
 @login_required(login_url='login')
 def update_password(request):

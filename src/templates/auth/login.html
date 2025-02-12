@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,12 +7,31 @@
     <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
+<body class="leading-normal tracking-normal text-indigo-400 m-6 bg-cover bg-fixed" style="background-image: url('{% static "images/header.png" %}');">
+    <!-- Transparent Nav -->
+    <nav class="w-full container mx-auto py-4 absolute top-0 left-0 bg-transparent">
+        <div class="flex items-center justify-between ml-8">
+            <a class="flex items-center text-indigo-400 no-underline hover:no-underline font-bold text-2xl" href="{% url 'index' %}">
+            <img src="{% static 'images/nav-logo.png' %}" class="w-36 h-36" alt="Logo">
+            </a>
+        </div>
+    </nav>
+
+    <div class="h-32"></div>
 
     <!-- Login Container -->
-    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm mx-auto mt-32 bg-opacity-80">
         <h2 class="text-2xl font-semibold text-center text-gray-800">Login</h2>
-        
+
+        <!-- Error Messages -->
+        {% if form.non_field_errors %}
+            <div class="text-red-500 text-center">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <!-- Form -->
         <form class="mt-4 space-y-4" action="{% url 'login' %}" method="post">
             {% csrf_token %}
@@ -20,7 +40,10 @@
                 <label for="id_username" class="block text-gray-600">Email</label>
                 <input type="email" name="username" id="id_username" placeholder="Enter your email"
                        class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                       required>
+                       value="" required>
+                {% if form.username.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.username.errors }}</p>
+                {% endif %}
             </div>
         
             <!-- Password Input -->
@@ -28,7 +51,10 @@
                 <label for="id_password" class="block text-gray-600">Password</label>
                 <input type="password" name="password" id="id_password" placeholder="Enter your password"
                        class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                       required>
+                       value="" required>
+                {% if form.password.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.password.errors }}</p>
+                {% endif %}
             </div>
         
             <!-- Login Button -->
@@ -49,6 +75,5 @@
             passwordField.type = passwordField.type === "password" ? "text" : "password";
         }
     </script>
-
 </body>
 </html>
