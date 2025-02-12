@@ -1,11 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>{{ username }}: broadcast</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 flex justify-center items-center h-screen relative">
+    <!-- Logo positioned at the top right -->
+    <a href="{% url 'index' %}" class="absolute top-0 left-0 m-4 ml-12">
+        <img src="{% static 'images/nav-logo.png' %}" alt="Logo" class="h-32 w-38">
+    </a>
+
+    <!-- Spacing for Header -->
+    <div class="h-24"></div>
     
+    <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg mx-6 w-full text-center">
+
+        <!-- User Info Section -->
+        <div class="mb-6">
+            <img src="{% static 'images/image.png' %}" alt="User Image" class="w-24 h-24 rounded-full mx-auto mb-4">
+            <p class="text-2xl font-bold text-gray-800">{{ username }}</p>
+            <p class="text-gray-600 mt-2">Phone: {{ userd.phone_number }}</p>
+            <p class="text-gray-600 mt-1">Email: {{user.email }}</p>
+            <p class="text-gray-600 mt-1">Designation: {{ userd.designation }}</p>
+        </div>
+
+        <!-- Message Section -->
+        <div class="mb-6 bg-gray-100 p-6">
+            <p class="text-xl font-semibold text-gray-700">{{ active_messages.message }}</p>
+        </div>
+
+        <!-- Footer Section (Optional) -->
+        <div class="mt-4 text-gray-500 text-sm">
+            <p>Contact information is important for professional communication.</p>
+        </div>
+    </div>
+
 </body>
 </html>
