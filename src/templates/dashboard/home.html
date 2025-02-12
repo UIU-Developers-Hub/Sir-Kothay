@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,16 +14,22 @@
     <div class="flex flex-col sm:flex-row items-center sm:space-x-8 space-y-4 sm:space-y-0">
         <!-- User Image -->
         <div class="relative">
-            <img src="https://via.placeholder.com/200" alt="User Image" 
-                 class="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-gray-300 shadow-md">
+            {% if userd.get_image_url %}
+                <img src="{{ userd.get_image_url }}" alt="User Image" 
+                    class="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-gray-300 shadow-md">
+            {% else %}
+                <img src="{% static 'images/image.png' %}" alt="User Image" 
+                    class="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-gray-300 shadow-md">
+            {% endif %}
         </div>
 
         <!-- User Info -->
         <div class="flex flex-col text-center sm:text-left">
-            <span class="text-2xl sm:text-3xl font-semibold">Username</span>
-            <span class="text-gray-500 text-base sm:text-lg">user@example.com</span>
-            <p class="text-gray-600 mt-2 text-sm sm:text-base">Bio: Lorem ipsum dolor sit amet...</p>
-            <p class="text-gray-600 text-sm sm:text-base">Organization: XYZ Inc.</p>
+            <span class="text-2xl sm:text-3xl font-semibold">{{ username }}</span>
+            <span class="text-gray-500 text-base sm:text-lg">{{ userd.user.email }}</span>
+            <span class="text-gray-600 text-sm sm:text-base">{{ userd.phone_number }}</span>
+            <span class="text-gray-600 text-sm sm:text-base">Organization: {{ userd.organization }}</span>
+            <p class="text-gray-600 mt-2 text-lg">{{ userd.bio }}</p>
         </div>
 
         <!-- Edit Button -->
@@ -38,11 +45,19 @@
     <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
         <!-- QR Code -->
         <div class="w-32 h-32 sm:w-40 sm:h-40 bg-gray-300 flex items-center justify-center rounded-md shadow">
-            <span class="text-gray-600">QR Code</span>
+            {% if qrcode %}
+                <img src="{{ qrcode.get_qr_url }}" alt="QR Code">
+            {% else %}
+                <img src="{% static 'images/logo_placeholder.jpg' %}" alt="">
+            {% endif %}
         </div>
 
         <!-- Generate Button -->
-        <button class="w-full sm:w-auto bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Generate</button>
+        {% if qrcode %}
+            <a href="{% url 'download_qr' %}" class="w-full sm:w-auto bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Download</a>
+        {% else %}
+            <a href="{% url 'generate_qr' %}" class="w-full sm:w-auto bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Generate</a>
+        {% endif %}
     </div>
 </section>
 
@@ -88,16 +103,53 @@
 <div id="editProfileModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden">
     <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
         <h2 class="text-xl font-semibold mb-4">Edit Profile</h2>
-        <input type="text" placeholder="Username" class="w-full border p-2 rounded mb-3">
-        <input type="email" placeholder="Email" class="w-full border p-2 rounded mb-3">
-        <textarea placeholder="Bio" class="w-full border p-2 rounded mb-3"></textarea>
-        <input type="text" placeholder="Organization" class="w-full border p-2 rounded mb-3">
-        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 justify-end">
-            <button onclick="closeModal('editProfileModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-            <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
-        </div>
+        
+        <form id="editProfileForm" method="POST" action="{% url 'user_details_update' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Profile Image Preview -->
+            <div class="flex items-center space-x-4 mb-3">
+                <img id="profileImagePreview" class="w-16 h-16 rounded-full border object-cover" 
+                     src="{{ user.details.get_image_url|default:'/static/default-profile.png' }}" alt="Profile Image">
+                <input type="file" id="profileImageInput" name="profile_image" accept="image/*" class="hidden" onchange="previewProfileImage(event)">
+                <button type="button" onclick="document.getElementById('profileImageInput').click()" 
+                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+                    Change Image
+                </button>
+            </div>
+            
+            <input type="text" name="username" placeholder="Username" value="{{ user.username }}" class="w-full border p-2 rounded mb-3">
+            <input type="email" name="email" placeholder="Email" value="{{ user.email }}" class="w-full border p-2 rounded mb-3">
+            <textarea name="bio" placeholder="Bio" class="w-full border p-2 rounded mb-3">{{ user.details.bio }}</textarea>
+            <input type="text" name="organization" placeholder="Organization" value="{{ user.details.organization }}" class="w-full border p-2 rounded mb-3">
+            <input type="text" name="designation" placeholder="Designation" value="{{ user.details.designation }}" class="w-full border p-2 rounded mb-3">
+            <input type="text" name="phone_number" placeholder="Phone Number" value="{{ user.details.phone_number }}" class="w-full border p-2 rounded mb-3">
+
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 justify-end">
+                <button type="button" onclick="closeModal('editProfileModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
+            </div>
+        </form>
     </div>
 </div>
+
+<script>
+    function openModal(id) {
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.add('hidden');
+    }
+
+    function previewProfileImage(event) {
+        const reader = new FileReader();
+        reader.onload = function () {
+            document.getElementById('profileImagePreview').src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>
 
 <div id="addMessageModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden">
     <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
