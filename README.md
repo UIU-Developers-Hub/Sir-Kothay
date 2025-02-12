@@ -1,6 +1,6 @@
 # [Sir Kothay?](!https://sirkothay.pythonanywhere.com/)
 
-*"Sir Kothay Achen"* is a lightweight web application that allows users to leave messages for others via a unique, shareable URL. Each message will have a dedicated page, and a QR code will be generated for easy sharing.  
+*"[Sir Kothay?](!(!https://sirkothay.pythonanywhere.com/))"* is a lightweight web application that allows users to leave messages for others via a unique, shareable URL. Each message will have a dedicated page, and a QR code will be generated for easy sharing.  
 
 The platform is built using **Django** and **Tailwind CSS**, hosted on **PythonAnywhere**. Future updates will include scheduling and a messaging system.  
 
