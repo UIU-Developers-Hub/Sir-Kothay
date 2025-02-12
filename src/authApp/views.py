@@ -67,4 +67,4 @@ def update_password(request):
         else:
             messages.error(request, "There was an error updating your password. Please try again.")
     
-    return redirect(reverse('home'))
+    return redirect(reverse('index'))
