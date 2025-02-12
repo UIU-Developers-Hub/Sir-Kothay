@@ -68,7 +68,7 @@ def generate_qr_code_with_logo(request):
 
     # Create a SimpleUploadedFile to save the image
     qr_image = SimpleUploadedFile(
-        name="qr_code_with_logo.png",
+        name=f"qr_code_with_logo_slug_{slug}.png",
         content=img_buffer.read(),
         content_type='image/png'
     )

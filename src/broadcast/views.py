@@ -6,14 +6,15 @@ from dashboard.models import UserDetails
 from django.contrib.auth.decorators import login_required
 
 def show_broadcast_messages(request, user_slug):
-    userd = get_object_or_404(UserDetails, slug=user_slug)
+    userd = get_object_or_404(UserDetails, _slug=user_slug)
     user = userd.user
-    active_messages = user.messages.filter(active=True)
+    active_message = user.messages.filter(active=True).first()
     
     context = {
         'user': user,
+        'username': user.username.replace('_', ' '),
         'userd': userd,
-        'active_messages': active_messages
+        'active_messages': active_message
     }
     
     return render(request, 'broadcast/message.html', context=context)
