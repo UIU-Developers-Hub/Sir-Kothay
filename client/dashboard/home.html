@@ -99,8 +99,9 @@
           <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="templates"><i class="bi bi-lightning mr-1"></i>Quick Status</button>
           <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="schedules"><i class="bi bi-arrow-repeat mr-1"></i>Auto-Schedule</button>
           <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="calendar"><i class="bi bi-calendar3 mr-1"></i>Calendar</button>
-          <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="inbox"><i class="bi bi-envelope mr-1"></i>Visitor Messages <span id="unreadBadge" class="hidden ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">0</span></button>
+          <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="inbox"><i class="bi bi-chat-dots mr-1"></i>Messages <span id="unreadBadge" class="hidden ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">0</span></button>
           <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="analytics"><i class="bi bi-graph-up mr-1"></i>Analytics</button>
+          <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="fc-settings"><i class="bi bi-gear mr-1"></i>Settings</button>
         </div>
       </section>
 
@@ -149,10 +150,57 @@
         </div>
       </section>
 
-      <!-- Tab: Inbox (DMs) -->
-      <section id="tab-inbox" class="tab-content hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-2">
-        <h2 class="text-xl font-bold mb-4 text-gray-800">Direct Messages</h2>
-        <div id="inboxList"></div>
+      <!-- Tab: Messages (Unified Inbox — threads + DMs) -->
+      <section id="tab-inbox" class="tab-content hidden max-w-5xl mx-auto mt-2">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" style="min-height:520px">
+          <div class="flex h-full" style="min-height:520px">
+
+            <!-- Left: Conversation List -->
+            <div id="chatListPanel" class="w-full md:w-[340px] lg:w-[380px] flex-shrink-0 border-r border-gray-100 flex flex-col">
+              <!-- Header -->
+              <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/70 flex items-center justify-between gap-2">
+                <h2 class="text-sm font-bold text-gray-800"><i class="bi bi-chat-dots text-blue-500 mr-1"></i>Messages</h2>
+                <div class="flex gap-1 items-center">
+                  <button onclick="_setChatFilter('all')" class="chat-filter-btn text-[10px] px-2 py-1 rounded-md font-bold border transition" data-filter="all">All</button>
+                  <button onclick="_setChatFilter('threads')" class="chat-filter-btn text-[10px] px-2 py-1 rounded-md font-bold border transition" data-filter="threads">Students</button>
+                  <button onclick="_setChatFilter('dms')" class="chat-filter-btn text-[10px] px-2 py-1 rounded-md font-bold border transition" data-filter="dms">Visitors</button>
+                  <button onclick="_closeAndDeleteAll()" class="text-[10px] px-2 py-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 border border-gray-200 transition"><i class="bi bi-trash3 mr-0.5"></i>Close & Delete All</button>
+                </div>
+              </div>
+              <!-- Search -->
+              <div class="px-3 py-2 border-b border-gray-100">
+                <div class="relative">
+                  <i class="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300 text-xs"></i>
+                  <input type="text" id="chatSearchInput" placeholder="Search conversations..." class="w-full border border-gray-200 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300" oninput="_filterConversations()">
+                </div>
+              </div>
+              <!-- List -->
+              <div id="conversationList" class="flex-1 overflow-y-auto">
+                <div class="py-16 text-center text-gray-300"><div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400 mx-auto"></div></div>
+              </div>
+            </div>
+
+            <!-- Right: Conversation Detail -->
+            <div id="chatDetailPanel" class="flex-1 flex flex-col min-w-0 hidden md:flex">
+              <!-- Empty state -->
+              <div id="chatEmptyState" class="flex-1 flex flex-col items-center justify-center text-gray-300">
+                <i class="bi bi-chat-square-text text-5xl mb-3"></i>
+                <p class="text-sm font-medium">Select a conversation</p>
+                <p class="text-xs text-gray-300 mt-1">Choose from the list to view messages</p>
+              </div>
+              <!-- Active conversation (hidden until selected) -->
+              <div id="chatActiveConvo" class="flex-1 flex flex-col hidden">
+                <!-- Header -->
+                <div id="chatConvoHeader" class="px-5 py-3 border-b border-gray-100 bg-gray-50/70 flex items-center gap-3"></div>
+                <!-- Messages -->
+                <div id="chatConvoMessages" class="flex-1 overflow-y-auto px-5 py-4 space-y-1" style="max-height:380px"></div>
+                <!-- Reply bar -->
+                <div id="chatReplyBar" class="px-4 py-3 border-t border-gray-100 bg-gray-50/50"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </section>
 
       <!-- Tab: Analytics -->
@@ -167,6 +215,57 @@
         </div>
         <canvas id="analyticsChart" height="180" class="w-full mb-5"></canvas>
         <div id="subscriberListSection" class="border-t pt-4"></div>
+      </section>
+
+      <!-- Tab: Faculty Settings -->
+      <section id="tab-fc-settings" class="tab-content hidden max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-2">
+        <h2 class="text-lg font-bold mb-1 text-gray-800"><i class="bi bi-gear text-gray-500 mr-2"></i>Chat & Notification Settings</h2>
+        <p class="text-xs text-gray-400 mb-5">Configure how you receive notifications and manage chat behavior.</p>
+        <div class="space-y-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-sm text-gray-800">New chat notifications</p>
+              <p class="text-xs text-gray-400">Email me when a student starts a new chat thread.</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="fcSettingNotifyNew" class="sr-only peer" onchange="saveFacultySettings()">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-sm text-gray-800">Reply notifications</p>
+              <p class="text-xs text-gray-400">Email me when a student sends a reply in active threads.</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="fcSettingNotifyReplies" class="sr-only peer" onchange="saveFacultySettings()">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-sm text-gray-800">Chat closed notifications</p>
+              <p class="text-xs text-gray-400">Email me when a chat thread is closed.</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="fcSettingNotifyClosed" class="sr-only peer" onchange="saveFacultySettings()">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-sm text-gray-800">Auto-close inactive chats</p>
+              <p class="text-xs text-gray-400">Automatically close threads after a period of inactivity.</p>
+            </div>
+            <select id="fcSettingAutoClose" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" onchange="saveFacultySettings()">
+              <option value="24">24 hours</option>
+              <option value="48">48 hours</option>
+              <option value="72">72 hours</option>
+              <option value="168">1 week</option>
+              <option value="">Never</option>
+            </select>
+          </div>
+        </div>
       </section>
     </div>
 
@@ -303,19 +402,7 @@
         </div>
       </div>
     </div>
-    <!-- Reply DM Modal -->
-    <div id="replyModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-      <div class="bg-white p-6 rounded-2xl shadow-xl w-11/12 sm:w-[420px]">
-        <h2 class="text-lg font-bold mb-1">Reply to Message</h2>
-        <p class="text-xs text-gray-400 mb-3">Replying to <strong id="replyTo" class="text-gray-700">visitor</strong> — they'll receive your reply via email.</p>
-        <textarea id="replyBody" placeholder="Write your reply..." class="w-full border border-gray-200 p-3 rounded-xl mb-3 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none" rows="4"></textarea>
-        <input type="hidden" id="replyDmId" />
-        <div class="flex gap-2 justify-end">
-          <button onclick="closeModal('replyModal')" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm">Cancel</button>
-          <button onclick="submitReply()" class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 text-sm shadow-sm"><i class="bi bi-send mr-1"></i>Send Reply</button>
-        </div>
-      </div>
-    </div>
+    <!-- Reply DM Modal removed — replies now happen inline in the chat panel -->
   </div>
   </main>
 
@@ -355,11 +442,12 @@
 
 <script src="../static/js/api-config.js"></script>
 <script src="../static/js/notify-modal.js"></script>
+<script src="../static/js/sk-modal.js"></script>
 <script src="../static/js/dashboard-core.js?v=8"></script>
 <script src="../static/js/dashboard-templates.js?v=4"></script>
 <script src="../static/js/dashboard-schedules.js?v=4"></script>
 <script src="../static/js/dashboard-calendar.js?v=4"></script>
-<script src="../static/js/dashboard-inbox.js"></script>
+<script src="../static/js/dashboard-chat.js"></script>
 <script src="../static/js/dashboard-analytics.js"></script>
 </body>
 </html>

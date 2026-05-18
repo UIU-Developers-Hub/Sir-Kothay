@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserDetails
+from .models import UserDetails, StudentInterest
 from authApp.models import CustomUser
 
 
@@ -19,6 +19,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             'id', 'user', 'user_email', 'user_username', 'username', 'email',
             'profile_image', 'profile_image_url', 'phone_number', 'bio', 'designation',
             'organization', 'default_status', 'default_availability', 'is_available', 'slug',
+            'notify_new_chats', 'notify_chat_replies', 'notify_chat_closed', 'auto_close_hours',
         ]
         read_only_fields = ['id', 'user', 'slug']
 
@@ -39,3 +40,25 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 
     def get_profile_image_url(self, obj):
         return obj.get_image_url
+
+class StudentInterestSerializer(serializers.ModelSerializer):
+    faculty_username = serializers.CharField(source='faculty.username', read_only=True)
+    faculty_details = serializers.SerializerMethodField()
+    student = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = StudentInterest
+        fields = ['id', 'student', 'faculty', 'faculty_username', 'faculty_details', 'notify_preference', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+    def get_faculty_details(self, obj):
+        try:
+            details = UserDetails.objects.get(user=obj.faculty)
+            return UserDetailsSerializer(details).data
+        except UserDetails.DoesNotExist:
+            return None
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'student_id', 'is_active', 'date_joined']

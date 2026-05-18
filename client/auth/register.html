@@ -91,6 +91,22 @@
 
         <!-- Form -->
         <form id="registerForm" class="space-y-6">
+            <!-- Role Selection -->
+            <div class="flex gap-4">
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="role" value="FACULTY" class="peer hidden" checked onchange="toggleStudentFields()">
+                    <div class="text-center p-3 border rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-600 transition font-medium">
+                        Faculty
+                    </div>
+                </label>
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="role" value="STUDENT" class="peer hidden" onchange="toggleStudentFields()">
+                    <div class="text-center p-3 border rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-600 transition font-medium">
+                        Student
+                    </div>
+                </label>
+            </div>
+
             <!-- Username Input -->
             <div>
                 <label for="username" class="block text-gray-700 font-medium mb-2">Full Name</label>
@@ -101,6 +117,18 @@
                     type="text"
                     placeholder="Your Full Name"
                     required
+                />
+            </div>
+
+            <!-- Student ID Input (Hidden by default) -->
+            <div id="studentIdContainer" class="hidden">
+                <label for="student_id" class="block text-gray-700 font-medium mb-2">Student ID</label>
+                <input
+                    class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    id="student_id"
+                    name="student_id"
+                    type="text"
+                    placeholder="e.g. 011231..."
                 />
             </div>
 
@@ -161,11 +189,28 @@
 
 <!-- Register Form Handler -->
 <script>
+  function toggleStudentFields() {
+    const isStudent = document.querySelector('input[name="role"]:checked').value === 'STUDENT';
+    const studentIdContainer = document.getElementById('studentIdContainer');
+    const studentIdInput = document.getElementById('student_id');
+    
+    if (isStudent) {
+      studentIdContainer.classList.remove('hidden');
+      studentIdInput.required = true;
+    } else {
+      studentIdContainer.classList.add('hidden');
+      studentIdInput.required = false;
+      studentIdInput.value = '';
+    }
+  }
+
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    const role = document.querySelector('input[name="role"]:checked').value;
     const username = document.getElementById('username').value;
     const email = document.getElementById('email').value;
+    const studentId = document.getElementById('student_id').value;
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirm_password').value;
     const messageDiv = document.getElementById('message');
@@ -184,8 +229,10 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          role: role,
           username: username,
           email: email,
+          student_id: studentId,
           password: password,
           password2: confirmPassword
         })

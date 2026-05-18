@@ -351,10 +351,36 @@
                 </div>
               </div>
 
-              <!-- Notify Me & Send Message Buttons -->
-              <div class="px-6 py-4 bg-gray-50 border-t flex gap-2">
+              <!-- Action Buttons (role-aware — rendered by JS) -->
+              <div id="actionBtnsSection" class="px-6 py-4 bg-gray-50 border-t flex gap-2">
                 <button id="notifyMeBtn" onclick="document.getElementById('subscribeForm').classList.toggle('hidden')" class="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-600 transition"><i class="bi bi-bell-fill mr-1"></i><span id="notifyBtnLabel">Notify Me When Available</span></button>
-                <button onclick="document.getElementById('dmForm').classList.toggle('hidden')" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-600 transition"><i class="bi bi-envelope-fill mr-1"></i>Send Message</button>
+                <button id="sendMsgBtn" onclick="document.getElementById('dmForm').classList.toggle('hidden')" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-600 transition"><i class="bi bi-envelope-fill mr-1"></i>Send Message</button>
+              </div>
+
+              <!-- Student-specific: Notification preference (hidden by default) -->
+              <div id="studentNotifyToggleSection" class="hidden px-6 py-3 bg-gray-50 border-t">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Status Notifications</p>
+                <div class="flex gap-2">
+                  <button onclick="setBroadcastNotifyPref('all')" id="bcNotifyAll" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold border transition-all">
+                    <i class="bi bi-bell-fill"></i> All updates
+                  </button>
+                  <button onclick="setBroadcastNotifyPref('available')" id="bcNotifyAvail" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold border transition-all">
+                    <i class="bi bi-bell"></i> When available
+                  </button>
+                  <button onclick="setBroadcastNotifyPref('none')" id="bcNotifyNone" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold border transition-all">
+                    <i class="bi bi-bell-slash"></i> Off
+                  </button>
+                </div>
+              </div>
+
+              <!-- Student-specific: Chat button (hidden by default) -->
+              <div id="studentChatSection" class="hidden px-6 py-3 border-t">
+                <button id="studentChatBtn" onclick="handleStudentChat()" class="w-full bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-600 transition shadow-md shadow-blue-500/20"><i class="bi bi-chat-dots mr-1"></i>Send Message</button>
+              </div>
+
+              <!-- Owner message (hidden by default) -->
+              <div id="ownerSection" class="hidden px-6 py-3 bg-gray-100 border-t text-center">
+                <p class="text-xs text-gray-500"><i class="bi bi-eye-slash mr-1"></i>This is your broadcast page. Visitors see the buttons above.</p>
               </div>
 
               <!-- Subscribe Form (hidden by default) -->
@@ -367,7 +393,7 @@
                 <p id="subResult" class="text-xs mt-2 hidden"></p>
               </div>
 
-              <!-- DM Form (hidden by default) -->
+              <!-- DM Form (hidden by default, for anonymous visitors) -->
               <div id="dmForm" class="hidden px-6 py-4 bg-blue-50 border-t">
                 <p class="text-xs text-gray-600 mb-2">Send a private message:</p>
                 <input id="dmName" type="text" placeholder="Your name" class="w-full border rounded-lg px-3 py-2 text-sm mb-2" />
@@ -445,6 +471,9 @@
                 copyToClipboard(data.email || data.user_email || "N/A");
               document.getElementById("copyOrg").onclick = () =>
                 copyToClipboard(data.organization || "N/A");
+
+              // Apply role-aware behavior (hides/shows buttons based on who's viewing)
+              applyRoleAwareBehavior(data);
             } catch (error) {
               console.error("Error loading user data:", error);
               showErrorState(error.message);
@@ -629,8 +658,153 @@
             }
           }
 
+          // --- Role-Aware Broadcast Page Logic ---
+          var _broadcastFacultyUserId = null;
+          var _broadcastStudentInterestId = null;
+
+          async function applyRoleAwareBehavior(facultyData) {
+            var token = localStorage.getItem('access_token');
+            if (!token) return; // Anonymous — keep default behavior
+
+            try {
+              var meRes = await fetch(API_BASE_URL + '/api/auth/users/me/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+              });
+              if (!meRes.ok) return;
+              var me = await meRes.json();
+
+              _broadcastFacultyUserId = facultyData.user_id || null;
+
+              // Case 1: Same faculty viewing their own page
+              if (me.role === 'FACULTY' && me.username === (facultyData.username || facultyData.user_username)) {
+                document.getElementById('actionBtnsSection').classList.add('hidden');
+                document.getElementById('ownerSection').classList.remove('hidden');
+                return;
+              }
+
+              // Case 2: Student logged in
+              if (me.role === 'STUDENT' && _broadcastFacultyUserId) {
+                // Hide anonymous DM buttons, show student-specific UI
+                document.getElementById('actionBtnsSection').classList.add('hidden');
+                document.getElementById('studentChatSection').classList.remove('hidden');
+                document.getElementById('studentNotifyToggleSection').classList.remove('hidden');
+
+                // Check notify preference status
+                try {
+                  var intRes = await fetch(API_BASE_URL + '/api/dashboard/student-interests/', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                  });
+                  if (intRes.ok) {
+                    var interests = await intRes.json();
+                    var match = interests.find(function (i) { return i.faculty === _broadcastFacultyUserId; });
+                    if (match) {
+                      _broadcastStudentInterestId = match.id;
+                      _highlightBcNotifyPref(match.notify_preference || 'none');
+                    }
+                  }
+                } catch (e) {}
+
+                // Check for existing chat thread
+                try {
+                  var chatRes = await fetch(API_BASE_URL + '/api/messaging/chat/check/' + _broadcastFacultyUserId + '/', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                  });
+                  if (chatRes.ok) {
+                    var chatData = await chatRes.json();
+                    var chatBtn = document.getElementById('studentChatBtn');
+                    if (chatData.has_thread) {
+                      chatBtn.innerHTML = '<i class="bi bi-chat-dots mr-1"></i>Continue Chat';
+                      chatBtn.onclick = function () {
+                        window.location.href = '../dashboard/student.html?tab=messages&thread=' + chatData.thread_id;
+                      };
+                    } else {
+                      chatBtn.innerHTML = '<i class="bi bi-chat-dots mr-1"></i>Send Message';
+                      chatBtn.onclick = function () { showStudentChatInitForm(); };
+                    }
+                  }
+                } catch (e) {}
+              }
+            } catch (e) { console.error('Role detection error:', e); }
+          }
+
+          function _highlightBcNotifyPref(pref) {
+            var map = { all: 'bcNotifyAll', available: 'bcNotifyAvail', none: 'bcNotifyNone' };
+            var colors = { all: 'bg-blue-50 text-blue-600 border-blue-300', available: 'bg-green-50 text-green-600 border-green-300', none: 'bg-gray-100 text-gray-500 border-gray-300' };
+            Object.keys(map).forEach(function (k) {
+              var el = document.getElementById(map[k]);
+              if (!el) return;
+              if (k === pref) { el.className = 'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold border transition-all ' + colors[k]; }
+              else { el.className = 'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-400 hover:bg-gray-50 transition-all'; }
+            });
+          }
+
+          async function setBroadcastNotifyPref(pref) {
+            if (!_broadcastStudentInterestId) return;
+            var token = localStorage.getItem('access_token');
+            try {
+              await fetch(API_BASE_URL + '/api/dashboard/student-interests/' + _broadcastStudentInterestId + '/', {
+                method: 'PATCH',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notify_preference: pref })
+              });
+              _highlightBcNotifyPref(pref);
+            } catch (e) {}
+          }
+
+          function showStudentChatInitForm() {
+            var formHtml =
+              '<div class="px-6 py-4 bg-blue-50 border-t">' +
+              '<p class="text-xs font-semibold text-gray-700 mb-2">Start a chat with this faculty:</p>' +
+              '<input type="text" id="bcChatSubject" placeholder="Subject (e.g. Office hours)" class="w-full border rounded-lg px-3 py-2 text-sm mb-2">' +
+              '<textarea id="bcChatBody" placeholder="Your message..." class="w-full border rounded-lg px-3 py-2 text-sm mb-2" rows="3"></textarea>' +
+              '<button onclick="submitBroadcastChat()" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 w-full font-semibold">Send</button>' +
+              '<p id="bcChatResult" class="text-xs mt-2 hidden"></p>' +
+              '</div>';
+            var section = document.getElementById('studentChatSection');
+            section.innerHTML = formHtml;
+          }
+
+          async function submitBroadcastChat() {
+            var subject = document.getElementById('bcChatSubject').value.trim();
+            var body = document.getElementById('bcChatBody').value.trim();
+            var el = document.getElementById('bcChatResult');
+            if (!subject || !body) { el.textContent = 'Subject and message are required.'; el.className = 'text-xs mt-2 text-red-500'; el.classList.remove('hidden'); return; }
+            try {
+              var token = localStorage.getItem('access_token');
+              var res = await fetch(API_BASE_URL + '/api/messaging/chat/initiate/', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ faculty_id: _broadcastFacultyUserId, subject: subject, body: body })
+              });
+              var data = await res.json();
+              if (res.ok) {
+                el.textContent = 'Chat started! Waiting for faculty to accept.';
+                el.className = 'text-xs mt-2 text-green-600';
+                el.classList.remove('hidden');
+                // Replace form with Continue Chat button
+                setTimeout(function () {
+                  var section = document.getElementById('studentChatSection');
+                  section.innerHTML = '<button onclick="window.location.href=\'../dashboard/student.html?tab=messages&thread=' + data.id + '\'" class="w-full bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-600 transition shadow-md shadow-blue-500/20"><i class="bi bi-chat-dots mr-1"></i>Continue Chat</button>';
+                }, 1500);
+              } else {
+                if (data.thread_id) {
+                  window.location.href = '../dashboard/student.html?tab=messages&thread=' + data.thread_id;
+                  return;
+                }
+                el.textContent = data.error || 'Failed to start chat.';
+                el.className = 'text-xs mt-2 text-red-500'; el.classList.remove('hidden');
+              }
+            } catch (e) {
+              el.textContent = 'Failed to send.'; el.className = 'text-xs mt-2 text-red-500'; el.classList.remove('hidden');
+            }
+          }
+
+          function handleStudentChat() { showStudentChatInitForm(); }
+
           // Load data on page load
-          loadUserData();
+          loadUserData().then(function () {
+            // applyRoleAwareBehavior is called inside loadUserData after data is loaded
+          });
 
           const isAuthenticated = !!localStorage.getItem("access_token");
           if (isAuthenticated) {

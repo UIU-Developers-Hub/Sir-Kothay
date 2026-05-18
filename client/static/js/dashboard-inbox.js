@@ -48,10 +48,12 @@ async function loadInbox() {
       var unread = !dm.is_read;
       var replies = parseReplies(dm.reply_body);
       var avatar = '<div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white" style="background:' + stringToColor(dm.sender_name) + '">' + dm.sender_name.charAt(0).toUpperCase() + '</div>';
+      var verifiedBadge = dm.sender_is_registered ? '<i class="bi bi-patch-check-fill text-blue-500 text-xs ml-1" title="Verified Account (ID: ' + escapeHtml(dm.sender_student_id || 'N/A') + ')"></i>' : '';
+      var viewProfileBtn = dm.sender_is_registered ? '<button onclick="event.stopPropagation(); _viewDmSenderProfile(' + JSON.stringify(JSON.stringify({username: dm.sender_name, email: dm.sender_email, student_id: dm.sender_student_id, role: dm.sender_role})).replace(/"/g, '&quot;') + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-blue-500 hover:bg-blue-50 transition"><i class="bi bi-person-circle mr-1"></i>View</button>' : '';
       return '<div class="flex gap-3 p-4 rounded-xl border mb-2 transition-shadow hover:shadow-md ' + (unread ? 'bg-blue-50/50 border-blue-200' : 'bg-white border-gray-100') + '">' +
         avatar +
         '<div class="flex-1 min-w-0">' +
-        '<div class="flex items-center gap-2"><span class="font-semibold text-sm text-gray-800">' + escapeHtml(dm.sender_name) + '</span>' +
+        '<div class="flex items-center gap-2"><span class="font-semibold text-sm text-gray-800">' + escapeHtml(dm.sender_name) + '</span>' + verifiedBadge +
         (unread ? '<span class="w-2 h-2 bg-blue-500 rounded-full"></span>' : '') +
         '<span class="text-xs text-gray-400 ml-auto">' + timeAgo(dm.created_at) + '</span></div>' +
         '<p class="text-xs text-gray-400">' + escapeHtml(dm.sender_email) + (dm.subject ? ' · ' + escapeHtml(dm.subject) : '') + '</p>' +
@@ -59,6 +61,8 @@ async function loadInbox() {
         renderReplies(replies) +
         '<div class="flex gap-1.5 mt-2">' +
         '<button onclick="openReply(' + dm.id + ',' + JSON.stringify(escapeHtml(dm.sender_name)).replace(/"/g, '&quot;') + ')" class="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition"><i class="bi bi-reply mr-1"></i>' + (replies.length > 0 ? 'Reply Again' : 'Reply') + '</button>' +
+        viewProfileBtn +
+        '<button onclick="closeDm(' + dm.id + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-yellow-50 hover:text-yellow-600 transition" title="Close DM"><i class="bi bi-check-circle"></i></button>' +
         '<button onclick="deleteDm(' + dm.id + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500 transition"><i class="bi bi-trash"></i></button>' +
         '</div></div></div>';
     }).join('');
@@ -103,4 +107,29 @@ async function deleteDm(id) {
     var res = await apiRequest(API_BASE_URL + '/api/messaging/' + id + '/delete/', { method: 'DELETE' });
     if (res.ok) { await skNotify('Deleted!', { variant: 'success', title: 'Inbox' }); loadInbox(); loadUnreadCount(); }
   } catch (e) { await skNotify('Failed to delete', { variant: 'error', title: 'Inbox' }); }
+}
+
+async function closeDm(id) {
+  var ok = await skConfirm('Mark this message as closed?', { title: 'Close DM', confirmText: 'Close' });
+  if (!ok) return;
+  try {
+    var res = await apiRequest(API_BASE_URL + '/api/messaging/' + id + '/close-dm/', { method: 'POST' });
+    if (res.ok) { await skNotify('DM closed.', { variant: 'success', title: 'Inbox' }); loadInbox(); loadUnreadCount(); }
+    else { await skNotify('Failed to close DM.', { variant: 'error', title: 'Inbox' }); }
+  } catch (e) { await skNotify('Error closing DM.', { variant: 'error', title: 'Inbox' }); }
+}
+
+function _viewDmSenderProfile(jsonStr) {
+  var info = JSON.parse(jsonStr);
+  var verifiedBadge = info.student_id ? '<span class="inline-flex items-center gap-1 bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-semibold border border-blue-200 mt-2"><i class="bi bi-patch-check-fill"></i>Verified Student</span>' : '';
+  var content =
+    '<div class="text-center">' +
+      '<div class="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-2xl mx-auto">' + (info.username || 'U').charAt(0).toUpperCase() + '</div>' +
+      '<h3 class="font-bold text-gray-800 text-lg mt-3">' + escapeHtml(info.username || 'User') + '</h3>' +
+      (info.email ? '<p class="text-sm text-gray-500 mt-1"><i class="bi bi-envelope mr-1"></i>' + escapeHtml(info.email) + '</p>' : '') +
+      (info.student_id ? '<p class="text-sm text-gray-500 mt-1"><i class="bi bi-person-badge mr-1"></i>ID: ' + escapeHtml(info.student_id) + '</p>' : '') +
+      (info.role ? '<p class="text-xs text-gray-400 mt-1">Role: ' + escapeHtml(info.role) + '</p>' : '') +
+      verifiedBadge +
+    '</div>';
+  skModal.open(content, { title: 'Sender Profile', maxWidth: 'max-w-sm' });
 }

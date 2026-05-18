@@ -9,6 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from dashboard.models import UserDetails
+from authApp.models import CustomUser
 
 from .models import DirectMessage
 from .serializers import (
@@ -38,7 +39,22 @@ def inbox(request):
     """Authenticated — list all received DMs for the current user."""
     dms = DirectMessage.objects.filter(broadcaster=request.user)
     serializer = DirectMessageSerializer(dms, many=True)
-    return Response(serializer.data)
+    data = serializer.data
+    # Annotate each DM with verified student info
+    for item in data:
+        email = item.get('sender_email', '')
+        try:
+            registered_user = CustomUser.objects.get(email=email)
+            item['sender_is_registered'] = True
+            item['sender_user_id'] = registered_user.id
+            item['sender_role'] = registered_user.role
+            item['sender_student_id'] = registered_user.student_id
+        except CustomUser.DoesNotExist:
+            item['sender_is_registered'] = False
+            item['sender_user_id'] = None
+            item['sender_role'] = None
+            item['sender_student_id'] = None
+    return Response(data)
 
 
 @api_view(['GET'])
@@ -104,3 +120,14 @@ def unread_count(request):
     """Authenticated — return the count of unread DMs."""
     count = DirectMessage.objects.filter(broadcaster=request.user, is_read=False).count()
     return Response({'unread_count': count})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def close_dm(request, pk):
+    """Authenticated — close a DM so it no longer appears in active inbox."""
+    dm = get_object_or_404(DirectMessage, pk=pk, broadcaster=request.user)
+    dm.is_closed = True
+    dm.is_read = True
+    dm.save(update_fields=['is_closed', 'is_read'])
+    return Response({'message': 'DM closed.'})

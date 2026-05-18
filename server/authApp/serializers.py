@@ -8,14 +8,17 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'username', 'password', 'first_name', 'last_name', 'is_active', 'date_joined']
+        fields = ['id', 'email', 'username', 'password', 'first_name', 'last_name', 'is_active', 'date_joined', 'role', 'student_id']
         read_only_fields = ['id', 'date_joined']
     
+    def validate(self, data):
+        if data.get('role') == 'STUDENT' and not data.get('student_id'):
+            raise serializers.ValidationError({"student_id": "Student ID is required for students."})
+        return data
+
     def create(self, validated_data):
         password = validated_data.pop('password')
         user = CustomUser.objects.create_user(**validated_data, password=password)
-        # Create UserDetails for new user
-        UserDetails.objects.create(user=user, phone_number='', bio='', designation='', organization='')
         return user
     
     def update(self, instance, validated_data):

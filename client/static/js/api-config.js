@@ -73,6 +73,10 @@ var API_ENDPOINTS = {
 
     // Notifications — Subscribers
     SUBSCRIBERS: API_BASE_URL + '/api/notifications/subscribers/',
+
+    // Chat Threads
+    CHAT_INITIATE: API_BASE_URL + '/api/messaging/chat/initiate/',
+    CHAT_THREADS: API_BASE_URL + '/api/messaging/chat/threads/',
 };
 
 /**

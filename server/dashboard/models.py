@@ -38,6 +38,24 @@ class UserDetails(models.Model):
     )
     _slug = models.SlugField(max_length=100, unique=True, blank=True, null=True)
 
+    # Notification settings
+    notify_new_chats = models.BooleanField(
+        default=True,
+        help_text='Email me when a new chat thread is initiated.',
+    )
+    notify_chat_replies = models.BooleanField(
+        default=False,
+        help_text='Email me on each reply in active chat threads.',
+    )
+    notify_chat_closed = models.BooleanField(
+        default=True,
+        help_text='Email me when a chat thread is closed.',
+    )
+    auto_close_hours = models.PositiveIntegerField(
+        default=48, null=True, blank=True,
+        help_text='Hours of inactivity before auto-closing chat threads. Null = never. Faculty only.',
+    )
+
     @property
     def slug(self):
         return self._slug or ''
@@ -57,3 +75,26 @@ class UserDetails(models.Model):
 
     def __str__(self):
         return f"{self.designation} at {self.organization}"
+
+class StudentInterest(models.Model):
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='interested_faculties', on_delete=models.CASCADE)
+    faculty = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='interested_students', on_delete=models.CASCADE)
+    NOTIFY_ALL = 'all'
+    NOTIFY_AVAILABLE = 'available'
+    NOTIFY_NONE = 'none'
+    NOTIFY_CHOICES = [
+        (NOTIFY_ALL, 'All updates'),
+        (NOTIFY_AVAILABLE, 'When available only'),
+        (NOTIFY_NONE, 'Off'),
+    ]
+    notify_preference = models.CharField(
+        max_length=10, choices=NOTIFY_CHOICES, default=NOTIFY_NONE,
+        help_text='Notification preference for this faculty status updates.',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'faculty')
+
+    def __str__(self):
+        return f"{self.student.username} -> {self.faculty.username}"

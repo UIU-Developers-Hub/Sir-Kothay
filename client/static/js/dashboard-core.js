@@ -37,13 +37,34 @@ document.addEventListener('DOMContentLoaded', function () {
       var target = document.getElementById('tab-' + btn.dataset.tab);
       if (target) target.classList.remove('hidden');
       var tab = btn.dataset.tab;
+      // Update URL to reflect active tab
+      var url = new URL(window.location);
+      url.searchParams.set('tab', tab);
+      history.replaceState(null, '', url);
       if (tab === 'templates') loadTemplates();
       else if (tab === 'schedules') loadSchedules();
       else if (tab === 'calendar') { loadCalendarEvents(); }
-      else if (tab === 'inbox') loadInbox();
+      else if (tab === 'inbox') loadUnifiedInbox();
       else if (tab === 'analytics') loadAnalytics();
+      else if (tab === 'fc-settings') loadFacultySettings();
     });
   });
+
+  // Handle URL params (e.g. ?tab=chats&thread=5)
+  var params = new URLSearchParams(window.location.search);
+  var tabParam = params.get('tab');
+  var threadParam = params.get('thread');
+  if (tabParam) {
+    setTimeout(function () {
+      // Map old 'chats' param to new unified 'inbox' tab
+      var mappedTab = tabParam === 'chats' ? 'inbox' : tabParam;
+      var tabBtn = document.querySelector('[data-tab="' + mappedTab + '"]');
+      if (tabBtn) tabBtn.click();
+      if (threadParam && (tabParam === 'chats' || tabParam === 'inbox')) {
+        setTimeout(function () { openConversation('thread', parseInt(threadParam)); }, 800);
+      }
+    }, 1000);
+  }
 });
 
 // --- Profile & Dashboard Load ---
@@ -52,6 +73,14 @@ var userSlug = null;
 async function loadDashboard() {
   if (!checkAuth()) return;
   try {
+    // Role Check
+    var meRes = await fetch(API_BASE_URL + '/api/auth/users/me/', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') } });
+    if (meRes.ok) {
+      var meData = await meRes.json();
+      if (meData.role === 'STUDENT') { window.location.href = 'student.html'; return; }
+      if (meData.role === 'ADMIN') { window.location.href = 'admin.html'; return; }
+    }
+
     var res = await apiRequest(API_ENDPOINTS.USER_DETAILS);
     var data = await res.json();
     if (res.ok) {
@@ -379,6 +408,42 @@ async function deleteMsg(id) {
     var res = await apiRequest(API_BASE_URL + '/api/broadcast/messages/' + id + '/', { method: 'DELETE' });
     if (res.ok) { await skNotify('Deleted!', { variant: 'success', title: 'Broadcast' }); loadMessages(); }
   } catch (e) { await skNotify('Failed to delete', { variant: 'error', title: 'Broadcast' }); }
+}
+
+// --- Faculty Notification Settings ---
+async function loadFacultySettings() {
+  try {
+    var res = await apiRequest(API_ENDPOINTS.USER_DETAILS);
+    if (!res.ok) return;
+    var data = await res.json();
+    var el1 = document.getElementById('fcSettingNotifyNew');
+    var el2 = document.getElementById('fcSettingNotifyReplies');
+    var el3 = document.getElementById('fcSettingNotifyClosed');
+    var el4 = document.getElementById('fcSettingAutoClose');
+    if (el1) el1.checked = !!data.notify_new_chats;
+    if (el2) el2.checked = !!data.notify_chat_replies;
+    if (el3) el3.checked = !!data.notify_chat_closed;
+    if (el4) el4.value = data.auto_close_hours != null ? String(data.auto_close_hours) : '';
+  } catch (e) { console.error(e); }
+}
+
+async function saveFacultySettings() {
+  try {
+    var autoClose = document.getElementById('fcSettingAutoClose').value;
+    var payload = {
+      notify_new_chats: document.getElementById('fcSettingNotifyNew').checked,
+      notify_chat_replies: document.getElementById('fcSettingNotifyReplies').checked,
+      notify_chat_closed: document.getElementById('fcSettingNotifyClosed').checked,
+      auto_close_hours: autoClose === '' ? null : parseInt(autoClose),
+    };
+    var res = await apiRequest(API_ENDPOINTS.UPDATE_USER_DETAILS, {
+      method: 'PATCH', body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed');
+    await skNotify('Settings saved.', { variant: 'success', title: 'Settings' });
+  } catch (e) {
+    await skNotify('Failed to save settings.', { variant: 'error', title: 'Settings' });
+  }
 }
 
 // Footer contributors

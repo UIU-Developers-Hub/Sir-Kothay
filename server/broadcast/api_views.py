@@ -71,6 +71,7 @@ def get_user_broadcast(request, user_slug):
         
         # Build response with user details and active message
         response_data = {
+            'user_id': user_details.user.id,
             'username': user_details.user.username,
             'user_username': user_details.user.username,
             'email': user_details.user.email,

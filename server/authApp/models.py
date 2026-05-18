@@ -25,6 +25,14 @@ class CustomUser(AbstractUser):
     Display name (`username`) may contain any characters up to 150 chars.
     Public URLs use a separate slug on UserDetails (ASCII, path-safe).
     """
+    ROLE_CHOICES = (
+        ('FACULTY', 'Faculty'),
+        ('STUDENT', 'Student'),
+        ('ADMIN', 'Admin'),
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='FACULTY')
+    student_id = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    
     email = models.EmailField(unique=True)
 
     username = models.CharField(

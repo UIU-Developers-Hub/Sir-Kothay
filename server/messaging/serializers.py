@@ -19,7 +19,7 @@ class DirectMessageSerializer(serializers.ModelSerializer):
         model = DirectMessage
         fields = [
             'id', 'sender_name', 'sender_email', 'subject', 'body',
-            'is_read', 'reply_body', 'replied_at', 'created_at',
+            'is_read', 'is_closed', 'reply_body', 'replied_at', 'created_at',
         ]
         read_only_fields = [
             'id', 'sender_name', 'sender_email', 'subject', 'body',
