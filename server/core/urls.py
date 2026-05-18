@@ -46,4 +46,7 @@ urlpatterns = [
     path('api/dashboard/', include('dashboard.api_urls')),
     path('api/broadcast/', include('broadcast.api_urls')),
     path('api/qrcode/', include('qrcodeApp.api_urls')),
+    path('api/messaging/', include('messaging.api_urls')),
+    path('api/scheduler/', include('scheduler.api_urls')),
+    path('api/notifications/', include('notifications.api_urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -4,698 +4,428 @@
 ```
 http://127.0.0.1:8000/api/
 ```
+> On LAN, replace `127.0.0.1` with your PC's IP (e.g. `192.168.1.100`).
 
 ## Authentication
-All authenticated endpoints require a JWT Bearer token in the Authorization header:
+All authenticated endpoints require a JWT Bearer token:
 ```
 Authorization: Bearer <access_token>
 ```
+Tokens expire after **5 hours**. Use the refresh token to obtain a new access token.
 
 ---
 
-## Authentication Endpoints
+## 1 · Authentication
 
-### 1. Register New User
+### 1.1 Register
 **POST** `/api/auth/users/register/`
 
-**Request Body:**
 ```json
-{
-  "email": "user@example.com",
-  "username": "username",
-  "password": "password123",
-  "first_name": "John",
-  "last_name": "Doe"
-}
+{ "email": "user@example.com", "username": "username", "password": "password123" }
 ```
-
-**Response:**
-```json
-{
-  "message": "User registered successfully",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "username": "username",
-    "first_name": "John",
-    "last_name": "Doe",
-    "is_active": true,
-    "date_joined": "2025-12-15T21:00:00Z"
-  },
-  "tokens": {
-    "refresh": "refresh_token_here",
-    "access": "access_token_here"
-  }
-}
-```
-
-**cURL Example:**
-```bash
-curl -X POST http://127.0.0.1:8000/api/auth/users/register/ \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","username":"username","password":"password123"}'
-```
+**Response:** `201` — user object + `tokens.access` / `tokens.refresh`
 
 ---
 
-### 2. Login
+### 1.2 Login
 **POST** `/api/auth/users/login/`
 
-**Request Body:**
 ```json
-{
-  "email": "fahimimran0088@gmail.com",
-  "password": "fahim0088"
-}
+{ "email": "user@example.com", "password": "password123" }
 ```
+**Response:** `200` — user object + tokens
 
-**Response:**
+---
+
+### 1.3 Get Current User
+**GET** `/api/auth/users/me/` · 🔒 JWT
+
+**Response:** user object (id, email, username, first_name, last_name, is_active, date_joined)
+
+---
+
+### 1.4 Change Password
+**POST** `/api/auth/users/change_password/` · 🔒 JWT
+
 ```json
-{
-  "message": "Login successful",
-  "user": {
-    "id": 2,
-    "email": "fahimimran0088@gmail.com",
-    "username": "MD_IRFAN_HASAN_FAHIM",
-    "first_name": "",
-    "last_name": "",
-    "is_active": true,
-    "date_joined": "2025-11-16T20:54:57.521112Z"
-  },
-  "tokens": {
-    "refresh": "refresh_token_here",
-    "access": "access_token_here"
-  }
-}
-```
-
-**cURL Example:**
-```bash
-curl -X POST http://127.0.0.1:8000/api/auth/users/login/ \
-  -H "Content-Type: application/json" \
-  -d '{"email":"fahimimran0088@gmail.com","password":"fahim0088"}'
+{ "old_password": "current", "new_password": "newpassword123" }
 ```
 
 ---
 
-### 3. Get Current User
-**GET** `/api/auth/users/me/`
+### 1.5 List All Users (Admin)
+**GET** `/api/auth/users/` · 🔒 JWT (staff only) · Paginated
 
-**Headers:** 
-- Authorization: Bearer {access_token}
+---
+
+## 2 · User Details (Dashboard)
+
+### 2.1 Get My Details
+**GET** `/api/dashboard/user-details/my_details/` · 🔒 JWT
 
 **Response:**
 ```json
 {
-  "id": 2,
-  "email": "fahimimran0088@gmail.com",
-  "username": "MD_IRFAN_HASAN_FAHIM",
-  "first_name": "",
-  "last_name": "",
-  "is_active": true,
-  "date_joined": "2025-11-16T20:54:57.521112Z"
+  "id": 1, "user": 1,
+  "user_email": "user@example.com",
+  "user_username": "username",
+  "profile_image": "/media/profile_images/photo.jpg",
+  "phone_number": "01XXXXXXXXX",
+  "bio": "...", "designation": "...", "organization": "...",
+  "default_status": "Away from desk",
+  "is_available": true,
+  "slug": "username-1"
 }
-```
-
-**cURL Example:**
-```bash
-curl -X GET http://127.0.0.1:8000/api/auth/users/me/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ---
 
-### 4. Change Password
-**POST** `/api/auth/users/change_password/`
+### 2.2 Update My Details
+**PATCH** `/api/dashboard/user-details/update_my_details/` · 🔒 JWT
 
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Request Body:**
-```json
-{
-  "old_password": "fahim0088",
-  "new_password": "newpassword123"
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Password changed successfully"
-}
-```
-
-**cURL Example:**
-```bash
-curl -X POST http://127.0.0.1:8000/api/auth/users/change_password/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"old_password":"fahim0088","new_password":"newpassword123"}'
-```
+Accepts any subset of: `phone_number`, `bio`, `designation`, `organization`, `default_status`, `is_available`, `profile_image` (multipart).
 
 ---
 
-### 5. List All Users (Admin/Staff Only)
-**GET** `/api/auth/users/`
-
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Response:**
-```json
-{
-  "count": 3,
-  "next": null,
-  "previous": null,
-  "results": [
-    {
-      "id": 1,
-      "email": "user1@example.com",
-      "username": "user1",
-      "first_name": "",
-      "last_name": "",
-      "is_active": true,
-      "date_joined": "2025-11-16T18:29:00.230272Z"
-    }
-  ]
-}
-```
-
-**cURL Example:**
-```bash
-curl -X GET http://127.0.0.1:8000/api/auth/users/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
+### 2.3 List All User Details
+**GET** `/api/dashboard/user-details/` · 🔒 JWT · Paginated
 
 ---
 
-## User Details Endpoints
+## 3 · Broadcast Messages
 
-### 6. Get My Details
-**GET** `/api/dashboard/user-details/my_details/`
+### 3.1 List My Messages
+**GET** `/api/broadcast/messages/my_messages/` · 🔒 JWT
 
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Response:**
-```json
-{
-  "id": 2,
-  "user": 2,
-  "user_email": "fahimimran0088@gmail.com",
-  "user_username": "MD_IRFAN_HASAN_FAHIM",
-  "profile_image": "/media/profile_images/MD_IRFAN_HASAN_FAHIM_300_x_300_px.jpg",
-  "profile_image_url": "/media/profile_images/MD_IRFAN_HASAN_FAHIM_300_x_300_px.jpg",
-  "phone_number": "+8801580356046",
-  "bio": "Product-focused developer...",
-  "designation": "Senior Software Engineer",
-  "organization": "Tech Company",
-  "slug": "MD_IRFAN_HASAN_FAHIM-None"
-}
-```
-
-**cURL Example:**
-```bash
-curl -X GET http://127.0.0.1:8000/api/dashboard/user-details/my_details/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
----
-
-### 7. Update My Details
-**PATCH** `/api/dashboard/user-details/update_my_details/`
-
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Request Body:**
-```json
-{
-  "phone_number": "+8801580356046",
-  "bio": "Updated bio via API",
-  "designation": "Senior Software Engineer",
-  "organization": "Tech Company"
-}
-```
-
-**Response:**
-```json
-{
-  "id": 2,
-  "user": 2,
-  "user_email": "fahimimran0088@gmail.com",
-  "user_username": "MD_IRFAN_HASAN_FAHIM",
-  "profile_image": "/media/profile_images/MD_IRFAN_HASAN_FAHIM_300_x_300_px.jpg",
-  "profile_image_url": "/media/profile_images/MD_IRFAN_HASAN_FAHIM_300_x_300_px.jpg",
-  "phone_number": "+8801580356046",
-  "bio": "Updated bio via API",
-  "designation": "Senior Software Engineer",
-  "organization": "Tech Company",
-  "slug": "MD_IRFAN_HASAN_FAHIM-None"
-}
-```
-
-**cURL Example:**
-```bash
-curl -X PATCH http://127.0.0.1:8000/api/dashboard/user-details/update_my_details/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"phone_number":"+8801580356046","bio":"Updated bio","designation":"Senior Engineer","organization":"Company"}'
-```
-
----
-
-### 8. List All User Details (Paginated)
-**GET** `/api/dashboard/user-details/`
-
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Response:**
-```json
-{
-  "count": 1,
-  "next": null,
-  "previous": null,
-  "results": [...]
-}
-```
-
-**cURL Example:**
-```bash
-curl -X GET http://127.0.0.1:8000/api/dashboard/user-details/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
----
-
-## Broadcast Message Endpoints
-
-### 9. List My Messages
-**GET** `/api/broadcast/messages/my_messages/`
-
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Response:**
+**Response:** array of message objects:
 ```json
 [
   {
-    "id": 4,
-    "user": 2,
-    "user_email": "fahimimran0088@gmail.com",
-    "user_username": "MD_IRFAN_HASAN_FAHIM",
-    "message": "This is a test message from API",
-    "active": true
+    "id": 1, "user": 1,
+    "message": "In Room 405",
+    "active": true,
+    "scheduled_for": null,
+    "duration_minutes": 60,
+    "active_until": "2026-05-18T13:00:00Z",
+    "created_at": "2026-05-18T12:00:00Z"
   }
 ]
 ```
 
-**cURL Example:**
-```bash
-curl -X GET http://127.0.0.1:8000/api/broadcast/messages/my_messages/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+---
+
+### 3.2 Get Active Message
+**GET** `/api/broadcast/messages/active_message/` · 🔒 JWT
+
+---
+
+### 3.3 Create Message
+**POST** `/api/broadcast/messages/` · 🔒 JWT
+
+```json
+{
+  "message": "In Room 405 until 3pm",
+  "active": true,
+  "scheduled_for": null,
+  "duration_minutes": 60
+}
 ```
 
 ---
 
-### 10. Get Active Message
-**GET** `/api/broadcast/messages/active_message/`
+### 3.4 Update Message
+**PATCH** `/api/broadcast/messages/{id}/` · 🔒 JWT
 
-**Headers:**
-- Authorization: Bearer {access_token}
+---
+
+### 3.5 Delete Message
+**DELETE** `/api/broadcast/messages/{id}/` · 🔒 JWT · `204 No Content`
+
+---
+
+### 3.6 Toggle Active (Set Active)
+**POST** `/api/broadcast/messages/{id}/set_active/` · 🔒 JWT
+
+Deactivates all other messages and activates the specified one.
+
+---
+
+### 3.7 Public Broadcast (No Auth)
+**GET** `/api/broadcast/<user_slug>/` · 🌐 Public
+
+Returns user profile + active broadcast message for the public broadcast page and QR code scanning.
 
 **Response:**
 ```json
 {
-  "id": 4,
-  "user": 2,
-  "user_email": "fahimimran0088@gmail.com",
-  "user_username": "MD_IRFAN_HASAN_FAHIM",
-  "message": "This is a test message from API",
-  "active": true
+  "username": "username",
+  "email": "user@example.com",
+  "phone_number": "01XXXXXXXXX",
+  "organization": "UIU",
+  "designation": "Lecturer",
+  "bio": "...",
+  "profile_image": "/media/profile_images/photo.jpg",
+  "active_message": "In Room 405 until 3pm",
+  "is_available": true,
+  "slug": "username-1"
 }
-```
-
-**cURL Example:**
-```bash
-curl -X GET http://127.0.0.1:8000/api/broadcast/messages/active_message/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ---
 
-### 11. Create Broadcast Message
-**POST** `/api/broadcast/messages/`
+## 4 · QR Code
 
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Request Body:**
-```json
-{
-  "message": "This is a test message from API",
-  "active": true
-}
-```
+### 4.1 Get My QR Code
+**GET** `/api/qrcode/qrcodes/my_qrcode/` · 🔒 JWT
 
 **Response:**
 ```json
 {
-  "id": 4,
-  "user": 2,
-  "user_email": "fahimimran0088@gmail.com",
-  "user_username": "MD_IRFAN_HASAN_FAHIM",
-  "message": "This is a test message from API",
-  "active": true
+  "id": 1, "user": 1,
+  "image": "/media/qr_codes/qr_1_username.png",
+  "generated_at": "2026-05-18T12:00:00Z"
 }
-```
-
-**cURL Example:**
-```bash
-curl -X POST http://127.0.0.1:8000/api/broadcast/messages/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"message":"Test message","active":true}'
 ```
 
 ---
 
-### 12. List All Messages (Paginated)
-**GET** `/api/broadcast/messages/`
+### 4.2 Generate / Regenerate QR Code
+**POST** `/api/qrcode/qrcodes/generate/` · 🔒 JWT
 
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Response:**
-```json
-{
-  "count": 3,
-  "next": null,
-  "previous": null,
-  "results": [...]
-}
-```
-
-**cURL Example:**
-```bash
-curl -X GET http://127.0.0.1:8000/api/broadcast/messages/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
----
-
-### 13. Set Message as Active
-**POST** `/api/broadcast/messages/{id}/set_active/`
-
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Response:**
-```json
-{
-  "message": "Message set as active"
-}
-```
-
-**cURL Example:**
-```bash
-curl -X POST http://127.0.0.1:8000/api/broadcast/messages/4/set_active/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
----
-
-### 14. Update Message
-**PATCH** `/api/broadcast/messages/{id}/`
-
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Request Body:**
-```json
-{
-  "message": "Updated message",
-  "active": false
-}
-```
-
-**cURL Example:**
-```bash
-curl -X PATCH http://127.0.0.1:8000/api/broadcast/messages/4/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"message":"Updated message","active":false}'
-```
-
----
-
-### 15. Delete Message
-**DELETE** `/api/broadcast/messages/{id}/`
-
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Response:** 204 No Content
-
-**cURL Example:**
-```bash
-curl -X DELETE http://127.0.0.1:8000/api/broadcast/messages/4/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
----
-
-## Public Broadcast Endpoint
-
-### 16. Get User Broadcast Information (Public)
-**GET** `/api/broadcast/<user_slug>/`
-
-**Authentication:** Not required (Public endpoint)
-
-**Description:** This public endpoint returns user profile information and their active broadcast message. It's used for public broadcast pages and QR code scanning. No authentication is required.
-
-**Response:**
-```json
-{
-  "username": "MD_IRFAN_HASAN_FAHIM",
-  "user_username": "MD_IRFAN_HASAN_FAHIM",
-  "email": "fahimimran0088@gmail.com",
-  "user_email": "fahimimran0088@gmail.com",
-  "phone_number": "+8801580356046",
-  "organization": "Tech Company",
-  "designation": "Senior Software Engineer",
-  "bio": "Product-focused developer...",
-  "profile_image": "/media/profile_images/MD_IRFAN_HASAN_FAHIM_300_x_300_px.jpg",
-  "active_message": "This is my active broadcast message",
-  "slug": "MD_IRFAN_HASAN_FAHIM-None"
-}
-```
-
-**Error Response (404):**
-```json
-{
-  "error": "User not found",
-  "message": "No user found with slug: username-slug"
-}
-```
-
-**cURL Example:**
-```bash
-curl -X GET http://127.0.0.1:8000/api/broadcast/MD_IRFAN_HASAN_FAHIM-None/
-```
-
----
-
-## QR Code Endpoints
-
-### 17. Get My QR Code
-**GET** `/api/qrcode/qrcodes/my_qrcode/`
-
-**Headers:**
-- Authorization: Bearer {access_token}
-
-**Response:**
-```json
-{
-  "id": 2,
-  "user": 2,
-  "user_email": "fahimimran0088@gmail.com",
-  "user_username": "MD_IRFAN_HASAN_FAHIM",
-  "image": "/media/qr_codes/qr_2_MD_IRFAN_HASAN_FAHIM.png",
-  "qr_url": "/media/qr_codes/qr_2_MD_IRFAN_HASAN_FAHIM.png",
-  "generated_at": "2025-11-16T20:59:21.106407Z"
-}
-```
-
-**cURL Example:**
-```bash
-curl -X GET http://127.0.0.1:8000/api/qrcode/qrcodes/my_qrcode/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
----
-
-### 18. Generate QR Code
-**POST** `/api/qrcode/qrcodes/generate/`
-
-**Headers:**
-- Authorization: Bearer {access_token}
+Generates a QR code encoding the user's public broadcast URL. Auto-detects LAN IP for mobile access.
 
 **Response:**
 ```json
 {
   "message": "QR code generated successfully",
-  "qr_code": {
-    "id": 2,
-    "user": 2,
-    "user_email": "fahimimran0088@gmail.com",
-    "user_username": "MD_IRFAN_HASAN_FAHIM",
-    "image": "/media/qr_codes/qr_2_MD_IRFAN_HASAN_FAHIM.png",
-    "qr_url": "/media/qr_codes/qr_2_MD_IRFAN_HASAN_FAHIM.png",
-    "generated_at": "2025-11-16T20:59:21.106407Z"
-  }
+  "qr_code": { "id": 1, "image": "/media/qr_codes/qr_1_username.png", "..." },
+  "public_profile_url": "http://192.168.1.100:5500/broadcast/message.html?user=username-1"
 }
-```
-
-**cURL Example:**
-```bash
-curl -X POST http://127.0.0.1:8000/api/qrcode/qrcodes/generate/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ---
 
-### 19. List All QR Codes (Paginated)
-**GET** `/api/qrcode/qrcodes/`
+### 4.3 QR PNG Export
+**GET** `/api/qrcode/qrcodes/qr_png/` · 🔒 JWT
 
-**Headers:**
-- Authorization: Bearer {access_token}
+Returns raw PNG bytes (for canvas-based exports). Set `Accept: image/png`.
+
+---
+
+### 4.4 Footer PNG Export
+**GET** `/api/qrcode/qrcodes/footer_png/` · 🔒 JWT
+
+Returns the branded footer PNG for "QR with user info" downloads.
+
+---
+
+## 5 · Direct Messaging
+
+### 5.1 Send Message to Broadcaster (Public)
+**POST** `/api/messaging/<user_slug>/send/` · 🌐 Public
+
+```json
+{
+  "sender_name": "John",
+  "sender_email": "john@example.com",
+  "subject": "Question about office hours",
+  "body": "When are you available today?"
+}
+```
+
+---
+
+### 5.2 Inbox
+**GET** `/api/messaging/inbox/` · 🔒 JWT
+
+Returns all messages received by the authenticated broadcaster.
+
+---
+
+### 5.3 Unread Count
+**GET** `/api/messaging/unread/` · 🔒 JWT
+
+**Response:** `{ "unread_count": 3 }`
+
+---
+
+### 5.4 Message Detail
+**GET** `/api/messaging/{id}/` · 🔒 JWT
+
+Returns full message details and marks it as read.
+
+---
+
+### 5.5 Reply to Message
+**POST** `/api/messaging/{id}/reply/` · 🔒 JWT
+
+```json
+{ "body": "I'll be available at 3pm." }
+```
+
+---
+
+### 5.6 Delete Message
+**DELETE** `/api/messaging/{id}/delete/` · 🔒 JWT
+
+---
+
+## 6 · Notifications (Subscribers)
+
+### 6.1 Subscribe to Broadcaster (Public)
+**POST** `/api/notifications/subscribe/<user_slug>/` · 🌐 Public
+
+```json
+{ "email": "subscriber@example.com" }
+```
+
+Subscribers receive an email when the broadcaster toggles to "Available".
+
+---
+
+### 6.2 Unsubscribe
+**GET** `/api/notifications/unsubscribe/<token>/` · 🌐 Public
+
+Token-based unsubscribe link (included in notification emails).
+
+---
+
+### 6.3 List My Subscribers
+**GET** `/api/notifications/subscribers/` · 🔒 JWT
+
+---
+
+### 6.4 Remove Subscriber
+**DELETE** `/api/notifications/subscribers/{id}/` · 🔒 JWT
+
+---
+
+## 7 · Scheduler
+
+### 7.1 Recurring Schedules (CRUD)
+**Base:** `/api/scheduler/recurring/` · 🔒 JWT
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/recurring/` | List all my recurring schedules |
+| POST | `/recurring/` | Create a new recurring schedule |
+| PATCH | `/recurring/{id}/` | Update a schedule |
+| DELETE | `/recurring/{id}/` | Delete a schedule |
+
+**Create body:**
+```json
+{
+  "day_of_week": 0,
+  "time": "14:00:00",
+  "message": "Office Hours — Room 405",
+  "duration_minutes": 120,
+  "set_available": true
+}
+```
+`day_of_week`: 0=Monday … 6=Sunday
+
+---
+
+### 7.2 Calendar Events (CRUD)
+**Base:** `/api/scheduler/calendar/` · 🔒 JWT
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/calendar/?start=ISO&end=ISO` | List events in date range |
+| POST | `/calendar/` | Create a new event |
+| PATCH | `/calendar/{id}/` | Update an event |
+| DELETE | `/calendar/{id}/` | Delete an event |
+
+**Create body:**
+```json
+{
+  "title": "Faculty Meeting",
+  "start": "2026-05-20T10:00:00Z",
+  "end": "2026-05-20T12:00:00Z",
+  "broadcast_message": "In Faculty Meeting",
+  "color": "#f68b1f",
+  "set_available": false
+}
+```
+
+---
+
+### 7.3 Quick Status Templates (CRUD)
+**Base:** `/api/scheduler/templates/` · 🔒 JWT
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/templates/` | List all my templates |
+| POST | `/templates/` | Create a new template |
+| PATCH | `/templates/{id}/` | Update a template |
+| DELETE | `/templates/{id}/` | Delete a template |
+
+**Create body:**
+```json
+{
+  "label": "In a Meeting",
+  "message": "Currently in a meeting, please check back later.",
+  "icon": "bi-camera-video-fill",
+  "set_available": false
+}
+```
+
+---
+
+## 8 · Analytics
+
+### 8.1 Analytics Summary
+**GET** `/api/scheduler/analytics/` · 🔒 JWT
 
 **Response:**
 ```json
 {
-  "count": 1,
-  "next": null,
-  "previous": null,
-  "results": [...]
+  "total_views": 142,
+  "total_scans": 38,
+  "daily": [
+    { "date": "2026-05-18", "view_count": 12, "qr_scan_count": 3 }
+  ]
 }
-```
-
-**cURL Example:**
-```bash
-curl -X GET http://127.0.0.1:8000/api/qrcode/qrcodes/ \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ---
 
-## Testing Summary
+### 8.2 Track Visit
+**POST** `/api/scheduler/analytics/track/` · 🌐 Public (optional JWT)
 
-All APIs have been successfully tested with the credentials:
-- **Email:** fahimimran0088@gmail.com
-- **Password:** fahim0088
-
-### Test Results:
-✅ User Login - Success  
-✅ Get Current User - Success  
-✅ Get User Details - Success  
-✅ Update User Details - Success  
-✅ Get Broadcast Messages - Success  
-✅ Create Broadcast Message - Success  
-✅ Generate QR Code - Success  
-✅ Get QR Code - Success  
-✅ Change Password - Success  
-✅ List Users - Success  
+```json
+{ "slug": "username-1", "source": "page" }
+```
+`source`: `"page"` or `"qr"`. If JWT is included, self-visits are skipped.
 
 ---
 
 ## Error Responses
 
-### 401 Unauthorized
-```json
-{
-  "detail": "Authentication credentials were not provided."
-}
-```
-or
-```json
-{
-  "error": "Invalid credentials"
-}
-```
-
-### 403 Forbidden
-```json
-{
-  "error": "Permission denied"
-}
-```
-
-### 404 Not Found
-```json
-{
-  "error": "User details not found"
-}
-```
-
-### 400 Bad Request
-```json
-{
-  "field_name": ["Error message"]
-}
-```
+| Status | Body |
+|--------|------|
+| `401` | `{ "detail": "Authentication credentials were not provided." }` |
+| `403` | `{ "error": "Permission denied" }` |
+| `404` | `{ "error": "User not found", "message": "..." }` |
+| `400` | `{ "field_name": ["Error message"] }` |
 
 ---
 
 ## Pagination
 
-All list endpoints support pagination with the following query parameters:
-- `page`: Page number (default: 1)
-- `page_size`: Number of items per page (default: 10, max: 100)
-
-Example:
-```bash
-curl -X GET "http://127.0.0.1:8000/api/broadcast/messages/?page=1&page_size=20" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+List endpoints return paginated results:
+```json
+{ "count": 50, "next": "...?page=2", "previous": null, "results": [...] }
 ```
+Query params: `page` (default 1), `page_size` (default 10, max 100).
 
 ---
 
 ## Notes
 
-1. All timestamps are in UTC format (ISO 8601)
-2. JWT tokens expire after 5 hours (configurable in settings)
-3. Refresh tokens can be used to obtain new access tokens
-4. Media files (images, QR codes) are served from `/media/` URL
-5. File uploads should use `multipart/form-data` content type
-6. Default pagination is 10 items per page
-
----
-
-## Quick Start Testing Script
-
-```bash
-# 1. Login and save token
-TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/auth/users/login/ \
-  -H "Content-Type: application/json" \
-  -d '{"email":"fahimimran0088@gmail.com","password":"fahim0088"}' \
-  | jq -r '.tokens.access')
-
-# 2. Get current user
-curl -X GET http://127.0.0.1:8000/api/auth/users/me/ \
-  -H "Authorization: Bearer $TOKEN"
-
-# 3. Get user details
-curl -X GET http://127.0.0.1:8000/api/dashboard/user-details/my_details/ \
-  -H "Authorization: Bearer $TOKEN"
-
-# 4. Get messages
-curl -X GET http://127.0.0.1:8000/api/broadcast/messages/my_messages/ \
-  -H "Authorization: Bearer $TOKEN"
-
-# 5. Generate QR Code
-curl -X POST http://127.0.0.1:8000/api/qrcode/qrcodes/generate/ \
-  -H "Authorization: Bearer $TOKEN"
-```
+1. All timestamps are UTC (ISO 8601)
+2. JWT access tokens expire after **5 hours** (configurable)
+3. Media files served from `/media/`
+4. File uploads use `multipart/form-data`
+5. CORS is open in `DEBUG=True` mode for development
+6. QR codes auto-detect LAN IP — no manual configuration needed for mobile testing

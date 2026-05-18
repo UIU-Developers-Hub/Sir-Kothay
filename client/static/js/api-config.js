@@ -1,5 +1,6 @@
 // API base: set window.SIR_KOTHAY_API_BASE before this script to override (e.g. production).
-// Default local backend: http://127.0.0.1:8000
+// Default local backend: uses the same hostname the page was opened from, port 8000.
+// This allows mobile devices on the LAN to reach the Django server automatically.
 (function () {
     var host = typeof window !== 'undefined' ? window.location.hostname : '';
     var isLocal =
@@ -7,7 +8,10 @@
         host === '127.0.0.1' ||
         host === '' ||
         host === '[::1]';
-    var defaultBase = isLocal ? 'http://127.0.0.1:8000' : window.location.origin;
+    // In dev mode, API runs on port 8000 at the same host (works for LAN IPs too)
+    var defaultBase = isLocal
+        ? 'http://127.0.0.1:8000'
+        : window.location.protocol + '//' + host + ':8000';
     var raw =
         (typeof window !== 'undefined' && window.SIR_KOTHAY_API_BASE) ||
         defaultBase;
@@ -27,22 +31,56 @@ window.sirKothayContributorsApiUrl = sirKothayContributorsApiUrl;
 
 // API Endpoints
 var API_ENDPOINTS = {
+    // Auth
     LOGIN: API_BASE_URL + '/api/auth/users/login/',
     REGISTER: API_BASE_URL + '/api/auth/users/register/',
     CURRENT_USER: API_BASE_URL + '/api/auth/users/me/',
     CHANGE_PASSWORD: API_BASE_URL + '/api/auth/users/change_password/',
+
+    // Dashboard
     USER_DETAILS: API_BASE_URL + '/api/dashboard/user-details/my_details/',
     UPDATE_USER_DETAILS: API_BASE_URL + '/api/dashboard/user-details/update_my_details/',
+
+    // QR
     MY_QRCODE: API_BASE_URL + '/api/qrcode/qrcodes/my_qrcode/',
     GENERATE_QR: API_BASE_URL + '/api/qrcode/qrcodes/generate/',
     /** Authenticated PNG for dashboard canvas export (not the public /media/ URL). */
     QR_PNG_EXPORT: API_BASE_URL + '/api/qrcode/qrcodes/qr_png/',
-    /** Footer banner PNG for “QR with user info” export (same file as client/static/images/qr/footer.png). */
+    /** Footer banner PNG for "QR with user info" export (same file as client/static/images/qr/footer.png). */
     FOOTER_PNG_EXPORT: API_BASE_URL + '/api/qrcode/qrcodes/footer_png/',
+
+    // Broadcast Messages
     MESSAGES: API_BASE_URL + '/api/broadcast/messages/my_messages/',
     ACTIVE_MESSAGE: API_BASE_URL + '/api/broadcast/messages/active_message/',
     CREATE_MESSAGE: API_BASE_URL + '/api/broadcast/messages/',
+
+    // Direct Messaging
+    DM_INBOX: API_BASE_URL + '/api/messaging/inbox/',
+    DM_UNREAD: API_BASE_URL + '/api/messaging/unread/',
+
+    // Scheduler — Recurring
+    RECURRING_LIST: API_BASE_URL + '/api/scheduler/recurring/',
+
+    // Scheduler — Calendar
+    CALENDAR_LIST: API_BASE_URL + '/api/scheduler/calendar/',
+
+    // Scheduler — Quick Templates
+    TEMPLATES_LIST: API_BASE_URL + '/api/scheduler/templates/',
+
+    // Analytics
+    ANALYTICS: API_BASE_URL + '/api/scheduler/analytics/',
+    ANALYTICS_TRACK: API_BASE_URL + '/api/scheduler/analytics/track/',
+
+    // Notifications — Subscribers
+    SUBSCRIBERS: API_BASE_URL + '/api/notifications/subscribers/',
 };
+
+/**
+ * Build a public endpoint URL dynamically (e.g. for DM send, subscribe).
+ */
+function buildPublicUrl(path) {
+    return API_BASE_URL + path;
+}
 
 function getAuthToken() {
     return localStorage.getItem('access_token');
@@ -93,5 +131,6 @@ if (typeof module !== 'undefined' && module.exports) {
         apiRequest: apiRequest,
         apiFetchImage: apiFetchImage,
         sirKothayContributorsApiUrl: sirKothayContributorsApiUrl,
+        buildPublicUrl: buildPublicUrl,
     };
 }

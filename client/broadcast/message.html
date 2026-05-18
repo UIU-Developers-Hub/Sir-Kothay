@@ -342,11 +342,46 @@
                 </button>
               </div>
             </div>
+
+              <!-- Availability Status Badge -->
+              <div id="availabilityBadge" class="px-6 py-3 border-t">
+                <div id="availBadgeContent" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-200">
+                  <span class="w-3 h-3 rounded-full bg-red-400"></span>
+                  <span>Currently Unavailable</span>
+                </div>
+              </div>
+
+              <!-- Notify Me & Send Message Buttons -->
+              <div class="px-6 py-4 bg-gray-50 border-t flex gap-2">
+                <button id="notifyMeBtn" onclick="document.getElementById('subscribeForm').classList.toggle('hidden')" class="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-600 transition"><i class="bi bi-bell-fill mr-1"></i><span id="notifyBtnLabel">Notify Me When Available</span></button>
+                <button onclick="document.getElementById('dmForm').classList.toggle('hidden')" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-600 transition"><i class="bi bi-envelope-fill mr-1"></i>Send Message</button>
+              </div>
+
+              <!-- Subscribe Form (hidden by default) -->
+              <div id="subscribeForm" class="hidden px-6 py-4 bg-orange-50 border-t">
+                <p id="subCopy" class="text-xs text-gray-600 mb-2">Get an email notification when this person becomes available:</p>
+                <div class="flex gap-2">
+                  <input id="subEmail" type="email" placeholder="your@email.com" class="flex-1 border rounded-lg px-3 py-2 text-sm" />
+                  <button onclick="doSubscribe()" class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600">Subscribe</button>
+                </div>
+                <p id="subResult" class="text-xs mt-2 hidden"></p>
+              </div>
+
+              <!-- DM Form (hidden by default) -->
+              <div id="dmForm" class="hidden px-6 py-4 bg-blue-50 border-t">
+                <p class="text-xs text-gray-600 mb-2">Send a private message:</p>
+                <input id="dmName" type="text" placeholder="Your name" class="w-full border rounded-lg px-3 py-2 text-sm mb-2" />
+                <input id="dmEmail" type="email" placeholder="Your email" class="w-full border rounded-lg px-3 py-2 text-sm mb-2" />
+                <input id="dmSubject" type="text" placeholder="Subject (optional)" class="w-full border rounded-lg px-3 py-2 text-sm mb-2" />
+                <textarea id="dmBody" placeholder="Your message..." class="w-full border rounded-lg px-3 py-2 text-sm mb-2" rows="3"></textarea>
+                <button onclick="doSendDm()" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 w-full">Send</button>
+                <p id="dmResult" class="text-xs mt-2 hidden"></p>
+              </div>
           </div>
         </div>
 
         <!-- API Config -->
-        <script src="../static/js/api-config.js"></script>
+        <script src="../static/js/api-config.js?v=2"></script>
 
         <script>
           // Get user slug from URL parameter
@@ -398,6 +433,12 @@
                   .classList.remove("hidden");
                 focusBroadcastMessage();
               }
+
+              // Update availability badge
+              updateAvailBadge(data.is_available, data.active_message);
+
+              // Track this page view for analytics
+              trackPageVisit();
 
               // Setup copy buttons
               document.getElementById("copyPhone").onclick = () =>
@@ -505,6 +546,89 @@
               document.body.appendChild(toast);
               setTimeout(() => toast.remove(), 2000);
             });
+          }
+
+          // --- Availability Badge ---
+          function updateAvailBadge(isAvailable, activeMessage) {
+            var badge = document.getElementById('availBadgeContent');
+            var notifyBtn = document.getElementById('notifyMeBtn');
+            var notifyLabel = document.getElementById('notifyBtnLabel');
+            var subCopy = document.getElementById('subCopy');
+            if (isAvailable) {
+              badge.className = 'flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-green-50 text-green-800 border border-green-200';
+              badge.innerHTML = '<span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span><span>Currently Available</span>' +
+                (activeMessage ? '<span class="text-xs text-green-600 ml-2">— ' + activeMessage + '</span>' : '');
+              if (notifyLabel) notifyLabel.textContent = 'Notify Me of Changes';
+              if (subCopy) subCopy.textContent = 'Get notified about status changes:';
+            } else {
+              badge.className = 'flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-200';
+              badge.innerHTML = '<span class="w-3 h-3 rounded-full bg-red-400"></span><span>Currently Unavailable</span>' +
+                (activeMessage ? '<span class="text-xs text-red-500 ml-2">— ' + activeMessage + '</span>' : '');
+              if (notifyLabel) notifyLabel.textContent = 'Notify Me When Available';
+              if (subCopy) subCopy.textContent = 'Get an email when this person becomes available:';
+            }
+          }
+
+          // --- Analytics Tracking ---
+          function trackPageVisit() {
+            var source = (new URLSearchParams(window.location.search)).get('source') || 'page';
+            var headers = { 'Content-Type': 'application/json' };
+            // Include auth token so server can skip self-visits
+            var token = localStorage.getItem('access_token');
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            fetch(API_BASE_URL + '/api/scheduler/analytics/track/', {
+              method: 'POST',
+              headers: headers,
+              body: JSON.stringify({ slug: userSlug, source: source })
+            }).catch(function () {});
+          }
+
+          // --- Subscribe ---
+          async function doSubscribe() {
+            var email = document.getElementById('subEmail').value.trim();
+            var el = document.getElementById('subResult');
+            if (!email) { el.textContent = 'Please enter your email'; el.className = 'text-xs mt-2 text-red-500'; el.classList.remove('hidden'); return; }
+            try {
+              var res = await fetch(API_BASE_URL + '/api/notifications/subscribe/' + userSlug + '/', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+              });
+              var data = await res.json();
+              el.textContent = data.message || 'Subscribed!';
+              el.className = 'text-xs mt-2 text-green-600';
+              el.classList.remove('hidden');
+              document.getElementById('subEmail').value = '';
+            } catch (e) {
+              el.textContent = 'Failed to subscribe'; el.className = 'text-xs mt-2 text-red-500'; el.classList.remove('hidden');
+            }
+          }
+
+          // --- Send DM ---
+          async function doSendDm() {
+            var name = document.getElementById('dmName').value.trim();
+            var email = document.getElementById('dmEmail').value.trim();
+            var subject = document.getElementById('dmSubject').value.trim();
+            var body = document.getElementById('dmBody').value.trim();
+            var el = document.getElementById('dmResult');
+            if (!name || !email || !body) { el.textContent = 'Name, email, and message are required'; el.className = 'text-xs mt-2 text-red-500'; el.classList.remove('hidden'); return; }
+            try {
+              var res = await fetch(API_BASE_URL + '/api/messaging/' + userSlug + '/send/', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sender_name: name, sender_email: email, subject: subject, body: body })
+              });
+              var data = await res.json();
+              if (res.ok) {
+                el.textContent = data.message || 'Message sent!';
+                el.className = 'text-xs mt-2 text-green-600';
+                document.getElementById('dmName').value = ''; document.getElementById('dmEmail').value = '';
+                document.getElementById('dmSubject').value = ''; document.getElementById('dmBody').value = '';
+              } else {
+                el.textContent = JSON.stringify(data); el.className = 'text-xs mt-2 text-red-500';
+              }
+              el.classList.remove('hidden');
+            } catch (e) {
+              el.textContent = 'Failed to send message'; el.className = 'text-xs mt-2 text-red-500'; el.classList.remove('hidden');
+            }
           }
 
           // Load data on page load

@@ -18,13 +18,20 @@ class BroadcastMessage(models.Model):
         """
         Activate scheduled messages when their scheduled time has passed.
         The most recently scheduled due message becomes active per user.
+        Also runs the scheduler services (recurring + calendar + expiry).
         """
         now = timezone.now()
         # First, expire active messages whose duration ended.
         expiring = cls.objects.filter(active=True, active_until__isnull=False, active_until__lte=now)
         if user is not None:
             expiring = expiring.filter(user=user)
+
+        expired_user_ids = list(expiring.values_list('user_id', flat=True).distinct())
         expiring.update(active=False)
+
+        # Revert expired users to their default status
+        for uid in expired_user_ids:
+            cls._revert_to_default(uid)
 
         due = cls.objects.filter(active=False, scheduled_for__isnull=False, scheduled_for__lte=now)
         if user is not None:
@@ -41,6 +48,37 @@ class BroadcastMessage(models.Model):
             if latest_due:
                 cls.objects.filter(user_id=user_id, active=True).update(active=False)
                 latest_due.activate_now()
+
+        # Run scheduler services (recurring schedules + calendar events)
+        try:
+            from scheduler.services import process_recurring_schedules, process_calendar_events
+            process_recurring_schedules(user=user)
+            process_calendar_events(user=user)
+        except ImportError:
+            pass
+
+    @classmethod
+    def _revert_to_default(cls, user_id):
+        """When a timed message expires, activate the user's default status if set."""
+        try:
+            from dashboard.models import UserDetails
+            from authApp.models import CustomUser
+            u = CustomUser.objects.get(pk=user_id)
+            details = u.details
+            default_text = (details.default_status or '').strip()
+            if not default_text:
+                return
+            already_active = cls.objects.filter(user_id=user_id, active=True).exists()
+            if already_active:
+                return
+            cls.objects.create(
+                user=u,
+                message=default_text,
+                active=True,
+                duration_minutes=None,
+            )
+        except Exception:
+            pass
 
     def _set_active_window(self):
         if self.duration_minutes:

@@ -65,6 +65,9 @@ def get_user_broadcast(request, user_slug):
             user=user_details.user,
             active=True
         ).first()
+
+        # NOTE: Page tracking is handled by the client-side trackPageVisit()
+        # call, NOT here. Doing both would double-count views.
         
         # Build response with user details and active message
         response_data = {
@@ -78,6 +81,7 @@ def get_user_broadcast(request, user_slug):
             'bio': user_details.bio or '',
             'profile_image': user_details.profile_image.url if user_details.profile_image else None,
             'active_message': active_message.message if active_message else None,
+            'is_available': user_details.is_available,
             'slug': user_details.slug
         }
         
@@ -93,3 +97,24 @@ def get_user_broadcast(request, user_slug):
             'error': 'Server error',
             'message': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def _track_page_view(broadcaster_user, request):
+    """Increment the daily page-view counter for analytics."""
+    try:
+        from django.db.models import F
+        from django.utils import timezone as tz
+        from scheduler.models import PageView
+
+        today = tz.now().date()
+        source = request.query_params.get('source', 'page')
+        pv, _ = PageView.objects.get_or_create(
+            broadcaster=broadcaster_user,
+            date=today,
+        )
+        if source == 'qr':
+            PageView.objects.filter(pk=pv.pk).update(qr_scan_count=F('qr_scan_count') + 1)
+        else:
+            PageView.objects.filter(pk=pv.pk).update(view_count=F('view_count') + 1)
+    except Exception:
+        pass

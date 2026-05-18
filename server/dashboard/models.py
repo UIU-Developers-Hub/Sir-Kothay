@@ -24,6 +24,14 @@ class UserDetails(models.Model):
     bio = models.TextField()
     designation = models.CharField(max_length=150)
     organization = models.CharField(max_length=150)
+    default_status = models.TextField(
+        blank=True, default='',
+        help_text='Fallback broadcast message activated when a timed status expires.',
+    )
+    is_available = models.BooleanField(
+        default=False,
+        help_text='Whether the broadcaster is currently available. Toggling to True notifies subscribers.',
+    )
     _slug = models.SlugField(max_length=100, unique=True, blank=True, null=True)
 
     @property
