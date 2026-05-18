@@ -14,14 +14,14 @@ from dashboard.models import UserDetails
 from .models import CalendarEvent, RecurringSchedule
 
 
-def _activate_broadcast_for_user(user, message_text, duration_minutes=None):
+def _activate_broadcast_for_user(user, message_text, duration_seconds=None):
     """Create-and-activate a broadcast message for *user* with the given text."""
     BroadcastMessage.objects.filter(user=user, active=True).update(active=False)
     msg = BroadcastMessage.objects.create(
         user=user,
         message=message_text,
         active=True,
-        duration_minutes=duration_minutes,
+        duration_seconds=duration_seconds,
     )
     return msg
 
@@ -42,7 +42,7 @@ def _revert_to_default_status(user):
         user=user,
         message=default_text,
         active=True,
-        duration_minutes=None,
+        duration_seconds=None,
     )
 
 
@@ -84,7 +84,7 @@ def process_recurring_schedules(user=None):
                 continue
 
         _activate_broadcast_for_user(
-            sched.user, sched.message, sched.duration_minutes,
+            sched.user, sched.message, sched.duration_seconds,
         )
         # Also set availability if configured
         if sched.set_availability:
@@ -99,7 +99,7 @@ def process_calendar_events(user=None):
     """Activate broadcast messages for calendar events currently in progress."""
     now = timezone.now()
 
-    qs = CalendarEvent.objects.exclude(broadcast_message='').filter(
+    qs = CalendarEvent.objects.exclude(title='').filter(
         start_time__lte=now,
         end_time__gt=now,
     )
@@ -108,14 +108,13 @@ def process_calendar_events(user=None):
 
     for event in qs:
         active = BroadcastMessage.objects.filter(
-            user=event.user, active=True, message=event.broadcast_message,
+            user=event.user, active=True, message=event.title,
         ).first()
         if active:
             continue
         remaining_seconds = (event.end_time - now).total_seconds()
-        remaining_minutes = max(1, int(remaining_seconds / 60))
         _activate_broadcast_for_user(
-            event.user, event.broadcast_message, remaining_minutes,
+            event.user, event.title, remaining_seconds,
         )
         # Also set availability if configured
         if event.set_availability:

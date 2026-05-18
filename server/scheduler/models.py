@@ -22,7 +22,7 @@ class RecurringSchedule(models.Model):
     message = models.TextField()
     day_of_week = models.IntegerField(choices=DAY_CHOICES)
     time_of_day = models.TimeField()
-    duration_minutes = models.PositiveIntegerField(
+    duration_seconds = models.PositiveIntegerField(
         blank=True, null=True,
         help_text='How long the status stays active. Null = until next change.',
     )
@@ -58,10 +58,7 @@ class CalendarEvent(models.Model):
     description = models.TextField(blank=True, default='')
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    broadcast_message = models.TextField(
-        blank=True, default='',
-        help_text='If set, this text becomes the active broadcast status during this event.',
-    )
+
     color = models.CharField(max_length=7, default='#f68b1f')
     set_availability = models.CharField(
         max_length=10, blank=True, default='',

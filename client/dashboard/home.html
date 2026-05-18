@@ -71,7 +71,11 @@
             <div class="flex items-center gap-2 mt-2 flex-wrap justify-center lg:justify-start">
               <span class="text-xs text-gray-500">Fallback Status:</span>
               <input id="defaultStatusInput" type="text" placeholder="e.g. Away from desk" class="border rounded px-2 py-1 text-xs w-48" />
-              <button onclick="saveDefaultStatus()" class="bg-orange-500 text-white text-xs px-3 py-1 rounded hover:bg-orange-600">Save</button>
+              <select id="defaultAvailInput" class="border rounded px-2 py-1 text-xs">
+                <option value="false">Unavailable</option>
+                <option value="true">Available</option>
+              </select>
+              <button onclick="saveDefaultSettings()" class="bg-orange-500 text-white text-xs px-3 py-1 rounded hover:bg-orange-600">Save</button>
             </div>
           </div>
           <div class="flex flex-col items-center space-y-4">
@@ -80,6 +84,7 @@
             </div>
             <div class="flex flex-wrap gap-2 justify-center">
               <button id="qrActionBtn" onclick="handleQRAction()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 shadow-md transition-all">Generate</button>
+              <button id="qrRegenerateBtn" onclick="confirmRegenerateQR()" class="hidden bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 border border-gray-200 shadow-sm transition-all flex items-center gap-1.5" title="Regenerate QR Code"><i class="bi bi-arrow-clockwise"></i> Regenerate</button>
               <button id="broadcastBtn" onclick="viewBroadcastPage()" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 shadow-md transition-all">Broadcast</button>
               <button onclick="openModal('addMessageModal')" class="sm:hidden bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-purple-700 shadow-md transition-all">Add Message</button>
             </div>
@@ -103,7 +108,7 @@
       <section id="tab-messages" class="tab-content max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-2 relative">
         <div class="flex justify-between items-center mb-4">
           <div><h2 class="text-lg font-bold text-gray-800">Live Broadcast Status</h2><p class="text-xs text-gray-400">Your current status is visible on your broadcast page and QR code.</p></div>
-          <button onclick="openModal('addMessageModal')" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-lg text-sm hover:from-orange-600 hover:to-orange-700 shadow-sm"><i class="bi bi-plus-lg mr-1"></i>New Status</button>
+          <button onclick="openNewMessageModal()" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-lg text-sm hover:from-orange-600 hover:to-orange-700 shadow-sm"><i class="bi bi-plus-lg mr-1"></i>New Status</button>
         </div>
         <div id="messagesList"><p class="text-gray-500 text-center py-8">Loading...</p></div>
       </section>
@@ -112,7 +117,7 @@
       <section id="tab-templates" class="tab-content hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-2">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold text-gray-800">Quick Status Templates</h2>
-          <button onclick="openModal('addTemplateModal')" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700">+ New Template</button>
+          <button onclick="openNewTemplateModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700">+ New Template</button>
         </div>
         <div id="templatesList" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
       </section>
@@ -121,7 +126,7 @@
       <section id="tab-schedules" class="tab-content hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-2">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold text-gray-800">Recurring Schedules</h2>
-          <button onclick="openModal('addScheduleModal')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">+ New Schedule</button>
+          <button onclick="openNewScheduleModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">+ New Schedule</button>
         </div>
         <div id="schedulesList"></div>
       </section>
@@ -134,7 +139,7 @@
             <h2 id="calMonthLabel" class="text-xl font-bold text-gray-800">May 2026</h2>
             <button onclick="calNavMonth(1)" class="p-1 hover:bg-gray-100 rounded"><i class="bi bi-chevron-right"></i></button>
           </div>
-          <button onclick="openModal('addEventModal')" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-700">+ New Event</button>
+          <button onclick="openNewEventModal()" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-700">+ New Event</button>
         </div>
         <div id="calendarGrid" class="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden"></div>
         <div class="mt-3 flex items-center gap-4 text-xs text-gray-400">
@@ -166,10 +171,11 @@
     </div>
 
     <!-- MODALS -->
-    <!-- Add Message Modal -->
-    <div id="addMessageModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
+    <!-- Message Modal (Create & Edit) -->
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
       <div class="bg-white p-6 rounded-2xl shadow-xl w-11/12 sm:w-[420px]">
-        <h2 class="text-lg font-bold mb-1">Set Broadcast Status</h2>
+        <h2 id="messageModalTitle" class="text-lg font-bold mb-1">Set Broadcast Status</h2>
+        <input type="hidden" id="messageId" value="">
         <p class="text-xs text-gray-400 mb-3">This is what visitors see on your page and QR code.</p>
         <!-- Template Quick Picks (interconnection!) -->
         <div id="templateQuickPicks" class="mb-3"></div>
@@ -181,12 +187,15 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 mb-1"><i class="bi bi-hourglass-split mr-0.5"></i>Auto-expire after</label>
-            <select id="newMessageDuration" class="w-full border border-gray-200 p-2 rounded-lg text-sm">
-              <option value="">Never (manual)</option>
-              <option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option>
-              <option value="60">1 hour</option><option value="120">2 hours</option><option value="360">6 hours</option>
-              <option value="720">12 hours</option><option value="1440">24 hours</option>
-            </select>
+            <div class="flex gap-2">
+              <input type="number" id="newMessageDuration" placeholder="Time (blank = never)" class="w-2/3 border border-gray-200 p-2 rounded-lg text-sm" min="1" />
+              <select id="newMessageDurationUnit" class="w-1/3 border border-gray-200 p-2 rounded-lg text-sm">
+                <option value="1">Secs</option>
+                <option value="60" selected>Min</option>
+                <option value="3600">Hrs</option>
+                <option value="86400">Days</option>
+              </select>
+            </div>
           </div>
         </div>
         <p class="text-[10px] text-gray-400 mb-3"><i class="bi bi-info-circle mr-0.5"></i>When a timed status expires, your <strong>default status</strong> will be restored automatically.</p>
@@ -199,32 +208,13 @@
           </select>
         </div>
         <div class="flex gap-2 justify-end">
-          <button type="button" onclick="closeModal('addMessageModal')" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm">Cancel</button>
-          <button type="button" onclick="submitNewMessage()" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-2 rounded-lg hover:from-orange-600 hover:to-orange-700 text-sm shadow-sm"><i class="bi bi-broadcast mr-1"></i>Go Live</button>
+          <button type="button" onclick="closeModal('messageModal')" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm">Cancel</button>
+          <button type="button" id="btnSaveOnly" onclick="submitMessage(false)" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 text-sm shadow-sm border border-gray-200"><i class="bi bi-save mr-1"></i>Save</button>
+          <button type="button" id="btnSaveAndGoLive" onclick="submitMessage(true)" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-2 rounded-lg hover:from-orange-600 hover:to-orange-700 text-sm shadow-sm"><i class="bi bi-broadcast mr-1"></i>Save & Go Live</button>
         </div>
       </div>
     </div>
-    <!-- Edit Message Modal -->
-    <div id="editMessageModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-        <h2 class="text-xl font-semibold mb-4">Edit Message</h2>
-        <textarea id="editMessageTextarea" placeholder="Type your message here..." class="w-full border p-2 rounded mb-3"></textarea>
-        <label for="editMessageSchedule" class="block text-sm text-gray-600 mb-1">Optional schedule time</label>
-        <input id="editMessageSchedule" type="datetime-local" class="w-full border p-2 rounded mb-3" />
-        <label for="editMessageDuration" class="block text-sm text-gray-600 mb-1">Active duration</label>
-        <select id="editMessageDuration" class="w-full border p-2 rounded mb-3">
-          <option value="">Until I change</option>
-          <option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option>
-          <option value="60">1 hour</option><option value="120">2 hours</option><option value="360">6 hours</option>
-          <option value="720">12 hours</option><option value="1440">24 hours</option>
-        </select>
-        <input type="hidden" id="editMessageId">
-        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 justify-end">
-          <button type="button" onclick="closeModal('editMessageModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-          <button type="button" onclick="submitEditMessage()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
-        </div>
-      </div>
-    </div>
+
     <!-- Download Modal -->
     <div id="downloadModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
       <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
@@ -236,10 +226,11 @@
         <div class="flex justify-end mt-4"><button type="button" onclick="closeModal('downloadModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button></div>
       </div>
     </div>
-    <!-- Add Template Modal -->
+    <!-- Add/Edit Template Modal -->
     <div id="addTemplateModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
       <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-        <h2 class="text-xl font-semibold mb-4">New Quick Status</h2>
+        <h2 id="templateModalTitle" class="text-xl font-semibold mb-4">New Quick Status</h2>
+        <input type="hidden" id="tplId">
         <input id="tplLabel" type="text" placeholder="Label (e.g. In a Meeting)" class="w-full border p-2 rounded mb-3" />
         <textarea id="tplMessage" placeholder="Broadcast message text..." class="w-full border p-2 rounded mb-3"></textarea>
         <label class="block text-xs text-gray-500 mb-1"><i class="bi bi-circle-fill mr-0.5" style="font-size:8px"></i>When activated, set availability to:</label>
@@ -250,23 +241,30 @@
         </select>
         <div class="flex justify-end gap-2">
           <button onclick="closeModal('addTemplateModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-          <button onclick="submitTemplate()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Create</button>
+          <button id="templateModalSubmit" onclick="submitTemplate()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Save</button>
         </div>
       </div>
     </div>
-    <!-- Add Schedule Modal -->
+    <!-- Add/Edit Schedule Modal -->
     <div id="addScheduleModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
       <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-        <h2 class="text-xl font-semibold mb-4">New Recurring Schedule</h2>
+        <h2 id="scheduleModalTitle" class="text-xl font-semibold mb-4">New Recurring Schedule</h2>
+        <input type="hidden" id="schedId">
         <select id="schedDay" class="w-full border p-2 rounded mb-3">
           <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
           <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
         </select>
         <input id="schedTime" type="time" class="w-full border p-2 rounded mb-3" />
         <textarea id="schedMessage" placeholder="Broadcast message..." class="w-full border p-2 rounded mb-3"></textarea>
-        <select id="schedDuration" class="w-full border p-2 rounded mb-3">
-          <option value="">Until next change</option><option value="30">30 min</option><option value="60">1 hour</option><option value="120">2 hours</option>
-        </select>
+        <div class="flex gap-2 mb-3">
+          <input type="number" id="schedDuration" placeholder="Duration (blank = never)" class="w-2/3 border p-2 rounded" min="1" />
+          <select id="schedDurationUnit" class="w-1/3 border p-2 rounded">
+            <option value="1">Secs</option>
+            <option value="60" selected>Min</option>
+            <option value="3600">Hrs</option>
+            <option value="86400">Days</option>
+          </select>
+        </div>
         <label class="block text-xs text-gray-500 mb-1"><i class="bi bi-circle-fill mr-0.5" style="font-size:8px"></i>When triggered, set availability to:</label>
         <select id="schedAvail" class="w-full border p-2 rounded mb-3">
           <option value="">Don't change</option>
@@ -275,20 +273,20 @@
         </select>
         <div class="flex justify-end gap-2">
           <button onclick="closeModal('addScheduleModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-          <button onclick="submitSchedule()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Create</button>
+          <button id="scheduleModalSubmit" onclick="submitSchedule()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Save</button>
         </div>
       </div>
     </div>
-    <!-- Add Event Modal -->
+    <!-- Add/Edit Event Modal -->
     <div id="addEventModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
       <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-        <h2 class="text-xl font-semibold mb-4">New Calendar Event</h2>
-        <input id="evtTitle" type="text" placeholder="Event title" class="w-full border p-2 rounded mb-3" />
+        <h2 id="eventModalTitle" class="text-xl font-semibold mb-4">New Scheduled Broadcast</h2>
+        <input type="hidden" id="evtId">
+        <input id="evtTitle" type="text" placeholder="Broadcast message (e.g. In a meeting)" class="w-full border p-2 rounded mb-3" />
         <label class="block text-sm text-gray-600 mb-1">Start</label>
         <input id="evtStart" type="datetime-local" class="w-full border p-2 rounded mb-3" />
         <label class="block text-sm text-gray-600 mb-1">End</label>
         <input id="evtEnd" type="datetime-local" class="w-full border p-2 rounded mb-3" />
-        <input id="evtBroadcast" type="text" placeholder="Auto-set broadcast status (optional)" class="w-full border p-2 rounded mb-3" />
         <input id="evtColor" type="color" value="#f68b1f" class="w-full h-10 border rounded mb-3" />
         <label class="block text-xs text-gray-500 mb-1"><i class="bi bi-circle-fill mr-0.5" style="font-size:8px"></i>During event, set availability to:</label>
         <select id="evtAvail" class="w-full border p-2 rounded mb-3">
@@ -296,9 +294,12 @@
           <option value="true">Available</option>
           <option value="false">Unavailable</option>
         </select>
-        <div class="flex justify-end gap-2">
-          <button onclick="closeModal('addEventModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-          <button onclick="submitEvent()" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">Create</button>
+        <div class="flex justify-between items-center mt-2">
+          <button id="eventModalDelete" type="button" onclick="deleteEvent()" class="text-red-500 hover:text-red-700 text-sm hidden"><i class="bi bi-trash mr-1"></i>Delete</button>
+          <div class="flex gap-2 justify-end flex-1">
+            <button onclick="closeModal('addEventModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+            <button id="eventModalSubmit" onclick="submitEvent()" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">Save</button>
+          </div>
         </div>
       </div>
     </div>
@@ -354,10 +355,10 @@
 
 <script src="../static/js/api-config.js"></script>
 <script src="../static/js/notify-modal.js"></script>
-<script src="../static/js/dashboard-core.js"></script>
-<script src="../static/js/dashboard-templates.js"></script>
-<script src="../static/js/dashboard-schedules.js"></script>
-<script src="../static/js/dashboard-calendar.js"></script>
+<script src="../static/js/dashboard-core.js?v=8"></script>
+<script src="../static/js/dashboard-templates.js?v=4"></script>
+<script src="../static/js/dashboard-schedules.js?v=4"></script>
+<script src="../static/js/dashboard-calendar.js?v=4"></script>
 <script src="../static/js/dashboard-inbox.js"></script>
 <script src="../static/js/dashboard-analytics.js"></script>
 </body>

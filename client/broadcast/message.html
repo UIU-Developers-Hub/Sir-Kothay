@@ -424,18 +424,16 @@
                   API_BASE_URL + data.profile_image;
               }
 
-              // Show broadcast message if exists
-              if (data.active_message) {
-                document.getElementById("broadcastMessage").textContent =
-                  data.active_message;
-                document
-                  .getElementById("broadcastSection")
-                  .classList.remove("hidden");
+              // Show broadcast message or default status if exists
+              const displayMsg = data.active_message || data.default_status;
+              if (displayMsg) {
+                document.getElementById("broadcastMessage").textContent = displayMsg;
+                document.getElementById("broadcastSection").classList.remove("hidden");
                 focusBroadcastMessage();
               }
 
               // Update availability badge
-              updateAvailBadge(data.is_available, data.active_message);
+              updateAvailBadge(data.is_available, displayMsg);
 
               // Track this page view for analytics
               trackPageVisit();

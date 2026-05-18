@@ -60,7 +60,10 @@ async function loadDashboard() {
       document.getElementById('userPhone').textContent = data.phone_number || '';
       document.getElementById('userOrg').textContent = data.organization || 'N/A';
       if (data.profile_image) document.getElementById('userImage').src = API_BASE_URL + data.profile_image;
-      if (data.default_status) document.getElementById('defaultStatusInput').value = data.default_status;
+      var statusEl = document.getElementById('defaultStatusInput');
+      if (statusEl && data.default_status !== undefined) statusEl.value = data.default_status;
+      var availEl = document.getElementById('defaultAvailInput');
+      if (availEl && data.default_availability !== undefined && data.default_availability !== null) availEl.value = data.default_availability.toString();
       userSlug = data.slug;
       updateAvailabilityUI(data.is_available);
       document.getElementById('loadingState').classList.add('hidden');
@@ -76,15 +79,18 @@ async function loadDashboard() {
   }
 }
 
-async function saveDefaultStatus() {
-  var val = document.getElementById('defaultStatusInput').value.trim();
+async function saveDefaultSettings() {
+  var statusEl = document.getElementById('defaultStatusInput');
+  var availEl = document.getElementById('defaultAvailInput');
+  var statusVal = statusEl ? statusEl.value.trim() : '';
+  var availVal = availEl ? (availEl.value === 'true') : false;
   try {
     var res = await apiRequest(API_ENDPOINTS.UPDATE_USER_DETAILS, {
-      method: 'PATCH', body: JSON.stringify({ default_status: val })
+      method: 'PATCH', body: JSON.stringify({ default_status: statusVal, default_availability: availVal })
     });
-    if (res.ok) await skNotify('Fallback status saved! This message appears when a timed status expires.', { variant: 'success', title: 'Fallback Status' });
-    else await skNotify('Failed to save', { variant: 'error', title: 'Settings' });
-  } catch (e) { await skNotify('Error saving default status', { variant: 'error', title: 'Settings' }); }
+    if (res.ok) await skNotify('Fallback settings saved! These take effect when a timed status expires.', { variant: 'success', title: 'Settings' });
+    else await skNotify('Failed to save settings', { variant: 'error', title: 'Settings' });
+  } catch (e) { await skNotify('Error saving settings', { variant: 'error', title: 'Settings' }); }
 }
 
 // --- Availability Toggle ---
@@ -170,12 +176,18 @@ async function loadQRCode() {
       document.getElementById('qrCode').src = qrCodeUrl;
       document.getElementById('qrActionBtn').textContent = 'Download';
       document.getElementById('qrActionBtn').onclick = function () { openModal('downloadModal'); };
+      var regenBtn = document.getElementById('qrRegenerateBtn');
+      if (regenBtn) regenBtn.classList.remove('hidden');
     }
   } catch (e) { console.log('No QR code found'); }
 }
 async function handleQRAction() {
   if (document.getElementById('qrActionBtn').textContent === 'Download') openModal('downloadModal');
   else await generateQRCode();
+}
+async function confirmRegenerateQR() {
+  var ok = await skConfirm('Are you sure you want to regenerate your QR code? Any old QR codes you printed or shared will stop working immediately.', { title: 'Regenerate QR Code', confirmText: 'Regenerate', danger: true });
+  if (ok) await generateQRCode();
 }
 async function generateQRCode() {
   var btn = document.getElementById('qrActionBtn');
@@ -242,14 +254,14 @@ async function loadMessages() {
     var el = document.getElementById('messagesList');
     if (data && data.length > 0) {
       el.innerHTML = data.map(function (msg) {
-        var durLabel = msg.duration_minutes ? (msg.duration_minutes < 60 ? msg.duration_minutes + ' min' : (msg.duration_minutes / 60) + 'h') : '∞';
+        var durLabel = msg.duration_seconds ? (msg.duration_seconds < 60 ? msg.duration_seconds + ' s' : (msg.duration_seconds < 3600 ? (msg.duration_seconds / 60) + ' min' : (msg.duration_seconds / 3600) + ' h')) : '∞';
         return '<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-2 hover:shadow-md transition-shadow">' +
           '<div class="flex-1 min-w-0"><p class="text-gray-800 font-medium text-sm leading-relaxed">' + escapeHtml(msg.message) + '</p>' +
           '<div class="flex flex-wrap items-center gap-2 mt-2">' + renderStatusBadge(msg) +
           '<span class="text-xs text-gray-400"><i class="bi bi-hourglass-split mr-0.5"></i>' + durLabel + '</span></div></div>' +
           '<div class="flex gap-1.5 flex-shrink-0">' +
-          '<button onclick="toggleMsg(' + msg.id + ')" class="text-xs px-3 py-1.5 rounded-lg border transition ' + (msg.active ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50') + '">' + (msg.active ? '<i class="bi bi-pause-fill"></i> Stop' : '<i class="bi bi-play-fill"></i> Go Live') + '</button>' +
-          '<button onclick="openEditModal(' + msg.id + ',\'' + escapeHtml(msg.message).replace(/'/g, "\\'") + '\',' + (msg.scheduled_for ? "'" + msg.scheduled_for + "'" : 'null') + ',' + (msg.duration_minutes || 'null') + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"><i class="bi bi-pencil"></i></button>' +
+          '<button onclick="toggleMsg(' + msg.id + ',' + msg.active + ')" class="text-xs px-3 py-1.5 rounded-lg border transition ' + (msg.active ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50') + '">' + (msg.active ? '<i class="bi bi-pause-fill"></i> Stop' : '<i class="bi bi-play-fill"></i> Go Live') + '</button>' +
+          '<button onclick="openEditModal(' + msg.id + ',\'' + escapeHtml(msg.message).replace(/'/g, "\\'") + '\',' + (msg.scheduled_for ? "'" + msg.scheduled_for + "'" : 'null') + ',' + (msg.duration_seconds || 'null') + ',\'' + (msg.set_availability || '') + '\')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"><i class="bi bi-pencil"></i></button>' +
           '<button onclick="confirmDeleteMsg(' + msg.id + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500"><i class="bi bi-trash"></i></button>' +
           '</div></div>';
       }).join('');
@@ -257,52 +269,105 @@ async function loadMessages() {
       el.innerHTML = '<div class="text-center py-12"><div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-broadcast text-2xl text-orange-500"></i></div>' +
         '<h3 class="text-gray-700 font-semibold mb-1">No broadcast status yet</h3>' +
         '<p class="text-gray-400 text-sm mb-4">Create your first status to let people know where you are.</p>' +
-        '<button onclick="openModal(\'addMessageModal\')" class="bg-orange-500 text-white px-5 py-2 rounded-lg text-sm hover:bg-orange-600 transition">Create Your First Status</button></div>';
+        '<button onclick="openNewMessageModal()" class="bg-orange-500 text-white px-5 py-2 rounded-lg text-sm hover:bg-orange-600 transition">Create Your First Status</button></div>';
     }
   } catch (e) { document.getElementById('messagesList').innerHTML = '<p class="text-red-500 text-center py-8">Failed to load messages</p>'; }
 }
 
-async function submitNewMessage() {
+function openNewMessageModal() {
+  document.getElementById('messageModalTitle').textContent = 'Set Broadcast Status';
+  document.getElementById('messageId').value = '';
+  document.getElementById('newMessageText').value = '';
+  document.getElementById('newMessageSchedule').value = '';
+  document.getElementById('newMessageDuration').value = '';
+  document.getElementById('newMessageDurationUnit').value = '60';
+  document.getElementById('newMessageAvail').value = '';
+  openModal('messageModal');
+}
+
+function openEditModal(id, message, scheduledFor, durationSeconds, setAvailability) {
+  document.getElementById('messageModalTitle').textContent = 'Edit Broadcast Status';
+  document.getElementById('messageId').value = id;
+  document.getElementById('newMessageText').value = message;
+  document.getElementById('newMessageSchedule').value = toLocalDateTimeInput(scheduledFor);
+  if (durationSeconds) {
+    if (durationSeconds % 86400 === 0) {
+      document.getElementById('newMessageDuration').value = durationSeconds / 86400;
+      document.getElementById('newMessageDurationUnit').value = '86400';
+    } else if (durationSeconds % 3600 === 0) {
+      document.getElementById('newMessageDuration').value = durationSeconds / 3600;
+      document.getElementById('newMessageDurationUnit').value = '3600';
+    } else if (durationSeconds % 60 === 0) {
+      document.getElementById('newMessageDuration').value = durationSeconds / 60;
+      document.getElementById('newMessageDurationUnit').value = '60';
+    } else {
+      document.getElementById('newMessageDuration').value = durationSeconds;
+      document.getElementById('newMessageDurationUnit').value = '1';
+    }
+  } else {
+    document.getElementById('newMessageDuration').value = '';
+    document.getElementById('newMessageDurationUnit').value = '60';
+  }
+  document.getElementById('newMessageAvail').value = setAvailability || '';
+  openModal('messageModal');
+}
+
+async function submitMessage(forceGoLive) {
+  var id = document.getElementById('messageId').value;
   var txt = document.getElementById('newMessageText').value, sched = document.getElementById('newMessageSchedule').value, dur = document.getElementById('newMessageDuration').value;
   var availChoice = document.getElementById('newMessageAvail').value;
   if (!txt || !txt.trim()) { await skNotify('Please enter a message', { variant: 'info', title: 'Broadcast' }); return; }
+  
   try {
-    var res = await apiRequest(API_BASE_URL + '/api/broadcast/messages/', { method: 'POST', body: JSON.stringify({ message: txt.trim(), active: !sched, scheduled_for: toApiDateTime(sched), duration_minutes: dur ? parseInt(dur) : null }) });
+    var payload = { 
+      message: txt.trim(), 
+      active: forceGoLive, 
+      scheduled_for: toApiDateTime(sched), 
+      duration_seconds: dur ? parseInt(dur) * parseInt(document.getElementById('newMessageDurationUnit').value) : null,
+      set_availability: availChoice 
+    };
+    var url = API_BASE_URL + '/api/broadcast/messages/';
+    var method = 'POST';
+    
+    if (id) {
+      url += id + '/';
+      method = 'PATCH';
+    }
+    
+    var res = await apiRequest(url, { method: method, body: JSON.stringify(payload) });
     if (res.ok) {
-      // Also set availability if chosen
-      if (availChoice) await setAvailability(availChoice === 'true');
-      document.getElementById('newMessageText').value = ''; document.getElementById('newMessageSchedule').value = ''; document.getElementById('newMessageDuration').value = ''; document.getElementById('newMessageAvail').value = '';
-      closeModal('addMessageModal'); await skNotify(sched ? 'Status scheduled!' : 'Status is now live!', { variant: 'success', title: 'Broadcast' }); loadMessages();
+      // Note: Backend now automatically updates availability when the message goes live!
+      closeModal('messageModal'); 
+      await skNotify(id ? 'Status saved!' : (sched ? 'Status scheduled!' : 'Status is now live!'), { variant: 'success', title: 'Broadcast' }); 
+      loadMessages();
+      if (forceGoLive) loadDashboard(); // Refresh the availability toggle button in sidebar just in case it activated immediately
     }
     else { var d = await res.json(); await skNotify(Object.values(d).flat().join(', ') || 'Failed', { variant: 'error', title: 'Broadcast' }); }
-  } catch (e) { await skNotify('Failed to add status', { variant: 'error', title: 'Broadcast' }); }
+  } catch (e) { await skNotify('Failed to save status', { variant: 'error', title: 'Broadcast' }); }
 }
 
-function openEditModal(id, message, scheduledFor, durationMinutes) {
-  document.getElementById('editMessageId').value = id;
-  document.getElementById('editMessageTextarea').value = message;
-  document.getElementById('editMessageSchedule').value = toLocalDateTimeInput(scheduledFor);
-  document.getElementById('editMessageDuration').value = durationMinutes || '';
-  openModal('editMessageModal');
-}
-
-async function submitEditMessage() {
-  var id = document.getElementById('editMessageId').value, txt = document.getElementById('editMessageTextarea').value;
-  var sched = document.getElementById('editMessageSchedule').value, dur = document.getElementById('editMessageDuration').value;
-  if (!txt || !txt.trim()) { await skNotify('Please enter a message', { variant: 'info', title: 'Broadcast' }); return; }
+async function toggleMsg(id, isCurrentlyActive) {
   try {
-    var res = await apiRequest(API_BASE_URL + '/api/broadcast/messages/' + id + '/', { method: 'PATCH', body: JSON.stringify({ message: txt.trim(), active: !sched, scheduled_for: toApiDateTime(sched), duration_minutes: dur ? parseInt(dur) : null }) });
-    if (res.ok) { closeModal('editMessageModal'); await skNotify('Status updated!', { variant: 'success', title: 'Broadcast' }); loadMessages(); }
-    else { var d = await res.json(); await skNotify(Object.values(d).flat().join(', ') || 'Failed', { variant: 'error', title: 'Broadcast' }); }
-  } catch (e) { await skNotify('Failed to update', { variant: 'error', title: 'Broadcast' }); }
-}
-
-async function toggleMsg(id) {
-  try {
-    var res = await apiRequest(API_BASE_URL + '/api/broadcast/messages/' + id + '/set_active/', { method: 'POST' });
+    var res;
+    if (isCurrentlyActive) {
+      // Deactivate: PATCH active=false
+      res = await apiRequest(API_BASE_URL + '/api/broadcast/messages/' + id + '/', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: false })
+      });
+    } else {
+      // Activate: POST set_active (also deactivates other messages)
+      res = await apiRequest(API_BASE_URL + '/api/broadcast/messages/' + id + '/set_active/', { method: 'POST' });
+    }
     var d = await res.json();
-    if (res.ok) { await skNotify(d.message || 'Updated!', { variant: 'success', title: 'Broadcast' }); loadMessages(); }
-    else await skNotify(d.message || 'Failed', { variant: 'error', title: 'Broadcast' });
+    if (res.ok) {
+      var msg = isCurrentlyActive ? 'Broadcast stopped' : 'Broadcast is now live!';
+      await skNotify(msg, { variant: 'success', title: 'Broadcast' });
+      loadMessages();
+    } else {
+      await skNotify(d.message || 'Failed', { variant: 'error', title: 'Broadcast' });
+    }
   } catch (e) { await skNotify('Failed', { variant: 'error', title: 'Broadcast' }); }
 }
 
@@ -324,5 +389,7 @@ async function loadFooterContributors() {
     if (el) el.innerHTML = data.slice(0, 6).map(function (c) { return '<a href="' + c.html_url + '" target="_blank"><img src="' + c.avatar_url + '" class="h-8 w-8 rounded-full" alt="' + c.login + '"></a>'; }).join('');
   } catch (e) {}
 }
-loadFooterContributors();
-loadDashboard();
+document.addEventListener('DOMContentLoaded', function () {
+  loadFooterContributors();
+  loadDashboard();
+});

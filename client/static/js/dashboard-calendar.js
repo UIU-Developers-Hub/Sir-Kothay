@@ -66,9 +66,8 @@ function renderCalendar() {
     // Show events (max 2)
     for (var ei = 0; ei < Math.min(dayEvents.length, 2); ei++) {
       var ev = dayEvents[ei];
-      var hasBroadcast = ev.broadcast_message ? ' title="Auto-sets status: ' + escapeHtml(ev.broadcast_message) + '"' : '';
-      html += '<div class="text-[10px] px-1.5 py-0.5 rounded mt-0.5 text-white truncate"' + hasBroadcast + ' style="background:' + (ev.color || '#f68b1f') + '">' +
-        (ev.broadcast_message ? '<i class="bi bi-broadcast" style="font-size:8px"></i> ' : '') + escapeHtml(ev.title) + '</div>';
+      html += '<div onclick="openEditEventModal(' + ev.id + '); event.stopPropagation();" class="text-[10px] px-1.5 py-0.5 rounded mt-0.5 text-white truncate cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-teal-400 transition" title="Auto-sets status: ' + escapeHtml(ev.title) + '" style="background:' + (ev.color || '#f68b1f') + '">' +
+        '<i class="bi bi-broadcast" style="font-size:8px"></i> ' + escapeHtml(ev.title) + '</div>';
     }
     // Show recurring schedules (max 1 if space)
     if (dayScheds.length > 0 && dayEvents.length < 2) {
@@ -82,30 +81,78 @@ function renderCalendar() {
   grid.innerHTML = html;
 }
 
+function openNewEventModal() {
+  document.getElementById('eventModalTitle').textContent = 'New Calendar Event';
+  document.getElementById('evtId').value = '';
+  document.getElementById('evtTitle').value = '';
+  document.getElementById('evtStart').value = '';
+  document.getElementById('evtEnd').value = '';
+  document.getElementById('evtColor').value = '#f68b1f';
+  document.getElementById('evtAvail').value = '';
+  document.getElementById('eventModalDelete').classList.add('hidden');
+  openModal('addEventModal');
+}
+
+function openEditEventModal(id) {
+  var ev = calEvents.find(function(e) { return e.id === id; });
+  if (!ev) return;
+  document.getElementById('eventModalTitle').textContent = 'Edit Calendar Event';
+  document.getElementById('evtId').value = ev.id;
+  document.getElementById('evtTitle').value = ev.title;
+  document.getElementById('evtStart').value = toLocalDateTimeInput(ev.start_time);
+  document.getElementById('evtEnd').value = toLocalDateTimeInput(ev.end_time);
+  document.getElementById('evtColor').value = ev.color || '#f68b1f';
+  document.getElementById('evtAvail').value = ev.set_availability || '';
+  document.getElementById('eventModalDelete').classList.remove('hidden');
+  openModal('addEventModal');
+}
+
 async function submitEvent() {
+  var id = document.getElementById('evtId').value;
   var title = document.getElementById('evtTitle').value.trim();
   var startVal = document.getElementById('evtStart').value;
   var endVal = document.getElementById('evtEnd').value;
-  var broadcast = document.getElementById('evtBroadcast').value.trim();
   var color = document.getElementById('evtColor').value;
   var availChoice = document.getElementById('evtAvail').value;
   if (!title || !startVal || !endVal) { await skNotify('Title, start, and end are required', { variant: 'info', title: 'Calendar' }); return; }
   try {
     var payload = {
       title: title, start_time: new Date(startVal).toISOString(), end_time: new Date(endVal).toISOString(),
-      broadcast_message: broadcast, color: color
+      color: color
     };
     if (availChoice) payload.set_availability = availChoice;
-    var res = await apiRequest(API_ENDPOINTS.CALENDAR_LIST, {
-      method: 'POST', body: JSON.stringify(payload)
-    });
+    else payload.set_availability = '';
+    
+    var url = API_ENDPOINTS.CALENDAR_LIST;
+    var method = 'POST';
+    if (id) {
+      url += id + '/';
+      method = 'PATCH';
+    }
+    
+    var res = await apiRequest(url, { method: method, body: JSON.stringify(payload) });
     if (res.ok) {
       document.getElementById('evtTitle').value = ''; document.getElementById('evtStart').value = '';
-      document.getElementById('evtEnd').value = ''; document.getElementById('evtBroadcast').value = ''; document.getElementById('evtAvail').value = '';
+      document.getElementById('evtEnd').value = ''; document.getElementById('evtAvail').value = '';
       closeModal('addEventModal');
-      var msg = broadcast ? 'Event created! Your broadcast status will auto-update during this event.' : 'Event created!';
+      var msg = id ? 'Event updated!' : 'Scheduled broadcast created!';
       await skNotify(msg, { variant: 'success', title: 'Calendar' });
       loadCalendarEvents();
     } else { var d = await res.json(); await skNotify(JSON.stringify(d), { variant: 'error', title: 'Calendar' }); }
-  } catch (e) { await skNotify('Failed to create event', { variant: 'error', title: 'Calendar' }); }
+  } catch (e) { await skNotify('Failed to save event', { variant: 'error', title: 'Calendar' }); }
+}
+
+async function deleteEvent() {
+  var id = document.getElementById('evtId').value;
+  if (!id) return;
+  var ok = await skConfirm('Delete this calendar event?', { title: 'Delete Event', confirmText: 'Delete', danger: true });
+  if (!ok) return;
+  try {
+    var res = await apiRequest(API_ENDPOINTS.CALENDAR_LIST + id + '/', { method: 'DELETE' });
+    if (res.ok) {
+      closeModal('addEventModal');
+      await skNotify('Event deleted!', { variant: 'success', title: 'Calendar' });
+      loadCalendarEvents();
+    }
+  } catch (e) { await skNotify('Failed to delete event', { variant: 'error', title: 'Calendar' }); }
 }

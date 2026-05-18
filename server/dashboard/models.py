@@ -28,6 +28,10 @@ class UserDetails(models.Model):
         blank=True, default='',
         help_text='Fallback broadcast message activated when a timed status expires.',
     )
+    default_availability = models.BooleanField(
+        default=False,
+        help_text='Fallback availability activated when a timed status expires.',
+    )
     is_available = models.BooleanField(
         default=False,
         help_text='Whether the broadcaster is currently available. Toggling to True notifies subscribers.',

@@ -24,21 +24,21 @@ class UserDetailsViewSet(viewsets.ModelViewSet):
     def my_details(self, request):
         """Get current user's details"""
         try:
-            user_details = UserDetails.objects.get(user=request.user)
+            user_details, created = UserDetails.objects.get_or_create(user=request.user)
             serializer = UserDetailsSerializer(user_details)
             return Response(serializer.data)
-        except UserDetails.DoesNotExist:
-            return Response({'error': 'User details not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['put', 'patch'], permission_classes=[IsAuthenticated])
     def update_my_details(self, request):
         """Update current user's details"""
         try:
-            user_details = UserDetails.objects.get(user=request.user)
+            user_details, created = UserDetails.objects.get_or_create(user=request.user)
             serializer = UserDetailsSerializer(user_details, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except UserDetails.DoesNotExist:
-            return Response({'error': 'User details not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

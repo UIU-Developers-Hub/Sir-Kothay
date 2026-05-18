@@ -13,7 +13,7 @@ async function loadTemplates() {
         '<div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-lightning-fill text-2xl text-purple-500"></i></div>' +
         '<h3 class="text-gray-700 font-semibold mb-1">Save time with Quick Templates</h3>' +
         '<p class="text-gray-400 text-sm mb-2">Create reusable status messages you can activate with one click.<br>They also appear as suggestions when adding new broadcast statuses.</p>' +
-        '<button onclick="openModal(\'addTemplateModal\')" class="bg-purple-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-purple-700 transition">Create Your First Template</button></div>';
+        '<button onclick="openNewTemplateModal()" class="bg-purple-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-purple-700 transition">Create Your First Template</button></div>';
       return;
     }
     el.innerHTML = items.map(function (t) {
@@ -25,6 +25,7 @@ async function loadTemplates() {
         '</div>' +
         '<div class="flex gap-1.5">' +
         '<button onclick="activateTemplate(' + t.id + ')" class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs px-2 py-2 rounded-lg hover:from-orange-600 hover:to-orange-700 transition shadow-sm"><i class="bi bi-broadcast mr-1"></i>Go Live</button>' +
+        '<button onclick="openEditTemplateModal(' + t.id + ',\'' + escapeHtml(t.label).replace(/'/g, "\\'") + '\',\'' + escapeHtml(t.message).replace(/'/g, "\\'") + '\',\'' + (t.set_availability || '') + '\')" class="text-gray-400 hover:text-purple-500 px-2 transition opacity-0 group-hover:opacity-100"><i class="bi bi-pencil"></i></button>' +
         '<button onclick="deleteTemplate(' + t.id + ')" class="text-gray-300 hover:text-red-500 px-2 transition opacity-0 group-hover:opacity-100"><i class="bi bi-trash"></i></button>' +
         '</div></div>';
     }).join('');
@@ -35,7 +36,26 @@ async function loadTemplates() {
   }
 }
 
+function openNewTemplateModal() {
+  document.getElementById('templateModalTitle').textContent = 'New Quick Status';
+  document.getElementById('tplId').value = '';
+  document.getElementById('tplLabel').value = '';
+  document.getElementById('tplMessage').value = '';
+  document.getElementById('tplAvail').value = '';
+  openModal('addTemplateModal');
+}
+
+function openEditTemplateModal(id, label, message, avail) {
+  document.getElementById('templateModalTitle').textContent = 'Edit Quick Status';
+  document.getElementById('tplId').value = id;
+  document.getElementById('tplLabel').value = label;
+  document.getElementById('tplMessage').value = message;
+  document.getElementById('tplAvail').value = avail;
+  openModal('addTemplateModal');
+}
+
 async function submitTemplate() {
+  var id = document.getElementById('tplId').value;
   var label = document.getElementById('tplLabel').value.trim();
   var message = document.getElementById('tplMessage').value.trim();
   var availChoice = document.getElementById('tplAvail').value;
@@ -43,16 +63,22 @@ async function submitTemplate() {
   try {
     var payload = { label: label, message: message, icon: 'bi-lightning-fill' };
     if (availChoice) payload.set_availability = availChoice;
-    var res = await apiRequest(API_ENDPOINTS.TEMPLATES_LIST, {
-      method: 'POST', body: JSON.stringify(payload)
-    });
+    else payload.set_availability = '';
+    
+    var url = API_ENDPOINTS.TEMPLATES_LIST;
+    var method = 'POST';
+    if (id) {
+      url += id + '/';
+      method = 'PATCH';
+    }
+    
+    var res = await apiRequest(url, { method: method, body: JSON.stringify(payload) });
     if (res.ok) {
-      document.getElementById('tplLabel').value = ''; document.getElementById('tplMessage').value = ''; document.getElementById('tplAvail').value = '';
       closeModal('addTemplateModal');
-      await skNotify('Template created! It will now appear as a suggestion when adding statuses.', { variant: 'success', title: 'Templates' });
+      await skNotify(id ? 'Template updated!' : 'Template created! It will now appear as a suggestion when adding statuses.', { variant: 'success', title: 'Templates' });
       loadTemplates();
     } else { var d = await res.json(); await skNotify(JSON.stringify(d), { variant: 'error', title: 'Templates' }); }
-  } catch (e) { await skNotify('Failed to create template', { variant: 'error', title: 'Templates' }); }
+  } catch (e) { await skNotify('Failed to save template', { variant: 'error', title: 'Templates' }); }
 }
 
 async function activateTemplate(id) {

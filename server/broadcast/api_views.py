@@ -81,6 +81,7 @@ def get_user_broadcast(request, user_slug):
             'bio': user_details.bio or '',
             'profile_image': user_details.profile_image.url if user_details.profile_image else None,
             'active_message': active_message.message if active_message else None,
+            'default_status': user_details.default_status,
             'is_available': user_details.is_available,
             'slug': user_details.slug
         }

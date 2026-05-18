@@ -10,7 +10,7 @@ class RecurringScheduleSerializer(serializers.ModelSerializer):
         model = RecurringSchedule
         fields = [
             'id', 'message', 'day_of_week', 'day_label', 'time_of_day',
-            'duration_minutes', 'is_active', 'set_availability', 'last_triggered_at',
+            'duration_seconds', 'is_active', 'set_availability', 'last_triggered_at',
         ]
         read_only_fields = ['id', 'last_triggered_at']
 
@@ -24,7 +24,7 @@ class CalendarEventSerializer(serializers.ModelSerializer):
         model = CalendarEvent
         fields = [
             'id', 'title', 'description', 'start_time', 'end_time',
-            'broadcast_message', 'color', 'set_availability', 'all_day', 'recurrence_rule',
+            'color', 'set_availability', 'all_day', 'recurrence_rule',
         ]
         read_only_fields = ['id']
 

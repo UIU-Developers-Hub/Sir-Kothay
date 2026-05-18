@@ -10,8 +10,12 @@ class BroadcastMessage(models.Model):
     message = models.TextField()
     active = models.BooleanField(default=True)
     scheduled_for = models.DateTimeField(blank=True, null=True)
-    duration_minutes = models.PositiveIntegerField(blank=True, null=True)
+    duration_seconds = models.PositiveIntegerField(blank=True, null=True)
     active_until = models.DateTimeField(blank=True, null=True)
+    set_availability = models.CharField(
+        max_length=10, blank=True, default='',
+        help_text='When activated: "true"=Available, "false"=Unavailable, ""=no change.',
+    )
 
     @classmethod
     def activate_due_messages(cls, user=None):
@@ -65,24 +69,32 @@ class BroadcastMessage(models.Model):
             from authApp.models import CustomUser
             u = CustomUser.objects.get(pk=user_id)
             details = u.details
+            # 1. Revert the availability status to the default fallback availability
+            if details.is_available != details.default_availability:
+                details.is_available = details.default_availability
+                details.save(update_fields=['is_available'])
+
+            # 2. Revert the broadcast message to the default fallback status
             default_text = (details.default_status or '').strip()
             if not default_text:
                 return
+
             already_active = cls.objects.filter(user_id=user_id, active=True).exists()
             if already_active:
                 return
+            
             cls.objects.create(
                 user=u,
                 message=default_text,
                 active=True,
-                duration_minutes=None,
+                duration_seconds=None,
             )
         except Exception:
             pass
 
     def _set_active_window(self):
-        if self.duration_minutes:
-            self.active_until = timezone.now() + timedelta(minutes=self.duration_minutes)
+        if self.duration_seconds:
+            self.active_until = timezone.now() + timedelta(seconds=self.duration_seconds)
         else:
             # "Until I change" behavior
             self.active_until = None
@@ -96,6 +108,15 @@ class BroadcastMessage(models.Model):
         if self.active:
             BroadcastMessage.objects.filter(user=self.user, active=True).update(active=False)
             self._set_active_window()
+            # Also apply availability preference if this message is going live
+            if self.set_availability in ['true', 'false']:
+                try:
+                    from dashboard.models import UserDetails
+                    UserDetails.objects.filter(user=self.user).update(
+                        is_available=(self.set_availability == 'true')
+                    )
+                except Exception:
+                    pass
         elif self.active_until is not None:
             self.active_until = None
         super().save(*args, **kwargs)
