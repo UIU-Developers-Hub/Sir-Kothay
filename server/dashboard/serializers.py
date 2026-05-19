@@ -61,4 +61,5 @@ class StudentInterestSerializer(serializers.ModelSerializer):
 class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'student_id', 'is_active', 'date_joined']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'student_id', 'is_active', 'is_staff', 'is_banned', 'date_joined']
+

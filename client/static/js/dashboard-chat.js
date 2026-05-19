@@ -237,7 +237,7 @@ async function _sendDmReply(dmId) {
   input.disabled = true;
   try {
     var res = await apiRequest(API_BASE_URL + '/api/messaging/' + dmId + '/reply/', {
-      method: 'PATCH', body: JSON.stringify({ reply_body: body })
+      method: 'POST', body: JSON.stringify({ reply_body: body })
     });
     if (res.ok) { await loadUnifiedInbox(); openConversation('dm', dmId); }
     else { await skNotify('Failed to send reply', { variant: 'error' }); input.disabled = false; }

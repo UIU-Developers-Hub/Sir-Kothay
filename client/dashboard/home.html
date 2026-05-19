@@ -23,7 +23,7 @@
         <a href="../index.html" class="flex items-center gap-3">
           <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo" />
         </a>
-        <div class="flex items-center gap-6 text-sm font-medium">
+        <div id="desktopNavLinks" class="flex items-center gap-6 text-sm font-medium">
           <a href="home.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Dashboard</a>
           <a href="profile.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Profile</a>
           <a href="#" onclick="logout()" class="text-red-600 hover:text-red-700">Logout</a>
@@ -31,7 +31,7 @@
         </div>
       </div>
       <div class="md:hidden">
-        <div class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
+        <div id="mobileNavLinks" class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
           <a href="home.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50" style="color: #f68b1f;"><i class="bi bi-speedometer2 text-2xl"></i><span class="text-xs font-medium">Dashboard</span></a>
           <a href="profile.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;"><i class="bi bi-person-circle text-2xl"></i><span class="text-xs font-medium">Profile</span></a>
           <a href="#" onclick="logout()" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 transition"><i class="bi bi-box-arrow-right text-2xl"></i><span class="text-xs font-medium">Logout</span></a>
@@ -443,7 +443,7 @@
 <script src="../static/js/api-config.js"></script>
 <script src="../static/js/notify-modal.js"></script>
 <script src="../static/js/sk-modal.js"></script>
-<script src="../static/js/dashboard-core.js?v=8"></script>
+<script src="../static/js/dashboard-core.js?v=9"></script>
 <script src="../static/js/dashboard-templates.js?v=4"></script>
 <script src="../static/js/dashboard-schedules.js?v=4"></script>
 <script src="../static/js/dashboard-calendar.js?v=4"></script>

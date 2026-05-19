@@ -11,25 +11,37 @@
     body { font-family: 'Poppins', sans-serif; }
     .hover-scale { transition: transform 0.2s ease-in-out; }
     .hover-scale:hover { transform: scale(1.02); }
+    .sort-btn { cursor: pointer; user-select: none; }
+    .sort-btn:hover { color: #f68b1f; }
+    .sort-btn .bi { font-size: 0.65rem; margin-left: 2px; opacity: 0.5; }
+    .sort-btn.active .bi { opacity: 1; color: #f68b1f; }
+    /* User detail modal overlay */
+    #userDetailOverlay { transition: opacity 0.2s ease; }
+    #userDetailOverlay.hidden { opacity: 0; pointer-events: none; }
+    #userDetailPanel { transition: transform 0.25s ease; }
   </style>
 </head>
 <body class="bg-gray-100">
 
   <!-- Navbar -->
   <nav class="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto z-50 bg-white/80 backdrop-blur-lg border-t md:border-b border-gray-200/50">
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-6xl mx-auto">
       <div class="hidden md:flex items-center justify-between px-8 py-4">
         <a href="../index.html" class="flex items-center gap-3">
           <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo" />
         </a>
         <div class="flex items-center gap-6 text-sm font-medium">
+          <a id="dashboardLink" href="home.html" class="text-gray-600 hover:text-gray-800 hidden" style="transition: color 0.2s;"><i class="bi bi-speedometer2 mr-1"></i>Dashboard</a>
           <a href="admin.html" class="text-orange-600 font-bold">Admin Panel</a>
+          <a href="profile.html" class="text-gray-600 hover:text-gray-800">Profile</a>
           <a href="#" onclick="logout()" class="text-red-600 hover:text-red-700">Logout</a>
         </div>
       </div>
       <div class="md:hidden">
         <div class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
+          <a id="dashboardLinkMobile" href="home.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-gray-800 transition hidden"><i class="bi bi-speedometer2 text-2xl"></i><span class="text-xs font-medium">Dashboard</span></a>
           <a href="admin.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50" style="color: #f68b1f;"><i class="bi bi-shield-lock-fill text-2xl"></i><span class="text-xs font-medium">Admin</span></a>
+          <a href="profile.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-gray-800 transition"><i class="bi bi-person-fill text-2xl"></i><span class="text-xs font-medium">Profile</span></a>
           <a href="#" onclick="logout()" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 transition"><i class="bi bi-box-arrow-right text-2xl"></i><span class="text-xs font-medium">Logout</span></a>
         </div>
       </div>
@@ -45,34 +57,74 @@
     <div id="mainContent" class="hidden">
       <!-- Admin Header Section -->
       <section class="max-w-6xl mx-auto bg-gradient-to-r from-gray-800 to-gray-900 p-6 rounded-xl shadow-lg border border-gray-700 mb-6 text-white">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 class="text-2xl lg:text-3xl font-bold mb-1"><i class="bi bi-shield-lock mr-2"></i>Admin Dashboard</h1>
-            <p class="text-gray-400 text-sm">Manage system users, roles, and status.</p>
+            <p id="adminGreeting" class="text-gray-400 text-sm">Manage system users, roles, and status.</p>
           </div>
-          <div class="bg-gray-700 p-3 rounded-lg text-center shadow-inner">
-            <p class="text-xs text-gray-400 uppercase tracking-widest">Total Users</p>
-            <p id="totalUsersCount" class="text-3xl font-bold text-orange-400">0</p>
+          <div class="flex gap-3">
+            <div class="bg-gray-700 p-3 rounded-lg text-center shadow-inner min-w-[80px]">
+              <p class="text-xs text-gray-400 uppercase tracking-widest">Total</p>
+              <p id="totalUsersCount" class="text-2xl font-bold text-orange-400">0</p>
+            </div>
+            <div class="bg-gray-700 p-3 rounded-lg text-center shadow-inner min-w-[80px]">
+              <p class="text-xs text-gray-400 uppercase tracking-widest">Faculty</p>
+              <p id="facultyCount" class="text-2xl font-bold text-blue-400">0</p>
+            </div>
+            <div class="bg-gray-700 p-3 rounded-lg text-center shadow-inner min-w-[80px]">
+              <p class="text-xs text-gray-400 uppercase tracking-widest">Students</p>
+              <p id="studentCount" class="text-2xl font-bold text-green-400">0</p>
+            </div>
+            <div class="bg-gray-700 p-3 rounded-lg text-center shadow-inner min-w-[80px]">
+              <p class="text-xs text-gray-400 uppercase tracking-widest">Admins</p>
+              <p id="adminCount" class="text-2xl font-bold text-purple-400">0</p>
+            </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Filters & Search -->
+      <section class="max-w-6xl mx-auto bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-4">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex-1 min-w-[200px]">
+            <div class="relative">
+              <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <input type="text" id="adminSearch" placeholder="Search by name, email, or student ID..." class="w-full border border-gray-300 pl-9 pr-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" oninput="renderAdminUsers()">
+            </div>
+          </div>
+          <select id="filterRole" class="border border-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" onchange="renderAdminUsers()">
+            <option value="">All Roles</option>
+            <option value="FACULTY">Faculty</option>
+            <option value="STUDENT">Student</option>
+            <option value="NONE">None (Admin only)</option>
+          </select>
+          <select id="filterStatus" class="border border-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" onchange="renderAdminUsers()">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="deactivated">Deactivated</option>
+            <option value="banned">Banned</option>
+          </select>
+          <button onclick="resetFilters()" class="text-gray-500 hover:text-orange-600 text-sm font-medium transition px-2 py-2" title="Reset all filters"><i class="bi bi-x-circle mr-1"></i>Reset</button>
         </div>
       </section>
 
       <!-- Users Table Section -->
       <section class="max-w-6xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6 relative">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-bold text-gray-800">User Management</h2>
-          <input type="text" id="adminSearch" placeholder="Search users..." class="border border-gray-300 p-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" onkeyup="renderAdminUsers()">
+          <h2 class="text-lg font-bold text-gray-800"><i class="bi bi-people-fill mr-2 text-orange-500"></i>User Management</h2>
+          <span id="filteredCount" class="text-sm text-gray-500"></span>
         </div>
         
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-gray-50 border-b">
-                <th class="p-3 text-sm font-semibold text-gray-600">ID</th>
-                <th class="p-3 text-sm font-semibold text-gray-600">Name</th>
-                <th class="p-3 text-sm font-semibold text-gray-600">Email</th>
-                <th class="p-3 text-sm font-semibold text-gray-600">Role</th>
-                <th class="p-3 text-sm font-semibold text-gray-600">Status</th>
+                <th class="p-3 text-sm font-semibold text-gray-600 sort-btn" onclick="setSort('id')">ID <i class="bi" id="sortIcon_id"></i></th>
+                <th class="p-3 text-sm font-semibold text-gray-600 sort-btn" onclick="setSort('username')">Name <i class="bi" id="sortIcon_username"></i></th>
+                <th class="p-3 text-sm font-semibold text-gray-600 sort-btn" onclick="setSort('email')">Email <i class="bi" id="sortIcon_email"></i></th>
+                <th class="p-3 text-sm font-semibold text-gray-600 sort-btn" onclick="setSort('role')">Role <i class="bi" id="sortIcon_role"></i></th>
+                <th class="p-3 text-sm font-semibold text-gray-600 sort-btn" onclick="setSort('is_active')">Status <i class="bi" id="sortIcon_is_active"></i></th>
+                <th class="p-3 text-sm font-semibold text-gray-600 sort-btn" onclick="setSort('date_joined')">Joined <i class="bi" id="sortIcon_date_joined"></i></th>
                 <th class="p-3 text-sm font-semibold text-gray-600 text-center">Actions</th>
               </tr>
             </thead>
@@ -80,21 +132,55 @@
               <!-- JS Populates this -->
             </tbody>
           </table>
-          <p id="emptyTableMessage" class="hidden text-center py-8 text-gray-500">No users found.</p>
+          <p id="emptyTableMessage" class="hidden text-center py-8 text-gray-500">No users found matching your filters.</p>
         </div>
       </section>
     </div>
   </div>
   </main>
 
+  <!-- User Detail Slide-Over Panel -->
+  <div id="userDetailOverlay" class="hidden fixed inset-0 z-[100] bg-black/40" onclick="closeUserDetail()">
+    <div id="userDetailPanel" class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+        <h3 class="text-lg font-bold text-gray-800"><i class="bi bi-person-badge mr-2"></i>User Details</h3>
+        <button onclick="closeUserDetail()" class="text-gray-400 hover:text-gray-700 text-xl"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="userDetailBody" class="p-6">
+        <!-- JS fills this -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Role Modal -->
+  <div id="changeRoleModal" class="hidden fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-gray-200">
+      <h3 class="text-lg font-bold text-gray-800 mb-1"><i class="bi bi-arrow-left-right mr-2 text-blue-600"></i>Change Role</h3>
+      <p class="text-sm text-gray-500 mb-4">Select a new role for <strong id="crUserName"></strong></p>
+      <input type="hidden" id="crUserId" />
+      <div id="crRoleOptions" class="space-y-2 mb-4">
+        <!-- JS fills radio options -->
+      </div>
+      <div id="crStudentIdGroup" class="hidden mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Student ID <span class="text-gray-400">(optional)</span></label>
+        <input type="text" id="crStudentId" placeholder="e.g. 0112430141" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <p class="text-xs text-gray-400 mt-1">Leave blank — student will set it on next login.</p>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="closeChangeRoleModal()" class="flex-1 py-2.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
+        <button onclick="confirmChangeRole()" class="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition">Apply</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="py-12 px-6 mt-4 mb-20 md:mb-0 bg-gray-900 text-gray-300">
     <div class="max-w-7xl mx-auto text-center">
-      <p>© 2026 Sir Kothay. Made with ❤️ by UIU Developers Hub</p>
+      <p>&copy; 2026 Sir Kothay. Made with ❤️ by UIU Developers Hub</p>
     </div>
   </footer>
 
 <script src="../static/js/api-config.js"></script>
 <script src="../static/js/notify-modal.js"></script>
-<script src="../static/js/admin-dashboard.js"></script>
+<script src="../static/js/admin-dashboard.js?v=7"></script>
 </body>
 </html>

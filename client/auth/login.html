@@ -151,10 +151,11 @@
         localStorage.setItem('access_token', data.tokens.access);
         localStorage.setItem('refresh_token', data.tokens.refresh);
         
-        // Redirect based on role
+        // Redirect based on role (admin is a privilege, not a role)
         if (data.user && data.user.role === 'STUDENT') {
             window.location.href = '../dashboard/student.html';
-        } else if (data.user && data.user.role === 'ADMIN') {
+        } else if (data.user && !data.user.role && data.user.is_staff) {
+            // Pure admin with no faculty/student role
             window.location.href = '../dashboard/admin.html';
         } else {
             window.location.href = '../dashboard/home.html';

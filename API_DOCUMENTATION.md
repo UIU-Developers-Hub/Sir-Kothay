@@ -25,12 +25,11 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
   "email": "user@example.com",
   "username": "username",
   "password": "password123",
-  "role": "FACULTY",
-  "student_id": null
+  "role": "FACULTY"
 }
 ```
-`role`: `"FACULTY"`, `"STUDENT"`, or `"ADMIN"`.
-`student_id`: required for students (optional for other roles).
+`role`: `"FACULTY"` or `"STUDENT"` (default: `"FACULTY"`).
+`student_id`: optional at registration. Students are prompted to set it on first dashboard visit.
 
 **Response:** `201` — user object + `tokens.access` / `tokens.refresh`
 
@@ -59,10 +58,13 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
   "username": "Dr. Smith",
   "role": "FACULTY",
   "student_id": null,
+  "is_staff": false,
   "is_active": true,
   "date_joined": "2026-05-18T12:00:00Z"
 }
 ```
+`role`: `"FACULTY"`, `"STUDENT"`, or `""` (empty = admin-only, no dashboard role).
+`is_staff`: `true` if the user has admin panel access.
 
 ---
 
@@ -85,6 +87,8 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
 ### 2.1 Get My Details
 **GET** `/api/dashboard/user-details/my_details/` · 🔒 JWT
 
+Auto-creates a `UserDetails` record if one doesn't exist (via `get_or_create`).
+
 **Response:**
 ```json
 {
@@ -93,6 +97,7 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
   "user_email": "user@example.com",
   "user_username": "Dr. Smith",
   "profile_image": "/media/profile_images/photo.jpg",
+  "profile_image_url": "/media/profile_images/photo.jpg",
   "phone_number": "01XXXXXXXXX",
   "bio": "...",
   "designation": "Associate Professor",
@@ -100,16 +105,35 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
   "default_status": "Away from desk",
   "default_availability": true,
   "is_available": true,
-  "slug": "dr-smith-1"
+  "slug": "dr-smith-1",
+  "notify_new_chats": true,
+  "notify_chat_replies": false,
+  "notify_chat_closed": true,
+  "auto_close_hours": 48
 }
 ```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `default_status` | string | Fallback broadcast message activated when a timed status expires |
+| `default_availability` | bool | Fallback availability state when a timed status expires |
+| `is_available` | bool | Current availability (toggling to `true` notifies subscribers) |
+| `notify_new_chats` | bool | Email on new chat thread initiated |
+| `notify_chat_replies` | bool | Email on each reply in active threads |
+| `notify_chat_closed` | bool | Email when a chat thread is closed |
+| `auto_close_hours` | int/null | Hours of inactivity before auto-closing chat threads. `null` = never |
+| `slug` | string | Auto-generated public URL slug (read-only, syncs with username) |
 
 ---
 
 ### 2.2 Update My Details
-**PATCH** `/api/dashboard/user-details/update_my_details/` · 🔒 JWT
+**PUT/PATCH** `/api/dashboard/user-details/update_my_details/` · 🔒 JWT
 
-Accepts any subset of: `phone_number`, `bio`, `designation`, `organization`, `default_status`, `default_availability`, `is_available`, `profile_image` (multipart).
+Accepts any subset of: `phone_number`, `bio`, `designation`, `organization`, `default_status`, `default_availability`, `is_available`, `profile_image` (multipart), `notify_new_chats`, `notify_chat_replies`, `notify_chat_closed`, `auto_close_hours`.
+
+**Proxy fields** (write-only, updates the linked user account):
+- `username` — change display name
+- `email` — change email address
 
 ---
 
@@ -130,11 +154,21 @@ Accepts any subset of: `phone_number`, `bio`, `designation`, `organization`, `de
     "id": 1,
     "student": 2,
     "faculty": 1,
+    "faculty_username": "Dr. Smith",
+    "faculty_details": {
+      "designation": "Associate Professor",
+      "organization": "UIU",
+      "profile_image_url": "/media/profile_images/photo.jpg",
+      "is_available": true,
+      "slug": "dr-smith-1"
+    },
     "notify_preference": "available",
     "created_at": "2026-05-18T12:00:00Z"
   }
 ]
 ```
+
+Each entry includes the full `faculty_details` nested object with availability, profile image, and broadcast slug.
 
 ---
 
@@ -174,22 +208,103 @@ Returns status updates of all interested faculties.
 
 Searches faculty by username or email. Returns up to 20 results.
 
+**Response:**
+```json
+[
+  {
+    "user": 1,
+    "username": "Dr. Smith",
+    "email": "smith@uiu.ac.bd",
+    "designation": "Associate Professor",
+    "profile_image_url": "/media/profile_images/photo.jpg"
+  }
+]
+```
+
 ---
 
 ## 4 · Admin User Management
 
+> **Authorization:** All endpoints require `is_staff=True`. Admin is a privilege (`is_staff`), not a role.
+
 ### 4.1 List All Users
 **GET** `/api/dashboard/admin-users/` · 🔒 JWT (staff)
 
+Returns all users with fields: `id`, `username`, `email`, `role`, `student_id`, `is_staff`, `is_banned`, `is_active`, `first_name`, `last_name`, `date_joined`.
+
 ---
 
-### 4.2 Toggle User Active
+### 4.2 Toggle User Active (Deactivate/Activate)
 **POST** `/api/dashboard/admin-users/{id}/toggle_active/` · 🔒 JWT (staff)
 
+Toggles `is_active`. Cannot deactivate yourself. Cannot toggle if user is banned (unban first).
+
+**Response:** `{ "status": "success", "is_active": false, "is_banned": false }`
+
 ---
 
-### 4.3 Delete User
+### 4.3 Ban User
+**POST** `/api/dashboard/admin-users/{id}/ban_user/` · 🔒 JWT (staff)
+
+Sets `is_banned=True` and `is_active=False`. Banned users cannot log in. Cannot ban yourself.
+
+**Response:** `{ "status": "success", "is_active": false, "is_banned": true }`
+
+---
+
+### 4.4 Unban User
+**POST** `/api/dashboard/admin-users/{id}/unban_user/` · 🔒 JWT (staff)
+
+Sets `is_banned=False` and `is_active=True`.
+
+**Response:** `{ "status": "success", "is_active": true, "is_banned": false }`
+
+---
+
+### 4.5 Toggle Admin Privilege
+**POST** `/api/dashboard/admin-users/{id}/toggle_admin/` · 🔒 JWT (staff)
+
+Grants or revokes `is_staff`. **Cannot remove the last admin** — at least one admin must remain.
+
+**Response:** `{ "status": "success", "is_staff": true }`
+
+---
+
+### 4.6 Change Role
+**POST** `/api/dashboard/admin-users/{id}/change_role/` · 🔒 JWT (staff)
+
+```json
+{ "role": "STUDENT", "student_id": "0112430141" }
+```
+`role`: `"FACULTY"`, `"STUDENT"`, or `""` (empty = admin-only).
+`student_id`: optional, only when changing to `STUDENT`.
+
+**Behavior:**
+- Changing away from `STUDENT` clears `student_id`.
+- Changing to `STUDENT` without `student_id` prompts the user on next login.
+- Admins can change their own role.
+
+**Response:** `{ "status": "success", "role": "STUDENT", "student_id": "0112430141", "old_role": "FACULTY" }`
+
+---
+
+### 4.7 Delete User
 **DELETE** `/api/dashboard/admin-users/{id}/` · 🔒 JWT (staff)
+
+Permanently deletes the user. Cannot delete yourself.
+
+---
+
+### 4.8 Set Student ID (Self-Service)
+**POST** `/api/dashboard/student/set-student-id/` · 🔒 JWT (Student)
+
+```json
+{ "student_id": "0112430141" }
+```
+
+Students without a `student_id` are prompted to set one upon visiting the dashboard. This endpoint handles that self-service flow.
+
+**Response:** `{ "status": "success", "student_id": "0112430141" }`
 
 ---
 
@@ -252,7 +367,9 @@ Searches faculty by username or email. Returns up to 20 results.
 ### 5.6 Toggle Active (Set Active)
 **POST** `/api/broadcast/messages/{id}/set_active/` · 🔒 JWT
 
-Deactivates all other messages and activates the specified one.
+Deactivates all other messages and activates the specified one. Non-staff users can only activate their own messages.
+
+Also processes scheduled messages and expires timed statuses on each request.
 
 ---
 
@@ -264,14 +381,18 @@ Returns user profile + active broadcast message for the public broadcast page an
 **Response:**
 ```json
 {
+  "user_id": 1,
   "username": "Dr. Smith",
+  "user_username": "Dr. Smith",
   "email": "user@example.com",
+  "user_email": "user@example.com",
   "phone_number": "01XXXXXXXXX",
   "organization": "UIU",
   "designation": "Lecturer",
   "bio": "...",
   "profile_image": "/media/profile_images/photo.jpg",
   "active_message": "In Room 405 until 3pm",
+  "default_status": "Away from desk",
   "is_available": true,
   "slug": "dr-smith-1"
 }
@@ -343,7 +464,14 @@ Returns the branded footer PNG for "QR with user info" downloads.
 ### 7.2 Inbox
 **GET** `/api/messaging/inbox/` · 🔒 JWT
 
-Returns all visitor messages received by the authenticated broadcaster.
+Returns all visitor messages received by the authenticated broadcaster. Each message is annotated with **sender verification** fields:
+
+| Field | Description |
+|-------|-------------|
+| `sender_is_registered` | `true` if the sender email matches a registered user |
+| `sender_user_id` | User ID if registered, else `null` |
+| `sender_role` | `"FACULTY"`, `"STUDENT"`, or `null` |
+| `sender_student_id` | Student ID if available, else `null` |
 
 ---
 
@@ -367,6 +495,8 @@ Returns full message details and marks it as read.
 ```json
 { "body": "I'll be available at 3pm." }
 ```
+
+Replies are **append-only** — each reply is timestamped and appended to the conversation thread (separated by `---REPLY_SEP---`). An **email notification** is sent to the visitor's email address with the reply.
 
 ---
 
@@ -446,7 +576,7 @@ Changes status from `PENDING` → `ACTIVE`.
 ```json
 { "body": "Yes, come to Room 405." }
 ```
-Only allowed when status is `ACTIVE`.
+**Rules:** Faculty can only reply when status is `ACTIVE`. Students can reply in both `PENDING` and `ACTIVE` threads (follow-up before acceptance). Email notification sent to the other party based on their `notify_chat_replies` setting.
 
 ---
 
@@ -462,7 +592,7 @@ Changes status to `CLOSED`. No more messages can be sent.
 
 **Response:**
 ```json
-{ "has_thread": true, "thread_id": 5 }
+{ "has_thread": true, "thread_id": 5, "status": "ACTIVE" }
 ```
 
 ---
@@ -558,12 +688,17 @@ Token-based unsubscribe link (included in notification emails).
 ```json
 {
   "title": "Faculty Meeting",
+  "description": "Monthly departmental meeting",
   "start_time": "2026-05-20T10:00:00Z",
   "end_time": "2026-05-20T12:00:00Z",
   "color": "#f68b1f",
+  "all_day": false,
+  "recurrence_rule": "none",
   "set_availability": "false"
 }
 ```
+`all_day`: `true` for all-day events.
+`recurrence_rule`: `"none"` | `"daily"` | `"weekly"` | `"monthly"`.
 
 ---
 
@@ -583,9 +718,11 @@ Token-based unsubscribe link (included in notification emails).
   "label": "In a Meeting",
   "message": "Currently in a meeting, please check back later.",
   "icon": "bi-camera-video-fill",
-  "set_availability": "false"
+  "set_availability": "false",
+  "sort_order": 0
 }
 ```
+`sort_order`: integer for display ordering (lower = first).
 
 ### 10.4 Activate Template
 **POST** `/api/scheduler/templates/{id}/activate/` · 🔒 JWT
@@ -619,6 +756,49 @@ One-click activate a quick template as the current broadcast status. Also sets a
 { "slug": "dr-smith-1", "source": "page" }
 ```
 `source`: `"page"` or `"qr"`. If JWT is included, self-visits are skipped.
+
+---
+
+## 12 · Server Info
+
+### 12.1 Server Index
+**GET** `/index/` · 🌐 Public
+
+Returns API metadata and available endpoint groups.
+
+**Response:**
+```json
+{
+  "message": "Sir Kothay API Server",
+  "version": "1.0",
+  "documentation": "/api/",
+  "endpoints": {
+    "auth": "/api/auth/",
+    "dashboard": "/api/dashboard/",
+    "qrcode": "/api/qrcode/",
+    "broadcast": "/api/broadcast/"
+  }
+}
+```
+
+---
+
+### 12.2 About & Contributors
+**GET** `/about/` · 🌐 Public
+
+Returns project info and a live contributor list fetched from the GitHub API (configurable via `GITHUB_CONTRIBUTORS_REPO` env var).
+
+---
+
+## 13 · Management Commands
+
+| Command | Description |
+|---------|-------------|
+| `python manage.py process_schedules` | Expires timed messages, triggers recurring schedules, syncs calendar events |
+| `python manage.py close_stale_chats` | Auto-closes inactive chat threads based on faculty `auto_close_hours` setting |
+| `python manage.py createsuperuser` | Create a Django superuser (standard Django command) |
+
+Set these up as cron jobs or PythonAnywhere scheduled tasks for production.
 
 ---
 
@@ -675,3 +855,8 @@ Dashboard pages support deep-linking via URL parameters:
 7. All email notifications are sent asynchronously via background threads (non-blocking)
 8. Chat thread deletion is per-user (soft delete). Threads are hard-deleted only when both parties delete.
 9. `duration_seconds` replaced the legacy `duration_minutes` field for broadcast messages
+10. **Admin is a privilege, not a role.** The `ADMIN` role has been removed. Admin access is controlled by `is_staff` (boolean). Any user with any role (or no role) can be an admin.
+11. **`is_banned` is separate from `is_active`.** Banning sets both `is_banned=True` and `is_active=False`. Deactivation only sets `is_active=False`. Unban restores both.
+12. **Empty role (`""`)** means the user has no dashboard role (admin-only). They are redirected to the admin panel on login.
+13. **Student ID is not required at registration.** Students are prompted to enter their ID on first dashboard visit via a blocking modal.
+14. **Last-admin protection:** The system prevents removing admin privileges from the last remaining admin.

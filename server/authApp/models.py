@@ -26,12 +26,13 @@ class CustomUser(AbstractUser):
     Public URLs use a separate slug on UserDetails (ASCII, path-safe).
     """
     ROLE_CHOICES = (
+        ('', 'None'),
         ('FACULTY', 'Faculty'),
         ('STUDENT', 'Student'),
-        ('ADMIN', 'Admin'),
     )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='FACULTY')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='FACULTY', blank=True)
     student_id = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    is_banned = models.BooleanField(default=False, help_text='Banned users cannot login even if is_active is True.')
     
     email = models.EmailField(unique=True)
 

@@ -78,9 +78,73 @@ async function loadStudentData() {
 
         // Load notification settings into toggles
         loadStudentSettings();
+
+        // If user is admin (is_staff), inject Admin Panel link into navbar
+        if (currentUser.is_staff) {
+            var desktopNav = document.getElementById('desktopNavLinks');
+            if (desktopNav) {
+                var adminLink = document.createElement('a');
+                adminLink.href = 'admin.html';
+                adminLink.className = 'text-purple-600 font-semibold';
+                adminLink.style.cssText = 'transition: color 0.2s;';
+                adminLink.innerHTML = '<i class="bi bi-shield-lock mr-1"></i>Admin';
+                desktopNav.insertBefore(adminLink, desktopNav.firstChild);
+            }
+            var mobileNav = document.getElementById('mobileNavLinks');
+            if (mobileNav) {
+                var mAdminLink = document.createElement('a');
+                mAdminLink.href = 'admin.html';
+                mAdminLink.className = 'flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-purple-600 hover:bg-purple-50 transition';
+                mAdminLink.innerHTML = '<i class="bi bi-shield-lock-fill text-2xl"></i><span class="text-xs font-medium">Admin</span>';
+                mobileNav.insertBefore(mAdminLink, mobileNav.firstChild);
+            }
+        }
+
+        // Student ID enforcement: block dashboard until student sets ID
+        if (!currentUser.student_id) {
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('studentIdModal').classList.remove('hidden');
+        }
     } catch (error) {
         console.error('Error loading student data:', error);
         showNotifyModal('Error loading profile', 'error');
+    }
+}
+
+async function submitStudentId() {
+    var input = document.getElementById('studentIdInput');
+    var errorEl = document.getElementById('studentIdError');
+    var sid = input.value.trim();
+    if (!sid) {
+        errorEl.textContent = 'Please enter your Student ID.';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+    errorEl.classList.add('hidden');
+    try {
+        var res = await fetch(API_BASE_URL + '/api/dashboard/student/set-student-id/', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ student_id: sid })
+        });
+        var data = await res.json();
+        if (!res.ok) {
+            errorEl.textContent = data.error || 'Failed to save Student ID.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        // Success — update UI and hide modal
+        currentUser.student_id = data.student_id;
+        document.getElementById('studentIdDisplay').textContent = 'ID: ' + data.student_id;
+        document.getElementById('studentIdModal').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        showNotifyModal('Student ID saved successfully!', 'success');
+    } catch (e) {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.remove('hidden');
     }
 }
 let feedHidden = false;

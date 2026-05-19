@@ -78,7 +78,27 @@ async function loadDashboard() {
     if (meRes.ok) {
       var meData = await meRes.json();
       if (meData.role === 'STUDENT') { window.location.href = 'student.html'; return; }
-      if (meData.role === 'ADMIN') { window.location.href = 'admin.html'; return; }
+      if (!meData.role && meData.is_staff) { window.location.href = 'admin.html'; return; }
+      // If user is admin (is_staff), inject Admin Panel link into navbar
+      if (meData.is_staff) {
+        var desktopNav = document.getElementById('desktopNavLinks');
+        if (desktopNav) {
+          var adminLink = document.createElement('a');
+          adminLink.href = 'admin.html';
+          adminLink.className = 'text-purple-600 font-semibold';
+          adminLink.style.cssText = 'transition: color 0.2s;';
+          adminLink.innerHTML = '<i class="bi bi-shield-lock mr-1"></i>Admin';
+          desktopNav.insertBefore(adminLink, desktopNav.firstChild);
+        }
+        var mobileNav = document.getElementById('mobileNavLinks');
+        if (mobileNav) {
+          var mAdminLink = document.createElement('a');
+          mAdminLink.href = 'admin.html';
+          mAdminLink.className = 'flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-purple-600 hover:bg-purple-50 transition';
+          mAdminLink.innerHTML = '<i class="bi bi-shield-lock-fill text-2xl"></i><span class="text-xs font-medium">Admin</span>';
+          mobileNav.insertBefore(mAdminLink, mobileNav.firstChild);
+        }
+      }
     }
 
     var res = await apiRequest(API_ENDPOINTS.USER_DETAILS);

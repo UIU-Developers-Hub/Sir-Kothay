@@ -8,16 +8,20 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'username', 'password', 'first_name', 'last_name', 'is_active', 'date_joined', 'role', 'student_id']
+        fields = ['id', 'email', 'username', 'password', 'first_name', 'last_name', 'is_active', 'is_staff', 'date_joined', 'role', 'student_id']
         read_only_fields = ['id', 'date_joined']
     
     def validate(self, data):
-        if data.get('role') == 'STUDENT' and not data.get('student_id'):
-            raise serializers.ValidationError({"student_id": "Student ID is required for students."})
+        # student_id is no longer required at registration;
+        # students are prompted to set it on first dashboard load.
         return data
 
     def create(self, validated_data):
         password = validated_data.pop('password')
+        # Normalize empty student_id to None to avoid UNIQUE constraint
+        # violations in SQLite (which treats '' as a unique value)
+        if not validated_data.get('student_id'):
+            validated_data['student_id'] = None
         user = CustomUser.objects.create_user(**validated_data, password=password)
         return user
     

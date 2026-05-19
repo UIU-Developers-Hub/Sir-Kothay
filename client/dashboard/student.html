@@ -23,14 +23,14 @@
         <a href="../index.html" class="flex items-center gap-3">
           <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo" />
         </a>
-        <div class="flex items-center gap-6 text-sm font-medium">
+        <div id="desktopNavLinks" class="flex items-center gap-6 text-sm font-medium">
           <a href="student.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Dashboard</a>
           <a href="profile.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Profile</a>
           <a href="#" onclick="logout()" class="text-red-600 hover:text-red-700">Logout</a>
         </div>
       </div>
       <div class="md:hidden">
-        <div class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
+        <div id="mobileNavLinks" class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
           <a href="student.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50" style="color: #f68b1f;"><i class="bi bi-speedometer2 text-2xl"></i><span class="text-xs font-medium">Dashboard</span></a>
           <a href="profile.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;"><i class="bi bi-person-circle text-2xl"></i><span class="text-xs font-medium">Profile</span></a>
           <a href="#" onclick="logout()" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 transition"><i class="bi bi-box-arrow-right text-2xl"></i><span class="text-xs font-medium">Logout</span></a>
@@ -232,6 +232,27 @@
     <!-- Old Send Message Modal removed — now using threaded chat system via skModal -->
 
   </div>
+  <!-- Student ID Required Modal (blocking) -->
+  <div id="studentIdModal" class="hidden fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-orange-200">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="bi bi-person-badge-fill text-3xl text-orange-600"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900">Student ID Required</h3>
+        <p class="text-gray-500 text-sm mt-2">Please enter your Student ID to continue using your dashboard.</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
+        <input type="text" id="studentIdInput" placeholder="e.g. 0112430141" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent" autofocus>
+        <p id="studentIdError" class="text-red-500 text-xs mt-1 hidden"></p>
+      </div>
+      <button onclick="submitStudentId()" class="w-full mt-4 py-3 rounded-xl text-white font-semibold shadow-md hover:opacity-95 transition" style="background:linear-gradient(to right,#f68b1f,#e67a0f)">
+        <i class="bi bi-check-circle mr-2"></i>Save & Continue
+      </button>
+    </div>
+  </div>
+
   </main>
 
   <footer class="py-12 px-6 mt-4 mb-20 md:mb-0 bg-gray-900 text-gray-300">
@@ -245,7 +266,7 @@
 <script src="../static/js/api-config.js"></script>
 <script src="../static/js/notify-modal.js"></script>
 <script src="../static/js/sk-modal.js"></script>
-<script src="../static/js/student-dashboard.js"></script>
+<script src="../static/js/student-dashboard.js?v=3"></script>
 <script src="../static/js/student-chat.js"></script>
 </body>
 </html>

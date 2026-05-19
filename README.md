@@ -11,29 +11,51 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
 ### Broadcasting & Status
 - **Live Broadcast Status** — set a message visible to anyone who scans your QR code or visits your page
 - **Timed Statuses** — schedule a status to go live later, or auto-expire after a set duration
-- **Fallback Status** — default message automatically restored when a timed status expires
+- **Fallback Status** — default message and default availability automatically restored when a timed status expires
 - **Availability Toggle** — mark yourself Available/Unavailable; subscribers and students get notified on change
 - **Set Availability on Broadcast** — each status, template, schedule, or calendar event can toggle availability automatically
 
 ### Scheduling & Automation
 - **Recurring Schedules** — auto-broadcast on a weekly schedule (e.g. "Office Hours Mon 2–4 PM")
-- **Calendar Events** — one-off events with broadcast integration (auto-set status during event)
-- **Quick Status Templates** — one-tap presets for common statuses ("In a Meeting", "Lab 401")
+- **Calendar Events** — one-off or recurring events with broadcast integration (auto-set status during event)
+  - Supports `daily`, `weekly`, `monthly` recurrence and all-day events
+- **Quick Status Templates** — one-tap presets for common statuses ("In a Meeting", "Lab 401") with custom sort order
 - **Automated Scheduler** — `python manage.py process_schedules` processes all triggers (cron/task)
 
 ### Role-Based Dashboards
 - **Faculty Dashboard** — full broadcast management, QR codes, analytics, scheduling, unified chat inbox
 - **Student Dashboard** — faculty interest tracking, threaded chat, granular notification preferences
-- **Admin Dashboard** — user management panel (activate/deactivate, view all users)
+  - **Mandatory Student ID** — students are prompted to enter their ID on first login (blocking modal)
+- **Admin Dashboard** — granular user management panel:
+  - **Ban / Unban** — block login (distinct from deactivation)
+  - **Deactivate / Activate** — toggle account active state
+  - **Toggle Admin** — grant/revoke `is_staff` privilege (last-admin protected)
+  - **Change Role** — switch between Faculty, Student, or None (admin-only) with modal UI
+  - **User Detail Panel** — slide-over panel with full user info and all actions
+  - **Filters & Sorting** — filter by role (Faculty/Student/None) and status (Active/Deactivated/Banned); sort by all columns
+- **Admin-only users** — users with no role (`""`) and `is_staff=True` are redirected directly to the admin panel
 
 ### Communication
 - **Threaded Chat System** — registered students and faculty can have multi-message, persistent conversations
   - **Thread Lifecycle** — Awaiting → Open → Closed status flow
   - **Chat Actions** — accept, reply, close, delete (per-user soft-delete)
   - **Close & Delete All** — bulk action to clean up all threads
+  - **Students can follow up** in pending threads before faculty accepts
+  - **Auto-Close Stale Chats** — `close_stale_chats` command auto-closes inactive threads based on faculty `auto_close_hours` setting
+- **Chat Notification Preferences** — per-faculty settings:
+  - `notify_new_chats` — email on new chat thread
+  - `notify_chat_replies` — email on each reply
+  - `notify_chat_closed` — email when a thread is closed
 - **Visitor Direct Messages** — anonymous visitors can send messages from the broadcast page (no login required)
+  - **Sender Verification** — inbox cross-references visitor emails with registered users (shows student ID, role)
+  - **Multi-Reply Threading** — faculty can reply multiple times (append-only conversation)
 - **Faculty Inbox** — unified split-panel view for both student chats and visitor DMs
 - **Email Notifications** — all chat lifecycle events (new thread, acceptance, reply, close) trigger async email notifications
+
+### Profile & Identity
+- **Profile Editor** — update display name, email, designation, organization, bio, phone number, and profile image
+- **Public URL Slugs** — auto-generated URL-safe slugs for broadcast pages (auto-syncs when username changes)
+- **Profile Image Upload** — upload and manage profile photos
 
 ### Notification System
 - **Anonymous Subscribers** — visitors subscribe via email; notified when broadcaster becomes available
@@ -47,6 +69,10 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
 - **Page View Tracking** — daily page views and QR scan counts
 - **Subscriber Management** — view and manage email subscribers
 - **Self-Visit Filtering** — broadcaster's own visits are not counted
+
+### Other
+- **About Page** — dynamic contributor list fetched live from the GitHub API
+- **Django Admin Panel** — built-in Django admin at `/admin/` for direct database management
 
 ### QR Code
 - **Auto-generated QR Codes** — encodes the public broadcast page URL
@@ -66,7 +92,7 @@ Sir-Kothay/
 │   ├── base.html                    # Shared layout template
 │   ├── auth/
 │   │   ├── login.html               # Login (email or student ID)
-│   │   └── register.html            # Register (Faculty / Student / Admin)
+│   │   └── register.html            # Register (Faculty / Student)
 │   ├── broadcast/
 │   │   └── message.html             # Public broadcast viewer (QR landing)
 │   ├── dashboard/
@@ -93,7 +119,7 @@ Sir-Kothay/
 │           └── sk-modal.js            # Reusable modal component
 ├── server/                          # Django backend
 │   ├── core/                        # Django project settings & URLs
-│   ├── authApp/                     # Custom user model (Faculty/Student/Admin), JWT auth
+│   ├── authApp/                     # Custom user model (Faculty/Student), JWT auth, is_staff admin
 │   ├── dashboard/                   # User profile, student interests, admin management
 │   ├── broadcast/                   # Broadcast messages (CRUD + public endpoint + scheduling)
 │   ├── qrcodeApp/                   # QR code generation & serving
@@ -160,7 +186,13 @@ Process recurring schedules, calendar events, and expiring messages:
 ```bash
 python manage.py process_schedules
 ```
-Set this up as a cron job (Linux) or PythonAnywhere scheduled task for production.
+
+Auto-close inactive chat threads:
+```bash
+python manage.py close_stale_chats
+```
+
+Set these up as cron jobs (Linux) or PythonAnywhere scheduled tasks for production.
 
 ### 5. Override API URL (Production)
 
@@ -209,7 +241,7 @@ When `EMAIL_HOST_USER` is empty, Django uses the console backend (emails print t
 | Backend | Django 5.1, Django REST Framework, SimpleJWT |
 | Frontend | HTML5, Tailwind CSS (CDN), Vanilla JS |
 | Database | SQLite (dev) / PostgreSQL (prod) |
-| Auth | JWT (Bearer tokens), role-based (Faculty / Student / Admin) |
+| Auth | JWT (Bearer tokens), privilege-based admin (`is_staff`) |
 | QR Codes | `qrcode` + `Pillow` (Python) |
 | Email | Gmail SMTP via `threading.Thread` (async, non-blocking) |
 | Static Files | WhiteNoise |
