@@ -183,8 +183,13 @@ __marimo__/
 # Django database & media
 server/db.sqlite3
 server/db.sqlite3-journal
+server/db.sqlite3-wal
+server/db.sqlite3-shm
 server/media/
 server/staticfiles/
+
+# Test scripts (local debugging only, not part of codebase)
+server/test_*.py
 
 # OS files
 .DS_Store
@@ -199,3 +204,6 @@ deploy.sh
 # Chat history / scratch notes (not part of codebase)
 Yesterday_Chat_History.md
 *_Chat_History.md
+
+# Gemini / AI agent workspace
+.gemini/

@@ -1,4 +1,4 @@
-# Sir-Kothay REST API Documentation
+# Sir Kothay — REST API Documentation
 
 ## Base URL
 ```
@@ -21,8 +21,17 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
 **POST** `/api/auth/users/register/`
 
 ```json
-{ "email": "user@example.com", "username": "username", "password": "password123" }
+{
+  "email": "user@example.com",
+  "username": "username",
+  "password": "password123",
+  "role": "FACULTY",
+  "student_id": null
+}
 ```
+`role`: `"FACULTY"`, `"STUDENT"`, or `"ADMIN"`.
+`student_id`: required for students (optional for other roles).
+
 **Response:** `201` — user object + `tokens.access` / `tokens.refresh`
 
 ---
@@ -33,6 +42,8 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
 ```json
 { "email": "user@example.com", "password": "password123" }
 ```
+> Also accepts `student_id` as the identifier field for student login.
+
 **Response:** `200` — user object + tokens
 
 ---
@@ -40,7 +51,18 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
 ### 1.3 Get Current User
 **GET** `/api/auth/users/me/` · 🔒 JWT
 
-**Response:** user object (id, email, username, first_name, last_name, is_active, date_joined)
+**Response:**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "username": "Dr. Smith",
+  "role": "FACULTY",
+  "student_id": null,
+  "is_active": true,
+  "date_joined": "2026-05-18T12:00:00Z"
+}
+```
 
 ---
 
@@ -66,15 +88,19 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
 **Response:**
 ```json
 {
-  "id": 1, "user": 1,
+  "id": 1,
+  "user": 1,
   "user_email": "user@example.com",
-  "user_username": "username",
+  "user_username": "Dr. Smith",
   "profile_image": "/media/profile_images/photo.jpg",
   "phone_number": "01XXXXXXXXX",
-  "bio": "...", "designation": "...", "organization": "...",
+  "bio": "...",
+  "designation": "Associate Professor",
+  "organization": "UIU",
   "default_status": "Away from desk",
+  "default_availability": true,
   "is_available": true,
-  "slug": "username-1"
+  "slug": "dr-smith-1"
 }
 ```
 
@@ -83,7 +109,7 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
 ### 2.2 Update My Details
 **PATCH** `/api/dashboard/user-details/update_my_details/` · 🔒 JWT
 
-Accepts any subset of: `phone_number`, `bio`, `designation`, `organization`, `default_status`, `is_available`, `profile_image` (multipart).
+Accepts any subset of: `phone_number`, `bio`, `designation`, `organization`, `default_status`, `default_availability`, `is_available`, `profile_image` (multipart).
 
 ---
 
@@ -92,21 +118,19 @@ Accepts any subset of: `phone_number`, `bio`, `designation`, `organization`, `de
 
 ---
 
-## 3 · Broadcast Messages
+## 3 · Student Interests
 
-### 3.1 List My Messages
-**GET** `/api/broadcast/messages/my_messages/` · 🔒 JWT
+### 3.1 List My Interests
+**GET** `/api/dashboard/student-interests/` · 🔒 JWT (Student)
 
-**Response:** array of message objects:
+**Response:**
 ```json
 [
   {
-    "id": 1, "user": 1,
-    "message": "In Room 405",
-    "active": true,
-    "scheduled_for": null,
-    "duration_minutes": 60,
-    "active_until": "2026-05-18T13:00:00Z",
+    "id": 1,
+    "student": 2,
+    "faculty": 1,
+    "notify_preference": "available",
     "created_at": "2026-05-18T12:00:00Z"
   }
 ]
@@ -114,12 +138,91 @@ Accepts any subset of: `phone_number`, `bio`, `designation`, `organization`, `de
 
 ---
 
-### 3.2 Get Active Message
+### 3.2 Add Interest
+**POST** `/api/dashboard/student-interests/` · 🔒 JWT
+
+```json
+{ "faculty": 1, "notify_preference": "all" }
+```
+`notify_preference`: `"all"` | `"available"` | `"none"` (default: `"none"`)
+
+---
+
+### 3.3 Update Notification Preference
+**PATCH** `/api/dashboard/student-interests/{id}/` · 🔒 JWT
+
+```json
+{ "notify_preference": "available" }
+```
+
+---
+
+### 3.4 Remove Interest
+**DELETE** `/api/dashboard/student-interests/{id}/` · 🔒 JWT
+
+---
+
+### 3.5 Faculty Feed
+**GET** `/api/dashboard/student-interests/feed/` · 🔒 JWT
+
+Returns status updates of all interested faculties.
+
+---
+
+### 3.6 Search Faculties
+**GET** `/api/dashboard/student-interests/search_faculties/?q=smith` · 🔒 JWT
+
+Searches faculty by username or email. Returns up to 20 results.
+
+---
+
+## 4 · Admin User Management
+
+### 4.1 List All Users
+**GET** `/api/dashboard/admin-users/` · 🔒 JWT (staff)
+
+---
+
+### 4.2 Toggle User Active
+**POST** `/api/dashboard/admin-users/{id}/toggle_active/` · 🔒 JWT (staff)
+
+---
+
+### 4.3 Delete User
+**DELETE** `/api/dashboard/admin-users/{id}/` · 🔒 JWT (staff)
+
+---
+
+## 5 · Broadcast Messages
+
+### 5.1 List My Messages
+**GET** `/api/broadcast/messages/my_messages/` · 🔒 JWT
+
+**Response:** array of message objects:
+```json
+[
+  {
+    "id": 1,
+    "user": 1,
+    "message": "In Room 405",
+    "active": true,
+    "scheduled_for": null,
+    "duration_seconds": 3600,
+    "active_until": "2026-05-18T13:00:00Z",
+    "set_availability": "true",
+    "created_at": "2026-05-18T12:00:00Z"
+  }
+]
+```
+
+---
+
+### 5.2 Get Active Message
 **GET** `/api/broadcast/messages/active_message/` · 🔒 JWT
 
 ---
 
-### 3.3 Create Message
+### 5.3 Create Message
 **POST** `/api/broadcast/messages/` · 🔒 JWT
 
 ```json
@@ -127,30 +230,33 @@ Accepts any subset of: `phone_number`, `bio`, `designation`, `organization`, `de
   "message": "In Room 405 until 3pm",
   "active": true,
   "scheduled_for": null,
-  "duration_minutes": 60
+  "duration_seconds": 3600,
+  "set_availability": "true"
 }
 ```
+`duration_seconds`: null = "Until I change". Positive integer = auto-expire after N seconds.
+`set_availability`: `"true"` = set Available, `"false"` = set Unavailable, `""` = no change.
 
 ---
 
-### 3.4 Update Message
+### 5.4 Update Message
 **PATCH** `/api/broadcast/messages/{id}/` · 🔒 JWT
 
 ---
 
-### 3.5 Delete Message
+### 5.5 Delete Message
 **DELETE** `/api/broadcast/messages/{id}/` · 🔒 JWT · `204 No Content`
 
 ---
 
-### 3.6 Toggle Active (Set Active)
+### 5.6 Toggle Active (Set Active)
 **POST** `/api/broadcast/messages/{id}/set_active/` · 🔒 JWT
 
 Deactivates all other messages and activates the specified one.
 
 ---
 
-### 3.7 Public Broadcast (No Auth)
+### 5.7 Public Broadcast (No Auth)
 **GET** `/api/broadcast/<user_slug>/` · 🌐 Public
 
 Returns user profile + active broadcast message for the public broadcast page and QR code scanning.
@@ -158,7 +264,7 @@ Returns user profile + active broadcast message for the public broadcast page an
 **Response:**
 ```json
 {
-  "username": "username",
+  "username": "Dr. Smith",
   "email": "user@example.com",
   "phone_number": "01XXXXXXXXX",
   "organization": "UIU",
@@ -167,61 +273,60 @@ Returns user profile + active broadcast message for the public broadcast page an
   "profile_image": "/media/profile_images/photo.jpg",
   "active_message": "In Room 405 until 3pm",
   "is_available": true,
-  "slug": "username-1"
+  "slug": "dr-smith-1"
 }
 ```
 
 ---
 
-## 4 · QR Code
+## 6 · QR Code
 
-### 4.1 Get My QR Code
+### 6.1 Get My QR Code
 **GET** `/api/qrcode/qrcodes/my_qrcode/` · 🔒 JWT
 
 **Response:**
 ```json
 {
-  "id": 1, "user": 1,
-  "image": "/media/qr_codes/qr_1_username.png",
+  "id": 1,
+  "user": 1,
+  "image": "/media/qr_codes/qr_1_drsmith.png",
   "generated_at": "2026-05-18T12:00:00Z"
 }
 ```
 
 ---
 
-### 4.2 Generate / Regenerate QR Code
+### 6.2 Generate / Regenerate QR Code
 **POST** `/api/qrcode/qrcodes/generate/` · 🔒 JWT
-
-Generates a QR code encoding the user's public broadcast URL. Auto-detects LAN IP for mobile access.
 
 **Response:**
 ```json
 {
   "message": "QR code generated successfully",
-  "qr_code": { "id": 1, "image": "/media/qr_codes/qr_1_username.png", "..." },
-  "public_profile_url": "http://192.168.1.100:5500/broadcast/message.html?user=username-1"
+  "qr_code": { "id": 1, "image": "/media/qr_codes/qr_1_drsmith.png" },
+  "public_profile_url": "http://192.168.1.100:5500/broadcast/message.html?user=dr-smith-1"
 }
 ```
 
 ---
 
-### 4.3 QR PNG Export
+### 6.3 QR PNG Export
 **GET** `/api/qrcode/qrcodes/qr_png/` · 🔒 JWT
 
-Returns raw PNG bytes (for canvas-based exports). Set `Accept: image/png`.
+Returns raw PNG bytes. Set `Accept: image/png`.
 
 ---
 
-### 4.4 Footer PNG Export
+### 6.4 Footer PNG Export
 **GET** `/api/qrcode/qrcodes/footer_png/` · 🔒 JWT
 
 Returns the branded footer PNG for "QR with user info" downloads.
 
 ---
 
-## 5 · Direct Messaging
+## 7 · Direct Messaging (Anonymous Visitors)
 
-### 5.1 Send Message to Broadcaster (Public)
+### 7.1 Send Message to Broadcaster (Public)
 **POST** `/api/messaging/<user_slug>/send/` · 🌐 Public
 
 ```json
@@ -235,28 +340,28 @@ Returns the branded footer PNG for "QR with user info" downloads.
 
 ---
 
-### 5.2 Inbox
+### 7.2 Inbox
 **GET** `/api/messaging/inbox/` · 🔒 JWT
 
-Returns all messages received by the authenticated broadcaster.
+Returns all visitor messages received by the authenticated broadcaster.
 
 ---
 
-### 5.3 Unread Count
+### 7.3 Unread Count
 **GET** `/api/messaging/unread/` · 🔒 JWT
 
 **Response:** `{ "unread_count": 3 }`
 
 ---
 
-### 5.4 Message Detail
+### 7.4 Message Detail
 **GET** `/api/messaging/{id}/` · 🔒 JWT
 
 Returns full message details and marks it as read.
 
 ---
 
-### 5.5 Reply to Message
+### 7.5 Reply to Message
 **POST** `/api/messaging/{id}/reply/` · 🔒 JWT
 
 ```json
@@ -265,44 +370,155 @@ Returns full message details and marks it as read.
 
 ---
 
-### 5.6 Delete Message
+### 7.6 Close Visitor DM
+**POST** `/api/messaging/{id}/close-dm/` · 🔒 JWT
+
+---
+
+### 7.7 Delete Visitor DM
 **DELETE** `/api/messaging/{id}/delete/` · 🔒 JWT
 
 ---
 
-## 6 · Notifications (Subscribers)
+## 8 · Threaded Chat (Student ↔ Faculty)
 
-### 6.1 Subscribe to Broadcaster (Public)
+### 8.1 Initiate Chat
+**POST** `/api/messaging/chat/initiate/` · 🔒 JWT (Student)
+
+```json
+{
+  "faculty_id": 1,
+  "subject": "Office hours query",
+  "body": "Hi, are you available this week?"
+}
+```
+Creates a new thread with status `PENDING`. Faculty receives an email notification.
+
+---
+
+### 8.2 List Threads
+**GET** `/api/messaging/chat/threads/` · 🔒 JWT
+
+Returns all chat threads for the current user (excluding soft-deleted threads). Supports `?status=ACTIVE` filter.
+
+---
+
+### 8.3 Thread Detail
+**GET** `/api/messaging/chat/{id}/` · 🔒 JWT
+
+Returns full thread with all messages, student/faculty info, and status.
+
+**Response:**
+```json
+{
+  "id": 1,
+  "student": 2,
+  "faculty": 1,
+  "student_info": { "username": "Alice", "email": "...", "student_id": "011..." },
+  "faculty_info": { "username": "Dr. Smith", "slug": "dr-smith-1" },
+  "subject": "Office hours query",
+  "status": "ACTIVE",
+  "messages": [
+    {
+      "id": 1,
+      "sender": 2,
+      "sender_name": "Alice",
+      "body": "Hi, are you available?",
+      "created_at": "2026-05-18T12:00:00Z"
+    }
+  ],
+  "last_activity_at": "2026-05-18T12:05:00Z"
+}
+```
+
+---
+
+### 8.4 Accept Thread
+**POST** `/api/messaging/chat/{id}/accept/` · 🔒 JWT (Faculty)
+
+Changes status from `PENDING` → `ACTIVE`.
+
+---
+
+### 8.5 Reply to Thread
+**POST** `/api/messaging/chat/{id}/reply/` · 🔒 JWT
+
+```json
+{ "body": "Yes, come to Room 405." }
+```
+Only allowed when status is `ACTIVE`.
+
+---
+
+### 8.6 Close Thread
+**POST** `/api/messaging/chat/{id}/close/` · 🔒 JWT
+
+Changes status to `CLOSED`. No more messages can be sent.
+
+---
+
+### 8.7 Check Existing Thread
+**GET** `/api/messaging/chat/check/{faculty_id}/` · 🔒 JWT (Student)
+
+**Response:**
+```json
+{ "has_thread": true, "thread_id": 5 }
+```
+
+---
+
+### 8.8 Delete Thread (Soft Delete)
+**DELETE** `/api/messaging/chat/{id}/delete/` · 🔒 JWT
+
+Closes the thread (if open) and soft-deletes it **for the requesting user only**. The other party still sees it. If both sides delete, the thread is permanently removed from the database.
+
+---
+
+### 8.9 Close & Delete All
+**POST** `/api/messaging/chat/delete-all/` · 🔒 JWT
+
+Closes all open threads and soft-deletes all threads for the requesting user.
+
+**Response:**
+```json
+{ "message": "5 thread(s) deleted.", "count": 5 }
+```
+
+---
+
+## 9 · Notifications (Subscribers)
+
+### 9.1 Subscribe to Broadcaster (Public)
 **POST** `/api/notifications/subscribe/<user_slug>/` · 🌐 Public
 
 ```json
 { "email": "subscriber@example.com" }
 ```
 
-Subscribers receive an email when the broadcaster toggles to "Available".
+Anonymous subscribers receive an email when the broadcaster toggles to "Available".
 
 ---
 
-### 6.2 Unsubscribe
+### 9.2 Unsubscribe
 **GET** `/api/notifications/unsubscribe/<token>/` · 🌐 Public
 
 Token-based unsubscribe link (included in notification emails).
 
 ---
 
-### 6.3 List My Subscribers
+### 9.3 List My Subscribers
 **GET** `/api/notifications/subscribers/` · 🔒 JWT
 
 ---
 
-### 6.4 Remove Subscriber
+### 9.4 Remove Subscriber
 **DELETE** `/api/notifications/subscribers/{id}/` · 🔒 JWT
 
 ---
 
-## 7 · Scheduler
+## 10 · Scheduler
 
-### 7.1 Recurring Schedules (CRUD)
+### 10.1 Recurring Schedules (CRUD)
 **Base:** `/api/scheduler/recurring/` · 🔒 JWT
 
 | Method | Path | Description |
@@ -316,17 +532,19 @@ Token-based unsubscribe link (included in notification emails).
 ```json
 {
   "day_of_week": 0,
-  "time": "14:00:00",
+  "time_of_day": "14:00:00",
   "message": "Office Hours — Room 405",
-  "duration_minutes": 120,
-  "set_available": true
+  "duration_seconds": 7200,
+  "set_availability": "true",
+  "is_active": true
 }
 ```
-`day_of_week`: 0=Monday … 6=Sunday
+`day_of_week`: 0=Monday … 6=Sunday.
+`set_availability`: `"true"` | `"false"` | `""` (no change).
 
 ---
 
-### 7.2 Calendar Events (CRUD)
+### 10.2 Calendar Events (CRUD)
 **Base:** `/api/scheduler/calendar/` · 🔒 JWT
 
 | Method | Path | Description |
@@ -340,17 +558,16 @@ Token-based unsubscribe link (included in notification emails).
 ```json
 {
   "title": "Faculty Meeting",
-  "start": "2026-05-20T10:00:00Z",
-  "end": "2026-05-20T12:00:00Z",
-  "broadcast_message": "In Faculty Meeting",
+  "start_time": "2026-05-20T10:00:00Z",
+  "end_time": "2026-05-20T12:00:00Z",
   "color": "#f68b1f",
-  "set_available": false
+  "set_availability": "false"
 }
 ```
 
 ---
 
-### 7.3 Quick Status Templates (CRUD)
+### 10.3 Quick Status Templates (CRUD)
 **Base:** `/api/scheduler/templates/` · 🔒 JWT
 
 | Method | Path | Description |
@@ -366,22 +583,27 @@ Token-based unsubscribe link (included in notification emails).
   "label": "In a Meeting",
   "message": "Currently in a meeting, please check back later.",
   "icon": "bi-camera-video-fill",
-  "set_available": false
+  "set_availability": "false"
 }
 ```
 
+### 10.4 Activate Template
+**POST** `/api/scheduler/templates/{id}/activate/` · 🔒 JWT
+
+One-click activate a quick template as the current broadcast status. Also sets availability if configured.
+
 ---
 
-## 8 · Analytics
+## 11 · Analytics
 
-### 8.1 Analytics Summary
+### 11.1 Analytics Summary
 **GET** `/api/scheduler/analytics/` · 🔒 JWT
 
 **Response:**
 ```json
 {
   "total_views": 142,
-  "total_scans": 38,
+  "total_qr_scans": 38,
   "daily": [
     { "date": "2026-05-18", "view_count": 12, "qr_scan_count": 3 }
   ]
@@ -390,11 +612,11 @@ Token-based unsubscribe link (included in notification emails).
 
 ---
 
-### 8.2 Track Visit
+### 11.2 Track Visit
 **POST** `/api/scheduler/analytics/track/` · 🌐 Public (optional JWT)
 
 ```json
-{ "slug": "username-1", "source": "page" }
+{ "slug": "dr-smith-1", "source": "page" }
 ```
 `source`: `"page"` or `"qr"`. If JWT is included, self-visits are skipped.
 
@@ -404,10 +626,10 @@ Token-based unsubscribe link (included in notification emails).
 
 | Status | Body |
 |--------|------|
-| `401` | `{ "detail": "Authentication credentials were not provided." }` |
-| `403` | `{ "error": "Permission denied" }` |
-| `404` | `{ "error": "User not found", "message": "..." }` |
 | `400` | `{ "field_name": ["Error message"] }` |
+| `401` | `{ "detail": "Authentication credentials were not provided." }` |
+| `403` | `{ "error": "Not authorized." }` |
+| `404` | `{ "error": "User not found" }` |
 
 ---
 
@@ -418,14 +640,38 @@ List endpoints return paginated results:
 { "count": 50, "next": "...?page=2", "previous": null, "results": [...] }
 ```
 Query params: `page` (default 1), `page_size` (default 10, max 100).
+> Note: Some endpoints (student-interests, subscribers) are unpaginated.
+
+---
+
+## URL-Based Tab Navigation
+
+Dashboard pages support deep-linking via URL parameters:
+- `?tab=messages` — opens the Messages tab
+- `?tab=messages&thread=5` — opens a specific thread
+- Tab switches update the URL via `history.replaceState` for browser back/forward support.
+
+---
+
+## Notification Tiers
+
+| Preference | Trigger | Recipients |
+|---|---|---|
+| **Anonymous subscriber** | Faculty becomes available | Email to subscribed visitors |
+| **Student: `all`** | Any status/availability change | Email to student |
+| **Student: `available`** | Faculty becomes available only | Email to student |
+| **Student: `none`** | — | No notifications |
 
 ---
 
 ## Notes
 
 1. All timestamps are UTC (ISO 8601)
-2. JWT access tokens expire after **5 hours** (configurable)
+2. JWT access tokens expire after **5 hours** (configurable in settings)
 3. Media files served from `/media/`
 4. File uploads use `multipart/form-data`
-5. CORS is open in `DEBUG=True` mode for development
+5. CORS is open in `DEBUG=True` mode; restricted to `CORS_ALLOWED_ORIGINS` in production
 6. QR codes auto-detect LAN IP — no manual configuration needed for mobile testing
+7. All email notifications are sent asynchronously via background threads (non-blocking)
+8. Chat thread deletion is per-user (soft delete). Threads are hard-deleted only when both parties delete.
+9. `duration_seconds` replaced the legacy `duration_minutes` field for broadcast messages

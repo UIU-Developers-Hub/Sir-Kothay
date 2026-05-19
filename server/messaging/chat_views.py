@@ -22,7 +22,7 @@ from .chat_serializers import (
 
 def _get_client_base():
     """Return the client base URL for email links."""
-    return getattr(django_settings, 'CLIENT_PUBLIC_BASE_URL', '').rstrip('/') or 'http://127.0.0.1:5500/client'
+    return getattr(django_settings, 'CLIENT_PUBLIC_BASE_URL', '').rstrip('/')
 
 
 import threading

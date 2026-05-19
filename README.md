@@ -1,6 +1,6 @@
 # [Sir Kothay?](https://sirkothay.pythonanywhere.com/)
 
-> *"Sir Kothay?"* — a real-time availability broadcasting platform. Professors, TAs, and professionals can share their live status via a unique URL and QR code. Visitors scan the QR code to instantly see where someone is, send direct messages, and subscribe for availability notifications.
+> *"Sir Kothay?"* — a real-time availability broadcasting platform for universities. Faculty members share their live status via a unique URL and QR code. Students track their favourite faculty, chat directly, and get notified when a professor becomes available. Visitors can scan a QR code to instantly see where someone is and send anonymous messages.
 
 Built with **Django REST Framework** (backend API) and a **static HTML + Tailwind CSS** client. Deployable to **PythonAnywhere** or any WSGI host.
 
@@ -12,7 +12,8 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
 - **Live Broadcast Status** — set a message visible to anyone who scans your QR code or visits your page
 - **Timed Statuses** — schedule a status to go live later, or auto-expire after a set duration
 - **Fallback Status** — default message automatically restored when a timed status expires
-- **Availability Toggle** — mark yourself Available/Unavailable; subscribers get notified on change
+- **Availability Toggle** — mark yourself Available/Unavailable; subscribers and students get notified on change
+- **Set Availability on Broadcast** — each status, template, schedule, or calendar event can toggle availability automatically
 
 ### Scheduling & Automation
 - **Recurring Schedules** — auto-broadcast on a weekly schedule (e.g. "Office Hours Mon 2–4 PM")
@@ -20,10 +21,27 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
 - **Quick Status Templates** — one-tap presets for common statuses ("In a Meeting", "Lab 401")
 - **Automated Scheduler** — `python manage.py process_schedules` processes all triggers (cron/task)
 
+### Role-Based Dashboards
+- **Faculty Dashboard** — full broadcast management, QR codes, analytics, scheduling, unified chat inbox
+- **Student Dashboard** — faculty interest tracking, threaded chat, granular notification preferences
+- **Admin Dashboard** — user management panel (activate/deactivate, view all users)
+
 ### Communication
-- **Visitor Direct Messages** — visitors can send messages from the broadcast page (no login required)
-- **Broadcaster Inbox** — view and reply to visitor messages from the dashboard
-- **Email Notifications** — subscribers get emailed when a broadcaster becomes available
+- **Threaded Chat System** — registered students and faculty can have multi-message, persistent conversations
+  - **Thread Lifecycle** — Awaiting → Open → Closed status flow
+  - **Chat Actions** — accept, reply, close, delete (per-user soft-delete)
+  - **Close & Delete All** — bulk action to clean up all threads
+- **Visitor Direct Messages** — anonymous visitors can send messages from the broadcast page (no login required)
+- **Faculty Inbox** — unified split-panel view for both student chats and visitor DMs
+- **Email Notifications** — all chat lifecycle events (new thread, acceptance, reply, close) trigger async email notifications
+
+### Notification System
+- **Anonymous Subscribers** — visitors subscribe via email; notified when broadcaster becomes available
+- **Student Notification Preferences** — 3-tier YouTube-style bell dropdown per faculty:
+  - 🔔 **All** — notified on every status/availability update
+  - 🔔 **When Available** — notified only when faculty becomes available
+  - 🔕 **Off** — no notifications
+- **Async Email Delivery** — all emails sent via background threads (non-blocking, no Celery required)
 
 ### Analytics
 - **Page View Tracking** — daily page views and QR scan counts
@@ -42,39 +60,53 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
 
 ```
 Sir-Kothay/
-├── client/                     # Static frontend (HTML + Tailwind CSS + JS)
-│   ├── index.html              # Landing page
-│   ├── about.html              # About page
-│   ├── auth/                   # Login & Register pages
-│   ├── broadcast/              # Public broadcast viewer (QR landing)
-│   ├── dashboard/              # Authenticated dashboard & profile
+├── client/                          # Static frontend (HTML + Tailwind CSS + JS)
+│   ├── index.html                   # Landing page
+│   ├── about.html                   # About page with contributors
+│   ├── base.html                    # Shared layout template
+│   ├── auth/
+│   │   ├── login.html               # Login (email or student ID)
+│   │   └── register.html            # Register (Faculty / Student / Admin)
+│   ├── broadcast/
+│   │   └── message.html             # Public broadcast viewer (QR landing)
+│   ├── dashboard/
+│   │   ├── home.html                # Faculty dashboard (tabs: status, QR, schedule, chat, analytics)
+│   │   ├── student.html             # Student dashboard (faculty tracking, chat)
+│   │   ├── admin.html               # Admin dashboard (user management)
+│   │   └── profile.html             # Profile editor (shared)
 │   └── static/
 │       ├── css/
 │       ├── images/
 │       └── js/
-│           ├── api-config.js           # API base URL (auto-detects LAN IP)
-│           ├── dashboard-core.js       # Auth, profile, QR, broadcast
-│           ├── dashboard-templates.js  # Quick status templates
-│           ├── dashboard-schedules.js  # Recurring schedules
-│           ├── dashboard-calendar.js   # Calendar events
-│           ├── dashboard-inbox.js      # Visitor messages
-│           └── dashboard-analytics.js  # Analytics tab
-├── server/                     # Django backend
-│   ├── core/                   # Django project settings & URLs
-│   ├── authApp/                # Custom user model, JWT auth
-│   ├── dashboard/              # User profile / details
-│   ├── broadcast/              # Broadcast messages (CRUD + public endpoint)
-│   ├── qrcodeApp/              # QR code generation & serving
-│   ├── messaging/              # Visitor → Broadcaster direct messages
-│   ├── notifications/          # Email subscriber system
-│   ├── scheduler/              # Recurring, calendar, templates, analytics
+│           ├── api-config.js          # API base URL + endpoint constants
+│           ├── dashboard-core.js      # Faculty: auth, profile, QR, broadcast, DM inbox
+│           ├── dashboard-chat.js      # Faculty: split-panel unified chat UI
+│           ├── dashboard-templates.js # Faculty: quick status templates
+│           ├── dashboard-schedules.js # Faculty: recurring schedules
+│           ├── dashboard-calendar.js  # Faculty: calendar events
+│           ├── dashboard-inbox.js     # Faculty: legacy visitor DM inbox
+│           ├── dashboard-analytics.js # Faculty: analytics charts
+│           ├── student-dashboard.js   # Student: faculty cards, interest management
+│           ├── student-chat.js        # Student: split-panel chat with faculty
+│           ├── admin-dashboard.js     # Admin: user management
+│           ├── notify-modal.js        # Notification/confirm modals (skNotify, skConfirm)
+│           └── sk-modal.js            # Reusable modal component
+├── server/                          # Django backend
+│   ├── core/                        # Django project settings & URLs
+│   ├── authApp/                     # Custom user model (Faculty/Student/Admin), JWT auth
+│   ├── dashboard/                   # User profile, student interests, admin management
+│   ├── broadcast/                   # Broadcast messages (CRUD + public endpoint + scheduling)
+│   ├── qrcodeApp/                   # QR code generation & serving
+│   ├── messaging/                   # Visitor DMs + threaded chat system
+│   ├── notifications/               # Email subscriber system + student notification service
+│   ├── scheduler/                   # Recurring schedules, calendar events, templates, analytics
 │   ├── manage.py
 │   ├── requirements.txt
-│   ├── .env.example
-│   └── db.sqlite3              # (gitignored) local dev database
+│   ├── .env.example                 # Environment variable template
+│   └── db.sqlite3                   # (gitignored) local dev database
 ├── scripts/
-│   ├── run-local.ps1           # Windows quick-start script
-│   └── run-local.sh            # Linux/macOS quick-start script
+│   ├── run-local.ps1                # Windows quick-start script
+│   └── run-local.sh                 # Linux/macOS quick-start script
 ├── API_DOCUMENTATION.md
 └── README.md
 ```
@@ -97,7 +129,7 @@ python -m venv .venv
 # Windows: .\.venv\Scripts\Activate.ps1
 # Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env          # Edit SECRET_KEY for non-local use
+cp .env.example .env          # Edit values as needed (see below)
 python manage.py migrate
 python manage.py runserver 0.0.0.0:8000
 ```
@@ -136,6 +168,40 @@ Set `window.SIR_KOTHAY_API_BASE = 'https://your-api.example.com'` in an inline s
 
 ---
 
+## ⚙️ Environment Variables
+
+All server configuration is in `server/.env`. Copy `.env.example` to `.env` and edit:
+
+| Variable | Default | Description |
+|---|---|---|
+| `SECRET_KEY` | dev fallback | Django secret key. **Must change for production.** |
+| `DEBUG` | `True` | Set to `False` in production. |
+| `ALLOWED_HOSTS` | `127.0.0.1,localhost` | Comma-separated allowed hosts. |
+| `CORS_ALLOWED_ORIGINS` | localhost variants | Comma-separated CORS origins (only used when `DEBUG=False`). |
+| `CSRF_TRUSTED_ORIGINS` | localhost variants | Comma-separated CSRF trusted origins. |
+| `DB_ENGINE` | SQLite | Set to `django.db.backends.postgresql` for Postgres. |
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` | — | PostgreSQL credentials (only when `DB_ENGINE` is set). |
+| `CLIENT_PUBLIC_BASE_URL` | empty | Full URL to the client root (e.g. `http://127.0.0.1:5500`). Used for QR codes and email links. |
+| `GITHUB_CONTRIBUTORS_REPO` | `UIU-Developers-Hub/Sir-Kothay` | GitHub repo for the About page contributor list. |
+| `EMAIL_HOST_USER` | empty | Gmail address. When set, enables real SMTP delivery. When empty, emails print to console. |
+| `EMAIL_HOST_PASSWORD` | empty | Gmail App Password (16 chars). See [setup instructions](#-email-setup). |
+
+### 📧 Email Setup
+
+The platform uses Gmail SMTP for free email delivery (500 emails/day):
+
+1. **Enable 2-Step Verification** on your Google account: https://myaccount.google.com/security
+2. **Generate an App Password**: https://myaccount.google.com/apppasswords
+3. **Add to `.env`:**
+   ```
+   EMAIL_HOST_USER=yourgmail@gmail.com
+   EMAIL_HOST_PASSWORD=abcdefghijklmnop
+   ```
+
+When `EMAIL_HOST_USER` is empty, Django uses the console backend (emails print to terminal — useful for development).
+
+---
+
 ## 🛠 Tech Stack
 
 | Layer | Technology |
@@ -143,8 +209,10 @@ Set `window.SIR_KOTHAY_API_BASE = 'https://your-api.example.com'` in an inline s
 | Backend | Django 5.1, Django REST Framework, SimpleJWT |
 | Frontend | HTML5, Tailwind CSS (CDN), Vanilla JS |
 | Database | SQLite (dev) / PostgreSQL (prod) |
-| Auth | JWT (Bearer tokens) |
+| Auth | JWT (Bearer tokens), role-based (Faculty / Student / Admin) |
 | QR Codes | `qrcode` + `Pillow` (Python) |
+| Email | Gmail SMTP via `threading.Thread` (async, non-blocking) |
+| Static Files | WhiteNoise |
 | Hosting | PythonAnywhere (or any WSGI host) |
 
 ---
@@ -157,10 +225,13 @@ See **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** for full endpoint reference
 |-------|--------|------|
 | Authentication | `/api/auth/users/` | Public (register/login) |
 | User Details | `/api/dashboard/user-details/` | JWT |
+| Student Interests | `/api/dashboard/student-interests/` | JWT |
+| Admin Users | `/api/dashboard/admin-users/` | JWT (staff) |
 | Broadcast Messages | `/api/broadcast/messages/` | JWT |
 | Public Broadcast | `/api/broadcast/<slug>/` | **Public** |
 | QR Codes | `/api/qrcode/qrcodes/` | JWT |
 | Direct Messaging | `/api/messaging/` | Mixed |
+| Threaded Chat | `/api/messaging/chat/` | JWT |
 | Notifications | `/api/notifications/` | Mixed |
 | Scheduler | `/api/scheduler/` | JWT |
 | Analytics | `/api/scheduler/analytics/` | Mixed |

@@ -63,9 +63,12 @@ class QuickStatusTemplateViewSet(viewsets.ModelViewSet):
         )
         # Also set availability if configured
         if template.set_availability:
-            UserDetails.objects.filter(user=request.user).update(
-                is_available=(template.set_availability == 'true')
-            )
+            try:
+                details, _ = UserDetails.objects.get_or_create(user=request.user)
+                details.is_available = (template.set_availability == 'true')
+                details.save()
+            except Exception:
+                pass
         return Response({
             'message': f'Status set to: {template.label}',
             'broadcast_id': msg.id,

@@ -237,8 +237,4 @@ EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes')
 EMAIL_HOST_USER = _email_user
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', _email_user or 'noreply@sirkothay.com')
-
-# Client public base URL — used for email links pointing to the frontend.
-# Set via env var in production; defaults to local dev server.
-CLIENT_PUBLIC_BASE_URL = os.getenv('CLIENT_PUBLIC_BASE_URL', 'http://127.0.0.1:5500/client')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', _email_user or 'noreply@sirkothay.com')
