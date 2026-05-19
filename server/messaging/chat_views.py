@@ -25,10 +25,24 @@ def _get_client_base():
     return getattr(django_settings, 'CLIENT_PUBLIC_BASE_URL', '').rstrip('/') or 'http://127.0.0.1:5500/client'
 
 
+import threading
+
+def _send_chat_email_worker(subject, body, from_email, to_email):
+    """Worker running in a background thread to send chat-related emails without blocking the request thread."""
+    try:
+        send_mail(subject, body, from_email, [to_email], fail_silently=False)
+    except Exception as e:
+        print(f"Background chat email delivery failed to {to_email}: {e}")
+
 def _send_chat_email(to_email, subject, body):
-    """Helper to send a chat-related email."""
+    """Helper to send a chat-related email asynchronously in the background."""
     from_email = getattr(django_settings, 'DEFAULT_FROM_EMAIL', 'noreply@sirkothay.com')
-    send_mail(subject, body, from_email, [to_email], fail_silently=True)
+    t = threading.Thread(
+        target=_send_chat_email_worker,
+        args=(subject, body, from_email, to_email)
+    )
+    t.daemon = True
+    t.start()
 
 
 def _should_notify(user, setting_name):

@@ -112,9 +112,9 @@ class BroadcastMessage(models.Model):
             if self.set_availability in ['true', 'false']:
                 try:
                     from dashboard.models import UserDetails
-                    UserDetails.objects.filter(user=self.user).update(
-                        is_available=(self.set_availability == 'true')
-                    )
+                    details, _ = UserDetails.objects.get_or_create(user=self.user)
+                    details.is_available = (self.set_availability == 'true')
+                    details.save()
                 except Exception:
                     pass
         elif self.active_until is not None:

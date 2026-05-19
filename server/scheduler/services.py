@@ -88,9 +88,12 @@ def process_recurring_schedules(user=None):
         )
         # Also set availability if configured
         if sched.set_availability:
-            UserDetails.objects.filter(user=sched.user).update(
-                is_available=(sched.set_availability == 'true')
-            )
+            try:
+                details, _ = UserDetails.objects.get_or_create(user=sched.user)
+                details.is_available = (sched.set_availability == 'true')
+                details.save()
+            except Exception:
+                pass
         sched.last_triggered_at = now
         sched.save(update_fields=['last_triggered_at'])
 
@@ -118,9 +121,12 @@ def process_calendar_events(user=None):
         )
         # Also set availability if configured
         if event.set_availability:
-            UserDetails.objects.filter(user=event.user).update(
-                is_available=(event.set_availability == 'true')
-            )
+            try:
+                details, _ = UserDetails.objects.get_or_create(user=event.user)
+                details.is_available = (event.set_availability == 'true')
+                details.save()
+            except Exception:
+                pass
 
 
 def run_all(user=None):
