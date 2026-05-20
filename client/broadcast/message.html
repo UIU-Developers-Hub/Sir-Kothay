@@ -407,7 +407,7 @@
         </div>
 
         <!-- API Config -->
-        <script src="../static/js/api-config.js?v=2"></script>
+        <script src="../static/js/api-config.js?v=3"></script>
 
         <script>
           // Get user slug from URL parameter
@@ -447,7 +447,7 @@
 
               if (data.profile_image) {
                 document.getElementById("userImage").src =
-                  API_BASE_URL + data.profile_image;
+                  resolveProfileImage(data.profile_image);
               }
 
               // Show broadcast message or default status if exists

@@ -210,9 +210,14 @@ def reply_thread(request, pk):
     thread.last_activity_at = timezone.now()
     thread.save(update_fields=['last_activity_at'])
 
-    # Email the other party if their setting is enabled
+    # Email the other party if their setting is enabled.
+    # Skip email to faculty while thread is still PENDING – the initial
+    # notification was already sent when the thread was created. Sending
+    # more emails before acceptance defeats the approval system.
     other = thread.faculty if request.user == thread.student else thread.student
-    if _should_notify(other, 'notify_chat_replies'):
+    if thread.status == 'PENDING' and other == thread.faculty:
+        pass  # Faculty already received the initial notification
+    elif _should_notify(other, 'notify_chat_replies'):
         client_base = _get_client_base()
         if other.role == 'STUDENT':
             thread_link = f'{client_base}/dashboard/student.html?tab=messages&thread={thread.id}'

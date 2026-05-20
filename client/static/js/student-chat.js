@@ -50,8 +50,12 @@ function _stuRenderList() {
     else if (t.status === 'ACTIVE') badge = '<span class="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0"></span>';
     else badge = '<span class="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0"></span>';
     var lastMsg = t.last_message ? t.last_message.body : '';
+    var facAvatarUrl = resolveProfileImage(fac.profile_image_url);
+    var facAvatarHtml = facAvatarUrl && facAvatarUrl !== '../static/images/image.png'
+      ? '<img src="' + facAvatarUrl + '" class="w-9 h-9 rounded-full object-cover flex-shrink-0">'
+      : '<div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">' + initial + '</div>';
     return '<div class="flex gap-2.5 px-4 py-3 cursor-pointer border-b border-gray-50 hover:bg-blue-50/50 transition-colors ' + (isActive ? 'bg-blue-50 border-l-2 border-l-blue-500' : '') + '" onclick="stuOpenThread(' + t.id + ')">' +
-      '<div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">' + initial + '</div>' +
+      facAvatarHtml +
       '<div class="flex-1 min-w-0">' +
         '<div class="flex items-center gap-1.5">' +
           '<span class="text-xs font-semibold text-gray-800 truncate">' + _esc(fac.username || 'Faculty') + '</span>' +
@@ -92,9 +96,13 @@ function _stuRenderDetail(thread) {
   var messages = thread.messages || [];
 
   // Header
+  var facHeaderAvatar = resolveProfileImage(fac.profile_image_url);
+  var facHeaderHtml = facHeaderAvatar && facHeaderAvatar !== '../static/images/image.png'
+    ? '<img src="' + facHeaderAvatar + '" class="w-9 h-9 rounded-full object-cover flex-shrink-0">'
+    : '<div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">' + (fac.username || 'F').charAt(0).toUpperCase() + '</div>';
   var headerHtml =
     '<button onclick="_stuBackToList()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 mr-1"><i class="bi bi-arrow-left"></i></button>' +
-    '<div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">' + (fac.username || 'F').charAt(0).toUpperCase() + '</div>' +
+    facHeaderHtml +
     '<div class="flex-1 min-w-0">' +
       '<p class="text-sm font-bold text-gray-800 truncate">' + _esc(fac.username || 'Faculty') + '</p>' +
       '<p class="text-[10px] text-gray-400 truncate">' + _esc(thread.subject) + ' · ' + _stuStatusLabel(thread.status) + '</p>' +

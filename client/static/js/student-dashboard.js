@@ -234,7 +234,7 @@ function renderFaculties(interests) {
             
                 <div onclick="viewFacultyProfile(${interest.faculty})" class="flex items-center gap-3 min-w-0 flex-1 hover:bg-gray-50 p-2 -m-2 rounded-lg transition-colors cursor-pointer text-left">
                     <div class="relative flex-shrink-0">
-                        <img src="${fac.profile_image_url || '../static/images/image.png'}" class="w-14 h-14 rounded-full object-cover border border-gray-100 shadow-sm hover:border-orange-200 transition-colors">
+                        <img src="${resolveProfileImage(fac.profile_image_url)}" class="w-14 h-14 rounded-full object-cover border border-gray-100 shadow-sm hover:border-orange-200 transition-colors">
                         <div class="absolute bottom-0 right-0 w-3.5 h-3.5 ${statusColor} border-2 border-white rounded-full"></div>
                     </div>
                     <div class="min-w-0 pr-12">
@@ -284,7 +284,7 @@ function viewFacultyProfile(facultyId) {
     const content = `
         <div class="text-center mb-6">
             <div class="relative inline-block">
-                <img src="${fac.profile_image_url || '../static/images/image.png'}" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg mx-auto">
+                <img src="${resolveProfileImage(fac.profile_image_url)}" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg mx-auto">
                 <div class="absolute bottom-1 right-1 w-5 h-5 ${statusColor} border-4 border-white rounded-full"></div>
             </div>
             <h2 class="text-xl font-bold text-gray-900 mt-3">${fac.username || interest.faculty_username}</h2>
@@ -364,7 +364,7 @@ function renderFeed(interests) {
         return `
             <div class="p-4 flex items-start gap-4 hover:bg-gray-50 transition-colors">
                 <div class="relative">
-                    <img src="${fac.profile_image_url || '../static/images/image.png'}" class="w-12 h-12 rounded-full object-cover border border-gray-200">
+                    <img src="${resolveProfileImage(fac.profile_image_url)}" class="w-12 h-12 rounded-full object-cover border border-gray-200">
                     <div class="absolute bottom-0 right-0 w-3.5 h-3.5 ${fac.is_available ? 'bg-green-500' : 'bg-red-500'} border-2 border-white rounded-full"></div>
                 </div>
                 <div class="flex-1">
@@ -404,7 +404,7 @@ async function searchFaculties() {
         resultsDiv.innerHTML = matched.map(u => `
             <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded border-b">
                 <div class="flex items-center gap-3">
-                    <img src="${u.profile_image_url || '../static/images/image.png'}" class="w-8 h-8 rounded-full">
+                    <img src="${resolveProfileImage(u.profile_image_url)}" class="w-8 h-8 rounded-full">
                     <div>
                         <p class="text-sm font-medium">${u.username}</p>
                         <p class="text-xs text-gray-500">${u.designation || 'Faculty'}</p>

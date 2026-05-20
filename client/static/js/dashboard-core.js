@@ -108,7 +108,7 @@ async function loadDashboard() {
       document.getElementById('userEmail').textContent = data.user_email || '';
       document.getElementById('userPhone').textContent = data.phone_number || '';
       document.getElementById('userOrg').textContent = data.organization || 'N/A';
-      if (data.profile_image) document.getElementById('userImage').src = API_BASE_URL + data.profile_image;
+      document.getElementById('userImage').src = resolveProfileImage(data.profile_image_url || data.profile_image);
       var statusEl = document.getElementById('defaultStatusInput');
       if (statusEl && data.default_status !== undefined) statusEl.value = data.default_status;
       var availEl = document.getElementById('defaultAvailInput');

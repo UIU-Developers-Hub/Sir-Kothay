@@ -197,7 +197,7 @@
 </div>
 
 <!-- API Config -->
-<script src="../static/js/api-config.js"></script>
+<script src="../static/js/api-config.js?v=3"></script>
 
 <script>
 // Check if user is logged in
@@ -251,9 +251,7 @@ async function loadProfile() {
                 document.getElementById('displayOrganization').innerHTML = `<span class="text-gray-500">•</span><i class="bi bi-building"></i> ${data.organization}`;
             }
 
-            if (data.profile_image) {
-                document.getElementById('profileImage').src = API_BASE_URL + data.profile_image;
-            }
+            document.getElementById('profileImage').src = resolveProfileImage(data.profile_image_url || data.profile_image);
         } else {
             console.error('API Error:', data);
             throw new Error(data.detail || 'Failed to load profile');

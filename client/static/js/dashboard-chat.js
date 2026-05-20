@@ -19,7 +19,7 @@ async function loadUnifiedInbox() {
     var info = t.student_info || {};
     _allConvos.push({
       type: 'thread', id: t.id, name: info.username || 'Student',
-      email: info.email || '', avatar: info.profile_image_url || '',
+      email: info.email || '', avatar: resolveProfileImage(info.profile_image_url),
       subject: t.subject, status: t.status, studentId: info.student_id || '',
       lastMsg: t.last_message ? t.last_message.body : '',
       lastTime: t.last_activity_at || t.created_at,
@@ -84,8 +84,11 @@ function _renderConvoList() {
     var verified = c.studentId ? '<i class="bi bi-patch-check-fill text-blue-500 text-[9px]"></i>' : '';
     var typeBadge = c.type === 'dm' ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-orange-50 text-orange-500 border border-orange-100 font-bold">Visitor</span>' : '';
     var unreadDot = c.unread ? '<span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></span>' : '';
+    var avatarHtml = c.avatar && c.avatar !== '../static/images/image.png'
+      ? '<img src="' + c.avatar + '" class="w-9 h-9 rounded-full object-cover flex-shrink-0">'
+      : '<div class="w-9 h-9 rounded-full ' + color + ' flex items-center justify-center text-sm font-bold flex-shrink-0">' + initial + '</div>';
     return '<div class="flex gap-2.5 px-4 py-3 cursor-pointer border-b border-gray-50 hover:bg-blue-50/50 transition-colors ' + (isActive ? 'bg-blue-50 border-l-2 border-l-blue-500' : '') + '" onclick="openConversation(\'' + c.type + '\',' + c.id + ')">' +
-      '<div class="w-9 h-9 rounded-full ' + color + ' flex items-center justify-center text-sm font-bold flex-shrink-0">' + initial + '</div>' +
+      avatarHtml +
       '<div class="flex-1 min-w-0">' +
         '<div class="flex items-center gap-1.5">' +
           '<span class="text-xs font-semibold text-gray-800 truncate">' + escapeHtml(c.name) + '</span>' +
@@ -124,12 +127,16 @@ async function _renderThreadConvo(c) {
     var thread = await res.json();
     c.raw = thread; // update raw
     var stu = thread.student_info || {};
+    var stuAvatarUrl = resolveProfileImage(stu.profile_image_url);
     var verified = stu.student_id ? ' <i class="bi bi-patch-check-fill text-blue-500 text-xs"></i>' : '';
+    var stuAvatarHtml = stuAvatarUrl && stuAvatarUrl !== '../static/images/image.png'
+      ? '<img src="' + stuAvatarUrl + '" class="w-9 h-9 rounded-full object-cover flex-shrink-0">'
+      : '<div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">' + (stu.username || 'S').charAt(0).toUpperCase() + '</div>';
 
     // Header
     var headerHtml =
       '<button onclick="_backToList()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 mr-1"><i class="bi bi-arrow-left"></i></button>' +
-      '<div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">' + (stu.username || 'S').charAt(0).toUpperCase() + '</div>' +
+      stuAvatarHtml +
       '<div class="flex-1 min-w-0">' +
         '<p class="text-sm font-bold text-gray-800 truncate">' + escapeHtml(stu.username || 'Student') + verified + '</p>' +
         '<p class="text-[10px] text-gray-400 truncate">' + escapeHtml(thread.subject) + ' · ' + _statusLabel(thread.status) + '</p>' +

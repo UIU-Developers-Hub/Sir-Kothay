@@ -86,6 +86,22 @@ function buildPublicUrl(path) {
     return API_BASE_URL + path;
 }
 
+/**
+ * Resolve a profile image URL from the API into a full absolute URL.
+ * Handles: null/undefined → fallback, relative paths → API_BASE_URL prefix,
+ * already-absolute URLs → pass-through.
+ * @param {string|null|undefined} url - The profile_image or profile_image_url value from the API
+ * @param {string} [fallback] - Fallback image path (default: '../static/images/image.png')
+ * @returns {string} Full image URL ready for <img src>
+ */
+function resolveProfileImage(url, fallback) {
+    if (!url) return fallback || '../static/images/image.png';
+    // Already absolute (http/https/data URI)
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    // Relative path from API — prepend base URL
+    return API_BASE_URL + url;
+}
+
 function getAuthToken() {
     return localStorage.getItem('access_token');
 }
@@ -136,5 +152,6 @@ if (typeof module !== 'undefined' && module.exports) {
         apiFetchImage: apiFetchImage,
         sirKothayContributorsApiUrl: sirKothayContributorsApiUrl,
         buildPublicUrl: buildPublicUrl,
+        resolveProfileImage: resolveProfileImage,
     };
 }
