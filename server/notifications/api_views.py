@@ -73,7 +73,7 @@ def subscribe(request, user_slug):
         f'You have successfully subscribed to status updates for {user_details.user.username}.\n'
         f'You will be notified {pref_str}.\n\n'
         f'---\n'
-        f'To manage or unsubscribe from these notifications, visit:\n{manage_url}\n'
+        f'Manage your subscriptions:\n{manage_url}\n'
     )
     send_email_async(subject, body, settings.DEFAULT_FROM_EMAIL, [email])
 

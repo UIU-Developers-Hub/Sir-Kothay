@@ -90,7 +90,7 @@ def send_dm(request, user_slug):
         f'Message: {dm.body}\n\n'
         f'They will reply to you directly at this email address.\n\n'
         f'---\n'
-        f'To manage your active messages or notifications, visit:\n{manage_url}\n'
+        f'Manage your subscriptions:\n{manage_url}\n'
     )
     send_email_async(subject, body, django_settings.DEFAULT_FROM_EMAIL, [dm.sender_email])
 
@@ -185,7 +185,7 @@ def reply_dm(request, pk):
         client_base = getattr(django_settings, 'CLIENT_PUBLIC_BASE_URL', 'http://127.0.0.1:5500/client')
         if not client_base: client_base = 'http://127.0.0.1:5500/client'
         manage_url = f'{client_base}/broadcast/manage.html?token={sub.unsubscribe_token}'
-        manage_text = f'\n---\nTo manage your active messages or opt out of replies, visit:\n{manage_url}\n'
+        manage_text = f'\n---\nManage your subscriptions:\n{manage_url}\n'
 
     from_email = getattr(django_settings, 'DEFAULT_FROM_EMAIL', 'noreply@sirkothay.com')
     subject = f'Reply from {request.user.username} — Sir Kothay'

@@ -3,12 +3,16 @@
 // This allows mobile devices on the LAN to reach the Django server automatically.
 (function () {
     var host = typeof window !== 'undefined' ? window.location.hostname : '';
+    // If we are on a local development IP (localhost, 127.0.0.1, or LAN IPs like 192.168.x.x / 10.x.x.x)
     var isLocal =
         host === 'localhost' ||
         host === '127.0.0.1' ||
         host === '' ||
-        host === '[::1]';
-    // In dev mode, API runs on port 8000 at the same host (works for LAN IPs too)
+        host === '[::1]' ||
+        host.startsWith('192.168.') ||
+        host.startsWith('10.');
+        
+    // Always map local development to 127.0.0.1:8000 so default `python manage.py runserver` works without tweaks
     var defaultBase = isLocal
         ? 'http://127.0.0.1:8000'
         : window.location.protocol + '//' + host + ':8000';

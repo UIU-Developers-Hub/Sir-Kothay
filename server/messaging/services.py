@@ -75,4 +75,49 @@ def process_stale_chats():
                         )
         except UserDetails.DoesNotExist:
             continue
+
+    from messaging.models import DirectMessage
+    from django.db import models
+    # Process DirectMessages (Visitor chats)
+    target_dms = DirectMessage.objects.filter(
+        models.Q(is_closed=False, replied_at__isnull=False) | models.Q(is_closed=True)
+    )
+
+    for dm in target_dms:
+        try:
+            faculty_details = UserDetails.objects.get(user=dm.broadcaster)
+            seconds = faculty_details.auto_close_seconds
+            if seconds is None:
+                continue
+
+            cutoff = now - timedelta(seconds=seconds)
+            
+            # For visitor chats, timer starts from when faculty replied
+            # If it's closed but not replied to, we can use created_at just in case it was closed manually
+            last_activity = dm.replied_at if dm.replied_at else dm.created_at
+            
+            if last_activity < cutoff:
+                will_delete = getattr(faculty_details, 'auto_delete_closed_chats', False)
+                
+                if dm.is_closed:
+                    if will_delete:
+                        dm.delete()
+                    continue
+
+                # It is not closed, so close it
+                dm.is_closed = True
+                
+                if will_delete:
+                    dm.delete()
+                else:
+                    dm.save(update_fields=['is_closed'])
+                
+                closed_count += 1
+                
+                # We could send an email to the visitor, but usually visitors don't expect auto-close emails, 
+                # or maybe they do? The user didn't specify sending emails for visitors.
+                # Just closing/deleting is enough.
+        except UserDetails.DoesNotExist:
+            continue
+
     return closed_count

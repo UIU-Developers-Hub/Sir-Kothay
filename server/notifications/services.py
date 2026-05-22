@@ -72,7 +72,7 @@ def notify_broadcaster_status_change(broadcaster, message_text, new_is_available
         if should_notify:
             avail_str = "Available" if new_is_available else "Unavailable"
             subject = f'Update from {broadcaster.username}'
-            unsubscribe_url = f'{client_base}/api/notifications/unsubscribe/{sub.unsubscribe_token}/'
+            manage_url = f'{client_base}/broadcast/manage.html?token={sub.unsubscribe_token}'
             body = (
                 f'Hi!\n\n'
                 f'Faculty member {broadcaster.username} has updated their status/availability:\n\n'
@@ -80,7 +80,7 @@ def notify_broadcaster_status_change(broadcaster, message_text, new_is_available
                 f'Availability: {avail_str}\n\n'
                 f'Visit their page to learn more.\n\n'
                 f'---\n'
-                f'To unsubscribe from these notifications, visit:\n{unsubscribe_url}\n'
+                f'Manage your subscriptions:\n{manage_url}\n'
             )
             send_email_async(subject, body, from_email, [sub.email])
 
