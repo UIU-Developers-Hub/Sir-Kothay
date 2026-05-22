@@ -375,6 +375,13 @@
     </div>
         </div>
       </main>
+
+      <!-- Mobile Bottom Nav -->
+      <nav class="sk-bottom-nav">
+        <div class="sk-bottom-nav-items">
+          <!-- Injected by JS -->
+        </div>
+      </nav>
     </div>
 
     <!-- API Config -->
@@ -382,6 +389,9 @@
     <script src="../static/js/utils.js"></script>
     <script src="../static/js/theme.js?v=ui-fix-14"></script>
     <script src="../static/js/layout.js?v=ui-fix-30"></script>
+    <script>
+      SKLayout.setupPublicNav && SKLayout.setupPublicNav('broadcast');
+    </script>
 
     <script>
       // Get user slug from URL parameter
