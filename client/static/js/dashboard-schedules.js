@@ -12,45 +12,153 @@ async function loadSchedules() {
     var res = await apiRequest(API_ENDPOINTS.RECURRING_LIST);
     var data = await res.json();
     window._recurringSchedules = Array.isArray(data) ? data : (data.results || []);
-    if (!el) {
-      if (typeof renderCalendar === 'function') renderCalendar();
-      return;
-    }
-    if (!res.ok) {
-      el.innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><h3>Failed to load schedules</h3></div>';
-      return;
-    }
-    var items = window._recurringSchedules;
-    if (items.length === 0) {
-      el.innerHTML = '<div class="sk-empty-state compact">' +
-        '<div class="sk-empty-icon"><i class="bi bi-arrow-repeat"></i></div>' +
-        '<h3>No recurring schedules</h3>' +
-        '<button onclick="openNewScheduleModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> Create Schedule</button>' +
-        '</div>';
-      if (typeof renderCalendar === 'function') renderCalendar();
-      return;
-    }
-    el.innerHTML = '<div class="sk-schedule-list">' + items.map(function (s) {
-      var durText = formatDurationSeconds(s.duration_seconds);
-      var activeClass = s.is_active ? 'active' : 'paused';
-      return '<div class="sk-schedule-item">' +
-        '<div class="sk-schedule-main">' +
-        '<div class="sk-schedule-icon ' + activeClass + '"><i class="bi bi-arrow-repeat"></i></div>' +
-        '<div class="sk-schedule-copy">' +
-        '<div class="sk-schedule-title"><span class="sk-status-dot ' + activeClass + '"></span>' + escapeHtml(s.day_label || dayNames[s.day_of_week]) + ' at ' + escapeHtml(s.time_of_day.slice(0, 5)) + '</div>' +
-        '<div class="sk-schedule-message">' + escapeHtml(s.message) + '</div>' +
-        '<div class="sk-schedule-meta">Duration: ' + escapeHtml(durText) + (s.last_triggered_at ? ' · Last ran: ' + escapeHtml(timeAgo(s.last_triggered_at)) : '') + '</div>' +
-        '</div></div>' +
-        '<div class="sk-schedule-actions">' +
-        '<button onclick="toggleSchedule(' + s.id + ',' + s.is_active + ')" class="sk-btn sk-btn-secondary sk-btn-sm">' + (s.is_active ? '<i class="bi bi-pause-fill"></i> Pause' : '<i class="bi bi-play-fill"></i> Resume') + '</button>' +
-        '<button onclick="openEditScheduleModalFromList(' + s.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon" title="Edit schedule"><i class="bi bi-pencil"></i></button>' +
-        '<button onclick="deleteSchedule(' + s.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete schedule"><i class="bi bi-trash"></i></button>' +
-        '</div></div>';
-    }).join('') + '</div>';
+    renderCombinedSchedules();
     if (typeof renderCalendar === 'function') renderCalendar();
+    
+    var dayModal = document.getElementById('dayViewModal');
+    if (dayModal && !dayModal.classList.contains('hidden') && window._currentDayModalDate) {
+      if (typeof openDayModal === 'function') openDayModal(window._currentDayModalDate);
+    }
   } catch (e) {
     if (el) el.innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><h3>Error loading schedules</h3></div>';
   }
+}
+
+function renderCombinedSchedules() {
+  var el = document.getElementById('schedulesList');
+  if (!el) return;
+
+  var filterVal = 'upcoming7';
+  var filterEl = document.getElementById('scheduleTimeFilter');
+  if (filterEl) filterVal = filterEl.value;
+
+  var typeFilterVal = 'all';
+  var typeFilterEl = document.getElementById('scheduleTypeFilter');
+  if (typeFilterEl) typeFilterVal = typeFilterEl.value;
+
+  var statusFilterVal = 'all';
+  var statusFilterEl = document.getElementById('scheduleStatusFilter');
+  if (statusFilterEl) statusFilterVal = statusFilterEl.value;
+
+  var recItems = window._recurringSchedules || [];
+  var calItems = typeof calEvents !== 'undefined' ? calEvents : [];
+
+  var now = new Date();
+  
+  // Filter Calendar Events
+  var filteredEvents = [];
+  if (typeFilterVal === 'all' || typeFilterVal === 'calendar') {
+    filteredEvents = calItems.filter(function(e) {
+      var isActive = e.is_active !== false;
+      if (statusFilterVal === 'active' && !isActive) return false;
+      if (statusFilterVal === 'paused' && isActive) return false;
+
+      var end = new Date(e.end_time);
+      var start = new Date(e.start_time);
+      
+      if (filterVal === 'upcoming') return end >= now;
+      if (filterVal === 'upcoming7') {
+        var up7 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        return end >= now && start <= up7;
+      }
+      if (filterVal === 'upcoming30') {
+        var up30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        return end >= now && start <= up30;
+      }
+      if (filterVal === 'today') {
+        var startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        var endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        return (start <= endOfToday && end >= startOfToday);
+      }
+      if (filterVal === 'last7') {
+        var last7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return end >= last7 && end <= now;
+      }
+      if (filterVal === 'last30') {
+        var last30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        return end >= last30 && end <= now;
+      }
+      return true; // all
+    });
+  }
+  
+  // Filter Recurring Schedules
+  var filteredRecs = [];
+  if (typeFilterVal === 'all' || typeFilterVal === 'recurring') {
+    filteredRecs = recItems.filter(function(s) {
+      if (statusFilterVal === 'active' && !s.is_active) return false;
+      if (statusFilterVal === 'paused' && s.is_active) return false;
+
+      if (filterVal === 'today') {
+        var todayIsoDow = now.getDay() || 7; // 1-7
+        var serverDow = todayIsoDow - 1; // 0-6 (0=Mon, 6=Sun)
+        return s.day_of_week === serverDow;
+      }
+      return true; // other time filters don't really apply to infinite recurring rules
+    });
+  }
+
+  filteredEvents.sort(function(a, b) { return a.start_time.localeCompare(b.start_time); });
+
+  if (filteredRecs.length === 0 && filteredEvents.length === 0) {
+    el.innerHTML = '<div class="sk-empty-state compact">' +
+      '<div class="sk-empty-icon"><i class="bi bi-calendar-x"></i></div>' +
+      '<h3>No schedules match the filter</h3>' +
+      '</div>';
+    return;
+  }
+
+  var html = '<div class="sk-schedule-list">';
+
+  // 1. Recurring Schedules
+  html += filteredRecs.map(function (s) {
+    var durText = formatDurationSeconds(s.duration_seconds);
+    var activeClass = s.is_active ? 'active' : 'paused';
+    return '<div class="sk-schedule-item">' +
+      '<div class="sk-schedule-main">' +
+      '<div class="sk-schedule-icon ' + activeClass + '"><i class="bi bi-arrow-repeat"></i></div>' +
+      '<div class="sk-schedule-copy">' +
+      '<div class="sk-schedule-title"><span class="sk-status-dot ' + activeClass + '"></span>' + escapeHtml(s.day_label || dayNames[s.day_of_week]) + ' at ' + escapeHtml(s.time_of_day.slice(0, 5)) + '</div>' +
+      '<div class="sk-schedule-message">' + escapeHtml(s.message) + '</div>' +
+      '<div class="sk-schedule-meta">Duration: ' + escapeHtml(durText) + (s.last_triggered_at ? ' &middot; Last ran: ' + escapeHtml(timeAgo(s.last_triggered_at)) : '') + '</div>' +
+      '</div></div>' +
+      '<div class="sk-schedule-actions">' +
+      '<button onclick="toggleSchedule(' + s.id + ',' + s.is_active + ')" class="sk-btn sk-btn-secondary sk-btn-sm">' + (s.is_active ? '<i class="bi bi-pause-fill"></i> Pause' : '<i class="bi bi-play-fill"></i> Resume') + '</button>' +
+      '<button onclick="openEditScheduleModalFromList(' + s.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon" title="Edit schedule"><i class="bi bi-pencil"></i></button>' +
+      '<button onclick="deleteSchedule(' + s.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete schedule"><i class="bi bi-trash"></i></button>' +
+      '</div></div>';
+  }).join('');
+
+  // 2. Calendar Events
+  html += filteredEvents.map(function (e) {
+    var startDate = new Date(e.start_time);
+    var dateStr = startDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    var timeStr = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    var endDateStr = new Date(e.end_time).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    
+    var isActive = e.is_active !== false;
+    var activeClass = isActive ? 'active' : 'paused';
+    var iconBg = isActive ? (e.color || '#f68b1f') : 'transparent';
+    var iconColor = isActive ? 'white' : (e.color || '#f68b1f');
+    var iconBorder = isActive ? 'none' : ('1px solid ' + (e.color || '#f68b1f'));
+
+    return '<div class="sk-schedule-item">' +
+      '<div class="sk-schedule-main">' +
+      '<div class="sk-schedule-icon ' + activeClass + '" style="background: ' + iconBg + '; color: ' + iconColor + '; border: ' + iconBorder + '"><i class="bi bi-calendar-event"></i></div>' +
+      '<div class="sk-schedule-copy">' +
+      '<div class="sk-schedule-title"><span class="sk-status-dot ' + activeClass + '" style="' + (isActive ? 'background: ' + (e.color || '#f68b1f') : '') + '"></span>' + escapeHtml(dateStr) + ' at ' + escapeHtml(timeStr) + '</div>' +
+      '<div class="sk-schedule-message">' + escapeHtml(e.title) + '</div>' +
+      '<div class="sk-schedule-meta">Ends: ' + escapeHtml(endDateStr) + '</div>' +
+      '</div></div>' +
+      '<div class="sk-schedule-actions">' +
+      '<button onclick="toggleEvent(' + e.id + ',' + isActive + ')" class="sk-btn sk-btn-secondary sk-btn-sm">' + (isActive ? '<i class="bi bi-pause-fill"></i> Pause' : '<i class="bi bi-play-fill"></i> Resume') + '</button>' +
+      '<button onclick="openEditEventModal(' + e.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon" title="Edit event"><i class="bi bi-pencil"></i></button>' +
+      '<button onclick="deleteEventFromList(' + e.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete event"><i class="bi bi-trash"></i></button>' +
+      '</div></div>';
+  }).join('');
+
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 function openEditScheduleModalFromList(id) {

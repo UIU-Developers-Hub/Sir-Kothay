@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Manage Notifications - Sir Kothay</title>
+    <meta name="description" content="Sir Kothay - Manage your subscriptions and direct messages.">
+    <link rel="stylesheet" href="../static/css/style.css?v=manage-1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+
+      /* Layout structure identical to message.html */
+      .bc-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      .bc-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        position: relative;
+        z-index: 1;
+      }
+      .bc-card {
+        width: 100%;
+        max-width: 420px;
+        background: var(--sk-card-bg);
+        border: 1px solid var(--sk-card-border);
+        border-radius: var(--sk-radius-xl);
+        overflow: hidden;
+        box-shadow: var(--sk-shadow-md);
+        animation: sk-fade-in 220ms ease both;
+      }
+      .bc-hero {
+        padding: 2rem 1.5rem;
+        text-align: center;
+        color: white;
+        background: var(--sk-primary);
+        position: relative;
+        overflow: hidden;
+      }
+      .bc-name {
+        font-size: var(--sk-text-xl);
+        font-weight: var(--sk-font-bold);
+        letter-spacing: -0.01em;
+        position: relative;
+        z-index: 1;
+      }
+      .bc-msg-section {
+        padding: 1.25rem 1.5rem;
+        background: var(--sk-primary-light);
+        text-align: center;
+      }
+      .bc-msg-label {
+        font-size: var(--sk-text-xs);
+        font-weight: var(--sk-font-semibold);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--sk-primary-text);
+        opacity: 0.7;
+        margin-bottom: 0.75rem;
+      }
+      .bc-info-list {
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .bc-info-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--sk-border);
+      }
+      .bc-info-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .bc-info-left {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        flex: 1;
+      }
+      .bc-info-icon {
+        color: var(--sk-primary);
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+      }
+      .bc-info-text-group {
+        display: flex;
+        flex-direction: column;
+      }
+      .bc-info-label {
+        font-size: var(--sk-text-xs);
+        color: var(--sk-text-tertiary);
+        margin-bottom: 0.25rem;
+      }
+      .bc-info-value {
+        font-size: var(--sk-text-sm);
+        color: var(--sk-text-primary);
+        font-weight: var(--sk-font-medium);
+      }
+      /* Custom toggle styling */
+      .toggle-switch {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        background-color: var(--sk-bg-muted);
+        border-radius: 20px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        flex-shrink: 0;
+      }
+      .toggle-switch.active {
+        background-color: var(--sk-success);
+      }
+      .toggle-handle {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 12px;
+        height: 12px;
+        background-color: white;
+        border-radius: 50%;
+        transition: transform 0.3s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .toggle-switch.active .toggle-handle {
+        transform: translateX(16px);
+      }
+      .toggle-status-text {
+        font-size: var(--sk-text-xs);
+        color: var(--sk-text-tertiary);
+        margin-top: 4px;
+        text-align: right;
+      }
+      
+      .empty-state {
+        text-align: center;
+        padding: 2rem 0;
+        color: var(--sk-text-tertiary);
+        font-size: var(--sk-text-sm);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sk-app">
+      <!-- Sidebar is injected by JS (layout.js) unconditionally -->
+
+      <main class="sk-main">
+        <div class="sk-page" style="padding-top: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; position:relative; z-index:1;">
+          <div class="bc-page" style="min-height: auto; width: 100%;">
+            <main class="bc-container">
+              <div class="bc-card">
+                
+                <!-- Header -->
+                <div class="bc-hero">
+                  <h1 class="bc-name" style="margin-bottom: 0.5rem;">Manage Settings</h1>
+                  <p style="font-size: var(--sk-text-sm); opacity: 0.9;">Control your Sir Kothay interactions</p>
+                </div>
+
+                <!-- Auth / Email Form -->
+                <div id="emailView" class="bc-info-list hidden">
+                  <p style="font-size: var(--sk-text-sm); color: var(--sk-text-secondary); margin-bottom: 0.5rem; text-align: center;">
+                    Enter your email to view your active subscriptions and messages instantly.
+                  </p>
+                  <div class="sk-form-group">
+                    <label class="sk-label">Email Address</label>
+                    <input type="email" id="emailInput" class="sk-input" placeholder="student@example.com" autofocus>
+                  </div>
+                  <button class="sk-btn sk-btn-primary" onclick="loadDataFromInput()" style="width: 100%; justify-content: center;">
+                    View My Settings
+                  </button>
+                  <p id="emailResult" style="text-align: center; font-size: var(--sk-text-sm); margin-top: 0.5rem;" class="hidden"></p>
+                </div>
+
+                <!-- Management View -->
+                <div id="manageView" class="hidden">
+                  <div class="bc-msg-section">
+                    <p class="bc-msg-label">Managing data for</p>
+                    <div class="bc-msg-panel" style="padding: 0.75rem;">
+                      <p id="userEmailDisplay" style="font-weight: var(--sk-font-semibold); font-size: var(--sk-text-sm);"></p>
+                    </div>
+                  </div>
+
+                  <div class="bc-info-list" style="padding-top: 0;">
+                    
+                    <div>
+                      <h2 style="font-size: var(--sk-text-sm); font-weight: var(--sk-font-bold); color: var(--sk-text-secondary); margin-bottom: 1rem; border-bottom: 1px solid var(--sk-border); padding-bottom: 0.5rem;">
+                        <i class="bi bi-bell me-2"></i> Status Subscriptions
+                      </h2>
+                      <div id="subsList"></div>
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                      <h2 style="font-size: var(--sk-text-sm); font-weight: var(--sk-font-bold); color: var(--sk-text-secondary); margin-bottom: 1rem; border-bottom: 1px solid var(--sk-border); padding-bottom: 0.5rem;">
+                        <i class="bi bi-chat-dots me-2"></i> Direct Messages
+                      </h2>
+                      <div id="dmsList"></div>
+                    </div>
+
+                    <button class="sk-btn sk-btn-secondary" onclick="window.location.reload()" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                      Manage Different Email
+                    </button>
+
+                  </div>
+                </div>
+
+              </div>
+            </main>
+          </div>
+        </div>
+      </main>
+
+      <!-- Mobile Bottom Nav -->
+      <nav class="sk-bottom-nav">
+        <div class="sk-bottom-nav-items">
+          <!-- Injected by JS -->
+        </div>
+      </nav>
+    </div>
+
+    <script src="../static/js/api.js"></script>
+    <script src="../static/js/api-config.js"></script>
+    <script src="../static/js/utils.js"></script>
+    <script src="../static/js/theme.js"></script>
+    <script src="../static/js/components.js"></script>
+    <script src="../static/js/layout.js"></script>
+    <script>
+      // Initialize Layout
+      document.addEventListener('DOMContentLoaded', () => {
+        SKLayout.setupPublicNav('manage');
+      });
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+
+      // Initialize view
+      if (token) {
+        document.getElementById('manageView').classList.remove('hidden');
+        loadData(null, token);
+      } else {
+        document.getElementById('emailView').classList.remove('hidden');
+      }
+
+      function showToast(msg) {
+        const toast = document.getElementById('skToast');
+        document.getElementById('skToastMessage').textContent = msg;
+        toast.style.display = 'flex';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+      }
+
+      async function skFetch(path, options = {}) {
+        const url = API_BASE_URL + path;
+        options.headers = { ...options.headers, 'Content-Type': 'application/json' };
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error || 'API request failed');
+        }
+        return response.json();
+      }
+
+      async function loadDataFromInput() {
+        const email = document.getElementById('emailInput').value.trim();
+        const el = document.getElementById('emailResult');
+        if (!email) {
+          el.textContent = 'Please enter an email address.';
+          el.style.color = 'var(--sk-error)';
+          el.classList.remove('hidden');
+          return;
+        }
+        try {
+          await loadData(email, null);
+          document.getElementById('emailView').classList.add('hidden');
+          document.getElementById('manageView').classList.remove('hidden');
+        } catch (e) {
+          el.textContent = e.message || 'An error occurred. Please try again.';
+          el.style.color = 'var(--sk-error)';
+          el.classList.remove('hidden');
+        }
+      }
+
+      async function loadData(email, tokenStr) {
+        const payload = { action: 'fetch' };
+        if (email) payload.email = email;
+        if (tokenStr) payload.token = tokenStr;
+
+        const res = await skFetch('/api/notifications/manage/', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        
+        if (res) {
+          document.getElementById('userEmailDisplay').textContent = res.email;
+          window._currentEmail = res.email;
+          window._currentToken = tokenStr;
+          renderSubs(res.subscriptions);
+          renderDms(res.messages);
+        }
+      }
+
+      function renderSubs(subs) {
+        const container = document.getElementById('subsList');
+        container.innerHTML = '';
+        if (!subs || subs.length === 0) {
+          container.innerHTML = '<div class="empty-state">No active notifications found.</div>';
+          return;
+        }
+        subs.forEach(s => {
+          const div = document.createElement('div');
+          div.className = 'bc-info-row';
+          
+          let currentPref = s.is_active ? s.notify_preference : 'none';
+          
+          div.innerHTML = `
+            <div class="bc-info-left">
+              <div class="bc-info-icon"><i class="bi bi-person-badge"></i></div>
+              <div class="bc-info-text-group">
+                <span class="bc-info-label">Faculty</span>
+                <span class="bc-info-value">${s.faculty}</span>
+              </div>
+            </div>
+            <div>
+              <select class="sk-input" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; height: auto;" onchange="updateSubscription('${s.type}', ${s.id}, this.value)">
+                <option value="all" ${currentPref === 'all' ? 'selected' : ''}>All Updates</option>
+                <option value="available" ${currentPref === 'available' ? 'selected' : ''}>When Available</option>
+                <option value="none" ${currentPref === 'none' ? 'selected' : ''}>No Updates</option>
+              </select>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      }
+
+      function renderDms(dms) {
+        const container = document.getElementById('dmsList');
+        container.innerHTML = '';
+        if (!dms || dms.length === 0) {
+          container.innerHTML = '<div class="empty-state">No direct messages found.</div>';
+          return;
+        }
+        dms.forEach(m => {
+          const div = document.createElement('div');
+          div.className = 'bc-info-row';
+          
+          const isOpen = m.allows_replies && !m.is_closed;
+          const actionHtml = isOpen ? 
+            `<button class="sk-btn sk-btn-ghost sk-btn-sm" style="color:var(--sk-error); padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="closeDM('${m.type}', ${m.id}, this)">Close Chat</button>` : 
+            `<span style="font-size: 0.75rem; color: var(--sk-text-tertiary); font-weight: 600; padding: 0.25rem 0.5rem; background: var(--sk-bg-muted); border-radius: 4px;">Closed</span>`;
+
+          div.innerHTML = `
+            <div class="bc-info-left">
+              <div class="bc-info-icon"><i class="bi bi-envelope"></i></div>
+              <div class="bc-info-text-group">
+                <span class="bc-info-label">To: ${m.faculty}</span>
+                <span class="bc-info-value" style="word-break: break-word;">${m.subject || 'No Subject'}</span>
+                <span style="font-size: 0.7rem; color: var(--sk-text-tertiary); margin-top: 2px;">Sent: ${new Date(m.created_at).toLocaleDateString()}</span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center;">
+              ${actionHtml}
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      }
+
+      async function updateSubscription(type, id, preference) {
+        const payload = { action: 'update_sub', item_type: type, item_id: id, preference: preference };
+        if (window._currentEmail) payload.email = window._currentEmail;
+        if (window._currentToken) payload.token = window._currentToken;
+
+        try {
+          const res = await skFetch('/api/notifications/manage/', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          if (res && res.status === 'ok') {
+            SKComponents.toast('Subscription updated', 'success');
+          }
+        } catch (e) {
+          SKComponents.toast('Failed to update subscription: ' + e.message, 'error');
+        }
+      }
+
+      async function closeDM(type, id, btnElement) {
+        const confirmed = await SKComponents.confirm('Are you sure you want to close this chat? This cannot be undone.', {
+          title: 'Close Chat',
+          confirmText: 'Close',
+          danger: true
+        });
+        if (!confirmed) return;
+        
+        const payload = { action: 'close_dm', item_type: type, item_id: id };
+        if (window._currentEmail) payload.email = window._currentEmail;
+        if (window._currentToken) payload.token = window._currentToken;
+
+        try {
+          const res = await skFetch('/api/notifications/manage/', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          if (res && res.status === 'ok') {
+            // Replace button with "Closed" badge
+            const container = btnElement.parentElement;
+            container.innerHTML = '<span style="font-size: 0.75rem; color: var(--sk-text-tertiary); font-weight: 600; padding: 0.25rem 0.5rem; background: var(--sk-bg-muted); border-radius: 4px;">Closed</span>';
+            SKComponents.toast('Chat closed', 'success');
+          }
+        } catch (e) {
+          SKComponents.toast('Failed to close chat: ' + e.message, 'error');
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -33,18 +33,26 @@
 .sk-sidebar-logo {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--sk-space-3);
-  padding: var(--sk-space-5) var(--sk-space-5);
+  padding: var(--sk-space-2);
   border-bottom: 1px solid var(--sk-sidebar-border);
-  height: var(--sk-topbar-height);
+  min-height: var(--sk-topbar-height);
   flex-shrink: 0;
 }
 
 .sk-sidebar-logo img {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--sk-radius-lg);
+  width: 80%;
+  height: auto;
+  max-width: 180px;
+  object-fit: contain;
   flex-shrink: 0;
+  transition: filter var(--sk-transition-base);
+}
+
+[data-theme="dark"] .sk-sidebar-logo img {
+  /* Adds a soft white glow to make dark text readable while preserving original colors */
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
 }
 
 .sk-sidebar-logo-text {

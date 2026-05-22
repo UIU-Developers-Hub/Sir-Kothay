@@ -84,34 +84,32 @@ window.SKLayout = (() => {
      SIDEBAR GENERATION
      ───────────────────────────────────────────────────────── */
   function getSidebarLinks(role, isStaff) {
-    const base = window.location.pathname.includes('/dashboard/') ? '' : 'dashboard/';
-
     const links = [];
 
     if (role === 'FACULTY') {
       links.push(
-        { id: 'broadcast', icon: 'megaphone', label: 'Broadcast', href: `${base}home.html?tab=messages` },
-        { id: 'templates', icon: 'lightning', label: 'Quick Status', href: `${base}home.html?tab=templates` },
-        { id: 'calendar', icon: 'calendar3', label: 'Calendar', href: `${base}home.html?tab=calendar` },
-        { id: 'inbox', icon: 'chat-dots', label: 'Messages', href: `${base}home.html?tab=inbox` }
+        { id: 'broadcast', icon: 'megaphone', label: 'Broadcast', href: getRelativePath('dashboard/home.html?tab=messages') },
+        { id: 'templates', icon: 'lightning', label: 'Quick Status', href: getRelativePath('dashboard/home.html?tab=templates') },
+        { id: 'calendar', icon: 'calendar3', label: 'Calendar', href: getRelativePath('dashboard/home.html?tab=calendar') },
+        { id: 'inbox', icon: 'chat-dots', label: 'Messages', href: getRelativePath('dashboard/home.html?tab=inbox') }
       );
     } else if (role === 'STUDENT') {
       links.push(
-        { id: 'faculties', icon: 'people', label: 'My Faculties', href: `${base}student.html?tab=faculties` },
-        { id: 'messages', icon: 'chat-dots', label: 'Messages', href: `${base}student.html?tab=messages` },
-        { id: 'feed', icon: 'rss', label: 'Updates', href: `${base}student.html?tab=feed` }
+        { id: 'faculties', icon: 'people', label: 'My Faculties', href: getRelativePath('dashboard/student.html?tab=faculties') },
+        { id: 'messages', icon: 'chat-dots', label: 'Messages', href: getRelativePath('dashboard/student.html?tab=messages') },
+        { id: 'feed', icon: 'rss', label: 'Updates', href: getRelativePath('dashboard/student.html?tab=feed') }
       );
     }
 
     // Admin goes to its own sidebar section, NOT in bottom nav
     if (isStaff) {
-      links.push({ id: 'admin', icon: 'shield-lock', label: 'Admin Panel', href: `${base}admin.html`, section: 'admin' });
+      links.push({ id: 'admin', icon: 'shield-lock', label: 'Admin Panel', href: getRelativePath('dashboard/admin.html'), section: 'admin' });
     }
 
     // Bottom section
     links.push(
-      { id: 'profile', icon: 'person', label: 'Profile', href: `${base}profile.html`, section: 'bottom' },
-      { id: 'settings', icon: 'gear', label: 'Settings', href: role === 'FACULTY' ? `${base}home.html?tab=fc-settings` : `${base}student.html?tab=settings`, section: 'bottom' }
+      { id: 'profile', icon: 'person', label: 'Profile', href: getRelativePath('dashboard/profile.html'), section: 'bottom' },
+      { id: 'settings', icon: 'gear', label: 'Settings', href: role === 'FACULTY' ? getRelativePath('dashboard/home.html?tab=fc-settings') : getRelativePath('dashboard/student.html?tab=settings'), section: 'bottom' }
     );
 
     return links;
@@ -119,9 +117,9 @@ window.SKLayout = (() => {
 
   function getSiteLinks(role, isStaff) {
     const links = [
-      { id: 'site-home', icon: 'house', label: 'Home', href: getRelativePath('index.html') },
-      { id: 'site-about', icon: 'info-circle', label: 'About', href: getRelativePath('about.html') },
-      { id: 'site-github', icon: 'github', label: 'GitHub', href: 'https://github.com/UIU-Developers-Hub/Sir-Kothay', external: true }
+      { id: 'home', icon: 'house', label: 'Home', href: getRelativePath('index.html') },
+      { id: 'about', icon: 'info-circle', label: 'About', href: getRelativePath('about.html') },
+      { id: 'github', icon: 'github', label: 'GitHub', href: 'https://github.com/UIU-Developers-Hub/Sir-Kothay', external: true }
     ];
     return links;
   }
@@ -207,13 +205,14 @@ window.SKLayout = (() => {
     return navHtml;
   }
 
-  function renderSiteSidebar(role, isStaff) {
+  function renderSiteSidebar(role, isStaff, activePage) {
     const links = getSiteLinks(role, isStaff);
     let html = '<div class="sk-sidebar-site-links"><div class="sk-sidebar-divider"></div><div class="sk-sidebar-section">';
     html += '<div class="sk-sidebar-section-title">Website</div>';
     links.forEach(l => {
+      const active = l.id === activePage ? 'active' : '';
       const external = l.external ? ' target="_blank" rel="noopener"' : '';
-      html += `<a href="${l.href}" class="sk-sidebar-link" data-page="${l.id}"${external}>
+      html += `<a href="${l.href}" class="sk-sidebar-link ${active}" data-page="${l.id}"${external}>
         <i class="bi bi-${l.icon}"></i>
         <span class="sk-sidebar-link-text">${SKUtils.escapeHtml(l.label)}</span>
       </a>`;
@@ -315,7 +314,7 @@ window.SKLayout = (() => {
     // Populate sidebar nav
     const sidebarNav = document.querySelector('.sk-sidebar-nav');
     if (sidebarNav) {
-      sidebarNav.innerHTML = renderSidebar(links, activePage) + renderSiteSidebar(role, isStaff);
+      sidebarNav.innerHTML = renderSidebar(links, activePage) + renderSiteSidebar(role, isStaff, activePage);
     }
 
     // Populate sidebar user footer
@@ -430,6 +429,7 @@ window.SKLayout = (() => {
     if (path.endsWith('/about.html')) return 'about';
     if (path.endsWith('/login.html')) return 'login';
     if (path.endsWith('/register.html')) return 'register';
+    if (path.endsWith('/manage.html')) return 'manage';
     return 'home';
   }
 
@@ -455,6 +455,9 @@ window.SKLayout = (() => {
       <a href="${getRelativePath('about.html')}" class="sk-bottom-nav-item ${activePage === 'about' ? 'active' : ''}">
         <i class="bi bi-info-circle"></i><span>About</span>
       </a>
+      <a href="${getRelativePath('broadcast/manage.html')}" class="sk-bottom-nav-item ${activePage === 'manage' ? 'active' : ''}">
+        <i class="bi bi-bell-fill"></i><span>Manage Subscriptions</span>
+      </a>
       <a href="${getRelativePath('auth/login.html')}" class="sk-bottom-nav-item ${activePage === 'login' ? 'active' : ''}">
         <i class="bi bi-box-arrow-in-right"></i><span>Login</span>
       </a>
@@ -471,12 +474,11 @@ window.SKLayout = (() => {
 
     // 1. Inject Sidebar HTML if not present (Unconditional for all pages now)
     if (!document.querySelector('.sk-sidebar')) {
-      const logoPath = getRelativePath('static/images/logo.png');
+      const logoPath = getRelativePath('static/images/nav-logo.png');
       const sidebarHtml = `
         <aside class="sk-sidebar">
           <div class="sk-sidebar-logo">
             <img src="${logoPath}" alt="Sir Kothay">
-            <span class="sk-sidebar-logo-text">Sir <span>Kothay</span></span>
           </div>
           <nav class="sk-sidebar-nav"></nav>
           <div class="sk-sidebar-footer"></div>
@@ -506,7 +508,7 @@ window.SKLayout = (() => {
         const links = getSidebarLinks(role, isStaff);
 
         if (sidebarNav) {
-          sidebarNav.innerHTML = renderSidebar(links, '') + renderSiteSidebar(role, isStaff);
+          sidebarNav.innerHTML = renderSidebar(links, activePage) + renderSiteSidebar(role, isStaff, activePage);
         }
 
         if (sidebarFooter) {
@@ -560,6 +562,9 @@ window.SKLayout = (() => {
         </a>
         <a href="${getRelativePath('about.html')}" class="sk-sidebar-link ${activePage === 'about' ? 'active' : ''}">
           <i class="bi bi-info-circle"></i><span>About</span>
+        </a>
+        <a href="${getRelativePath('broadcast/manage.html')}" class="sk-sidebar-link ${activePage === 'manage' ? 'active' : ''}">
+          <i class="bi bi-bell-fill"></i><span>Manage Subscriptions</span>
         </a>
         <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="sk-sidebar-link">
           <i class="bi bi-github"></i><span>GitHub</span>

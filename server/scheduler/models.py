@@ -58,12 +58,12 @@ class CalendarEvent(models.Model):
     description = models.TextField(blank=True, default='')
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-
-    color = models.CharField(max_length=7, default='#f68b1f')
+    color = models.CharField(max_length=20, blank=True, default='#f68b1f')
     set_availability = models.CharField(
         max_length=10, blank=True, default='',
-        help_text='During event: "true"=Available, "false"=Unavailable, ""=no change.',
+        help_text='"true"=Available, "false"=Unavailable, ""=no change.',
     )
+    is_active = models.BooleanField(default=True)
     all_day = models.BooleanField(default=False)
     recurrence_rule = models.CharField(
         max_length=10, choices=RECURRENCE_CHOICES, default='none',

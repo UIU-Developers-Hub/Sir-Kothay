@@ -15,6 +15,7 @@ class DirectMessage(models.Model):
     body = models.TextField()
     is_read = models.BooleanField(default=False)
     is_closed = models.BooleanField(default=False)
+    allows_replies = models.BooleanField(default=True)
     reply_body = models.TextField(blank=True, default='')
     replied_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

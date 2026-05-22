@@ -313,7 +313,7 @@
             <button id="notifyMeBtn" onclick="document.getElementById('subscribeForm').classList.toggle('hidden')" class="sk-btn sk-btn-primary" style="flex:1;font-size:var(--sk-text-sm)">
               <i class="bi bi-bell-fill"></i><span id="notifyBtnLabel">Notify Me When Available</span>
             </button>
-            <button id="sendMsgBtn" onclick="document.getElementById('dmForm').classList.toggle('hidden')" class="sk-btn sk-btn-secondary" style="flex:1;font-size:var(--sk-text-sm)">
+            <button id="sendMsgBtn" onclick="document.getElementById('dmModal').classList.remove('hidden')" class="sk-btn sk-btn-secondary" style="flex:1;font-size:var(--sk-text-sm)">
               <i class="bi bi-envelope-fill"></i>Send Message
             </button>
           </div>
@@ -348,7 +348,16 @@
 
           <!-- Subscribe Form (hidden by default) -->
           <div id="subscribeForm" class="bc-section-form hidden">
-            <p id="subCopy" style="font-size:var(--sk-text-xs);color:var(--sk-text-secondary);margin-bottom:0.5rem">Get an email notification when this person becomes available:</p>
+            <p id="subCopy" style="font-size:var(--sk-text-xs);color:var(--sk-text-secondary);margin-bottom:0.5rem">Get an email notification when this person updates their status:</p>
+            <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
+              <button onclick="setAnonNotifyPref('all')" id="anonNotifyAll" class="bc-notify-btn">
+                <i class="bi bi-bell-fill"></i> All updates
+              </button>
+              <button onclick="setAnonNotifyPref('available')" id="anonNotifyAvail" class="bc-notify-btn" style="background:var(--sk-success-bg);color:var(--sk-success);border-color:var(--sk-success)">
+                <i class="bi bi-bell"></i> When available
+              </button>
+              <input type="hidden" id="anonNotifyPref" value="available">
+            </div>
             <div style="display:flex;gap:0.5rem">
               <input id="subEmail" type="email" placeholder="your@email.com" class="sk-input" style="flex:1">
               <button onclick="doSubscribe()" class="sk-btn sk-btn-primary sk-btn-sm">Subscribe</button>
@@ -356,16 +365,7 @@
             <p id="subResult" class="hidden" style="font-size:var(--sk-text-xs);margin-top:0.5rem"></p>
           </div>
 
-          <!-- DM Form (hidden by default, for anonymous visitors) -->
-          <div id="dmForm" class="bc-section-form hidden">
-            <p style="font-size:var(--sk-text-xs);color:var(--sk-text-secondary);margin-bottom:0.5rem">Send a private message:</p>
-            <input id="dmName" type="text" placeholder="Your name" class="sk-input" style="margin-bottom:0.5rem">
-            <input id="dmEmail" type="email" placeholder="Your email" class="sk-input" style="margin-bottom:0.5rem">
-            <input id="dmSubject" type="text" placeholder="Subject (optional)" class="sk-input" style="margin-bottom:0.5rem">
-            <textarea id="dmBody" placeholder="Your message..." class="sk-textarea" rows="3" style="margin-bottom:0.5rem"></textarea>
-            <button onclick="doSendDm()" class="sk-btn sk-btn-primary" style="width:100%">Send</button>
-            <p id="dmResult" class="hidden" style="font-size:var(--sk-text-xs);margin-top:0.5rem"></p>
-          </div>
+          <!-- DM Form moved to Modal below -->
         </div>
       </main>
 
@@ -384,14 +384,56 @@
       </nav>
     </div>
 
+    <!-- DM Form Modal -->
+    <div id="dmModal" onclick="if(event.target===this) this.classList.add('hidden')" class="sk-modal-overlay hidden">
+      <div class="sk-modal-panel" style="max-width:420px">
+        <div class="sk-modal-header">
+          <h3 class="sk-modal-title">Send a private message</h3>
+          <button class="sk-modal-close" onclick="document.getElementById('dmModal').classList.add('hidden')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="sk-modal-body">
+          <p style="font-size:var(--sk-text-sm);color:var(--sk-text-secondary);margin-bottom:1rem">Send a direct message to this faculty.</p>
+          <input id="dmName" type="text" placeholder="Your name" class="sk-input" style="margin-bottom:0.75rem">
+          <input id="dmEmail" type="email" placeholder="Your email" class="sk-input" style="margin-bottom:0.75rem">
+          <input id="dmSubject" type="text" placeholder="Subject (optional)" class="sk-input" style="margin-bottom:0.75rem">
+          <textarea id="dmBody" placeholder="Your message..." class="sk-textarea" rows="4" style="margin-bottom:1rem"></textarea>
+          <button onclick="doSendDm()" class="sk-btn sk-btn-primary" style="width:100%">Send Message</button>
+          <p id="dmResult" class="hidden" style="font-size:var(--sk-text-sm);margin-top:0.75rem"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Chat Modal -->
+    <div id="studentChatModal" onclick="if(event.target===this) this.classList.add('hidden')" class="sk-modal-overlay hidden">
+      <div class="sk-modal-panel" style="max-width:420px">
+        <div class="sk-modal-header">
+          <h3 class="sk-modal-title">Start a chat with this faculty</h3>
+          <button class="sk-modal-close" onclick="document.getElementById('studentChatModal').classList.add('hidden')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="sk-modal-body">
+          <p style="font-size:var(--sk-text-sm);color:var(--sk-text-secondary);margin-bottom:1rem">Send a direct message to this faculty.</p>
+          <input type="text" id="bcChatSubject" placeholder="Subject (e.g. Office hours)" class="sk-input" style="margin-bottom:0.75rem">
+          <textarea id="bcChatBody" placeholder="Your message..." class="sk-textarea" rows="4" style="margin-bottom:1rem"></textarea>
+          <button onclick="submitBroadcastChat()" class="sk-btn sk-btn-gradient" style="width:100%">Send Message</button>
+          <p id="bcChatResult" class="hidden" style="font-size:var(--sk-text-sm);margin-top:0.75rem"></p>
+        </div>
+      </div>
+    </div>
+
     <!-- API Config -->
     <script src="../static/js/api-config.js?v=3"></script>
     <script src="../static/js/utils.js"></script>
-    <script src="../static/js/theme.js?v=ui-fix-14"></script>
+    <script src="../static/js/api.js"></script>
     <script src="../static/js/components.js"></script>
-    <script src="../static/js/layout.js?v=ui-fix-30"></script>
+    <script src="../static/js/theme.js"></script>
+    <script src="../static/js/layout.js"></script>
     <script>
-      SKLayout.setupPublicNav && SKLayout.setupPublicNav('broadcast');
+      // Initialize Layout
+      document.addEventListener('DOMContentLoaded', () => {
+        SKLayout.setupPublicNav('broadcast');
+      });
+
+      var _broadcastFacultyUserId = null;
     </script>
 
     <script>
@@ -555,16 +597,16 @@
           badge.style.border = '1px solid var(--sk-success-bg)';
           badge.innerHTML = '<span class="bc-avail-dot animate-pulse" style="background:var(--sk-success)"></span><span>Currently Available</span>' +
             (activeMessage ? '<span style="font-size:var(--sk-text-xs);opacity:0.8;margin-left:0.5rem">— ' + activeMessage + '</span>' : '');
-          if (notifyLabel) notifyLabel.textContent = 'Notify Me of Changes';
-          if (subCopy) subCopy.textContent = 'Get notified about status changes:';
+          if (notifyLabel) notifyLabel.textContent = 'Get Notifications';
+          if (subCopy) subCopy.textContent = 'Get an email notification when this person updates their status:';
         } else {
           badge.style.background = 'var(--sk-error-bg)';
           badge.style.color = 'var(--sk-error)';
           badge.style.border = '1px solid var(--sk-error-bg)';
           badge.innerHTML = '<span class="bc-avail-dot" style="background:var(--sk-error)"></span><span>Currently Unavailable</span>' +
             (activeMessage ? '<span style="font-size:var(--sk-text-xs);opacity:0.8;margin-left:0.5rem">— ' + activeMessage + '</span>' : '');
-          if (notifyLabel) notifyLabel.textContent = 'Notify Me When Available';
-          if (subCopy) subCopy.textContent = 'Get an email when this person becomes available:';
+          if (notifyLabel) notifyLabel.textContent = 'Get Notifications';
+          if (subCopy) subCopy.textContent = 'Get an email notification when this person updates their status:';
         }
       }
 
@@ -582,20 +624,47 @@
       }
 
       // --- Subscribe ---
+      function setAnonNotifyPref(pref) {
+        document.getElementById('anonNotifyPref').value = pref;
+        var map = { all: 'anonNotifyAll', available: 'anonNotifyAvail' };
+        var activeStyles = {
+          all: 'background:var(--sk-info-bg);color:var(--sk-info);border-color:var(--sk-info)',
+          available: 'background:var(--sk-success-bg);color:var(--sk-success);border-color:var(--sk-success)'
+        };
+        Object.keys(map).forEach(function (k) {
+          var el = document.getElementById(map[k]);
+          if (!el) return;
+          if (k === pref) {
+            el.style.cssText = activeStyles[k];
+          } else {
+            el.style.cssText = '';
+          }
+        });
+      }
+
       async function doSubscribe() {
         var email = document.getElementById('subEmail').value.trim();
+        var prefValue = document.getElementById('anonNotifyPref').value;
         var el = document.getElementById('subResult');
+        var emailRegex = /^[^\s@]+@[^\s@]+$/;
         if (!email) { el.textContent = 'Please enter your email'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden'); return; }
+        if (!emailRegex.test(email)) { el.textContent = 'Please enter a valid email address'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden'); return; }
         try {
           var res = await fetch(API_BASE_URL + '/api/notifications/subscribe/' + userSlug + '/', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email })
+            body: JSON.stringify({ email: email, notify_preference: prefValue })
           });
           var data = await res.json();
-          el.textContent = data.message || 'Subscribed!';
-          el.style.color = 'var(--sk-success)';
-          el.classList.remove('hidden');
-          document.getElementById('subEmail').value = '';
+          if (res.ok) {
+            el.textContent = data.message || 'Subscribed!';
+            el.style.color = 'var(--sk-success)';
+            el.classList.remove('hidden');
+            document.getElementById('subEmail').value = '';
+          } else {
+            el.textContent = data.error || data.detail || JSON.stringify(data);
+            el.style.color = 'var(--sk-error)';
+            el.classList.remove('hidden');
+          }
         } catch (e) {
           el.textContent = 'Failed to subscribe'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden');
         }
@@ -608,7 +677,9 @@
         var subject = document.getElementById('dmSubject').value.trim();
         var body = document.getElementById('dmBody').value.trim();
         var el = document.getElementById('dmResult');
+        var emailRegex = /^[^\s@]+@[^\s@]+$/;
         if (!name || !email || !body) { el.textContent = 'Name, email, and message are required'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden'); return; }
+        if (!emailRegex.test(email)) { el.textContent = 'Please enter a valid email address'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden'); return; }
         try {
           var res = await fetch(API_BASE_URL + '/api/messaging/' + userSlug + '/send/', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -720,25 +791,24 @@
         if (!_broadcastStudentInterestId) return;
         var token = localStorage.getItem('access_token');
         try {
-          await fetch(API_BASE_URL + '/api/dashboard/student-interests/' + _broadcastStudentInterestId + '/', {
+          var res = await fetch(API_BASE_URL + '/api/dashboard/student-interests/' + _broadcastStudentInterestId + '/', {
             method: 'PATCH',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ notify_preference: pref })
           });
-          _highlightBcNotifyPref(pref);
-        } catch (e) {}
+          if (res.ok) {
+            SKComponents.toast('Subscription updated.', 'success');
+            _highlightBcNotifyPref(pref);
+          } else {
+            SKComponents.toast(data.error || 'Failed to update subscription.', 'error');
+          }
+        } catch (e) {
+          SKComponents.toast('Network error. Failed to update.', 'error');
+        }
       }
 
       function showStudentChatInitForm() {
-        var section = document.getElementById('studentChatSection');
-        section.innerHTML =
-          '<div class="bc-section-form" style="padding:0">' +
-          '<p style="font-size:var(--sk-text-xs);font-weight:600;color:var(--sk-text-secondary);margin-bottom:0.5rem">Start a chat with this faculty:</p>' +
-          '<input type="text" id="bcChatSubject" placeholder="Subject (e.g. Office hours)" class="sk-input" style="margin-bottom:0.5rem">' +
-          '<textarea id="bcChatBody" placeholder="Your message..." class="sk-textarea" rows="3" style="margin-bottom:0.5rem"></textarea>' +
-          '<button onclick="submitBroadcastChat()" class="sk-btn sk-btn-gradient" style="width:100%">Send</button>' +
-          '<p id="bcChatResult" class="hidden" style="font-size:var(--sk-text-xs);margin-top:0.5rem"></p>' +
-          '</div>';
+        document.getElementById('studentChatModal').classList.remove('hidden');
       }
 
       async function submitBroadcastChat() {
@@ -755,23 +825,21 @@
           });
           var data = await res.json();
           if (res.ok) {
-            el.textContent = 'Chat started! Waiting for faculty to accept.';
-            el.style.color = 'var(--sk-success)';
-            el.classList.remove('hidden');
+            SKComponents.toast('Chat started! Waiting for faculty to accept.', 'success');
             setTimeout(function () {
               var section = document.getElementById('studentChatSection');
               section.innerHTML = '<button onclick="window.location.href=\'../dashboard/student.html?tab=messages&thread=' + data.id + '\'" class="sk-btn sk-btn-gradient" style="width:100%"><i class="bi bi-chat-dots" style="margin-right:0.25rem"></i>Continue Chat</button>';
+              document.getElementById('studentChatModal').classList.add('hidden');
             }, 1500);
           } else {
             if (data.thread_id) {
               window.location.href = '../dashboard/student.html?tab=messages&thread=' + data.thread_id;
               return;
             }
-            el.textContent = data.error || 'Failed to start chat.';
-            el.style.color = 'var(--sk-error)'; el.classList.remove('hidden');
+            SKComponents.toast(data.error || 'Failed to start chat.', 'error');
           }
         } catch (e) {
-          el.textContent = 'Failed to send.'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden');
+          SKComponents.toast('Failed to send.', 'error');
         }
       }
 
@@ -781,35 +849,6 @@
       loadUserData().then(function () {
         // applyRoleAwareBehavior is called inside loadUserData after data is loaded
       });
-
-      // Auth-aware nav update
-      const isAuthenticated = !!localStorage.getItem("access_token");
-      if (isAuthenticated) {
-        const desktopNav = document.getElementById("desktopNav");
-        if (desktopNav) {
-          desktopNav.innerHTML = `
-            <a href="../dashboard/home.html" class="sk-public-nav-link">Dashboard</a>
-            <a href="../dashboard/profile.html" class="sk-public-nav-link">Profile</a>
-            <a href="#" onclick="logoutUser(); return false;" class="sk-btn sk-btn-ghost sk-btn-sm" style="color:var(--sk-error)">Logout</a>
-          `;
-        }
-        const mobileRoot = document.getElementById("mobileNavRoot");
-        if (mobileRoot) {
-          mobileRoot.innerHTML = `
-            <div class="sk-bottom-nav-items">
-              <a href="../dashboard/home.html" class="sk-bottom-nav-item active"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
-              <a href="../dashboard/profile.html" class="sk-bottom-nav-item"><i class="bi bi-person-circle"></i><span>Profile</span></a>
-              <a href="#" onclick="logoutUser(); return false;" class="sk-bottom-nav-item" style="color:var(--sk-error)"><i class="bi bi-box-arrow-right"></i><span>Logout</span></a>
-            </div>
-          `;
-        }
-      }
-
-      function logoutUser() {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "../index.html";
-      }
 
       // Load contributors for footer
       async function loadFooterContributors() {

@@ -13,6 +13,11 @@ class StatusSubscription(models.Model):
         related_name='status_subscribers',
     )
     is_active = models.BooleanField(default=True)
+    notify_preference = models.CharField(
+        max_length=20,
+        choices=[('available', 'When Available'), ('all', 'All Updates')],
+        default='available'
+    )
     unsubscribe_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -21,4 +26,4 @@ class StatusSubscription(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'{self.email} → {self.broadcaster.username}'
+        return f'{self.email} → {self.broadcaster.username} ({self.notify_preference})'

@@ -101,10 +101,10 @@ function _renderConvoList() {
       badge = _statusDot(c.status);
     }
     var verified = c.studentId ? '<i class="bi bi-patch-check-fill" style="color:var(--sk-primary);font-size:0.625rem"></i>' : '';
-    var typeBadge = c.type === 'dm' ? '<span class="sk-convo-type visitor">Visitor</span>' : '';
+    var typeBadge = (c.type === 'dm' && !c.isRegistered) ? '<span class="sk-convo-type visitor">Visitor</span>' : '';
     var unreadDot = c.unread ? '<span class="sk-convo-dot unread"></span>' : '';
     return '<div class="sk-convo-item ' + (isActive ? 'active' : '') + '" onclick="openConversation(\'' + c.type + '\',' + c.id + ')">' +
-      _convoAvatar(c.avatar, c.name, c.type === 'dm' ? 'visitor' : '') +
+      _convoAvatar(c.avatar, c.name, (c.type === 'dm' && !c.isRegistered) ? 'visitor' : '') +
       '<div class="sk-convo-main">' +
         '<div class="sk-convo-row">' +
           '<span class="sk-convo-name">' + escapeHtml(c.name) + '</span>' +
@@ -210,9 +210,9 @@ function _renderDmConvo(c) {
   // Header
   document.getElementById('chatConvoHeader').innerHTML =
     '<button onclick="_backToList()" class="sk-btn sk-btn-ghost sk-btn-icon sk-chat-back" title="Back"><i class="bi bi-arrow-left"></i></button>' +
-    _chatHeaderAvatar('', c.name, 'visitor') +
+    _chatHeaderAvatar('', c.name, c.isRegistered ? '' : 'visitor') +
     '<div class="sk-chat-header-main">' +
-      '<p class="sk-chat-header-title">' + escapeHtml(c.name) + verified + ' <span class="sk-convo-type visitor">Visitor</span></p>' +
+      '<p class="sk-chat-header-title">' + escapeHtml(c.name) + verified + (!c.isRegistered ? ' <span class="sk-convo-type visitor">Visitor</span>' : '') + '</p>' +
       '<p class="sk-chat-header-meta">' + escapeHtml(c.email) + (c.subject ? ' · ' + escapeHtml(c.subject) : '') + '</p>' +
     '</div>' +
     '<div class="sk-chat-header-actions">' +

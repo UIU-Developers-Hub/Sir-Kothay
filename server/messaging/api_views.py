@@ -12,11 +12,13 @@ from dashboard.models import UserDetails
 from authApp.models import CustomUser
 
 from .models import DirectMessage
+from .models import DirectMessage, ChatThread, ChatMessage
 from .serializers import (
     DirectMessageCreateSerializer,
     DirectMessageReplySerializer,
     DirectMessageSerializer,
 )
+from notifications.services import send_email_async
 
 
 @api_view(['POST'])
@@ -24,9 +26,88 @@ from .serializers import (
 def send_dm(request, user_slug):
     """Public endpoint — visitors send a direct message to a broadcaster."""
     user_details = get_object_or_404(UserDetails, _slug=user_slug)
+    sender_email = request.data.get('sender_email')
+    sender_name = request.data.get('sender_name')
+    subject = request.data.get('subject', 'No Subject')
+    body = request.data.get('body', '')
+
+    # Intercept: If the sender email belongs to a registered student, route to ChatThread automatically
+    registered_user = CustomUser.objects.filter(email=sender_email).first()
+    if registered_user:
+        thread = ChatThread.objects.create(
+            student=registered_user,
+            faculty=user_details.user,
+            subject=subject,
+            status='PENDING'
+        )
+        ChatMessage.objects.create(
+            thread=thread,
+            sender=registered_user,
+            body=body
+        )
+        
+        # Notify the faculty of the new ChatThread message
+        faculty_email = user_details.user.email
+        if faculty_email:
+            fac_subject = f'New Chat Request from {registered_user.username}'
+            fac_body = (
+                f'Hi {user_details.user.username},\n\n'
+                f'{registered_user.username} has started a new chat with you.\n\n'
+                f'Subject: {subject}\n'
+                f'Message:\n{body}\n\n'
+                f'You can view and reply from your dashboard Inbox.\n'
+            )
+            send_email_async(fac_subject, fac_body, django_settings.DEFAULT_FROM_EMAIL, [faculty_email])
+
+        return Response(
+            {'message': 'Your message has been sent and added to your Dashboard Inbox.'},
+            status=status.HTTP_201_CREATED,
+        )
+
+    # Standard anonymous flow
     serializer = DirectMessageCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    serializer.save(broadcaster=user_details.user)
+    dm = serializer.save(broadcaster=user_details.user)
+
+    # Ensure a StatusSubscription exists to hold an unsubscribe token
+    from notifications.models import StatusSubscription
+    sub, _ = StatusSubscription.objects.get_or_create(
+        email=dm.sender_email,
+        broadcaster=user_details.user,
+        defaults={'notify_preference': 'none', 'is_active': False}
+    )
+
+    client_base = getattr(django_settings, 'CLIENT_PUBLIC_BASE_URL', 'http://127.0.0.1:5500/client')
+    if not client_base: client_base = 'http://127.0.0.1:5500/client'
+    manage_url = f'{client_base}/broadcast/manage.html?token={sub.unsubscribe_token}'
+
+    # Send confirmation email to the sender
+    subject = f'Message sent to {user_details.user.username}'
+    body = (
+        f'Hi {dm.sender_name},\n\n'
+        f'Your message to {user_details.user.username} has been successfully delivered.\n\n'
+        f'Subject: {dm.subject or "No Subject"}\n'
+        f'Message: {dm.body}\n\n'
+        f'They will reply to you directly at this email address.\n\n'
+        f'---\n'
+        f'To manage your active messages or notifications, visit:\n{manage_url}\n'
+    )
+    send_email_async(subject, body, django_settings.DEFAULT_FROM_EMAIL, [dm.sender_email])
+
+    # Send notification email to the faculty
+    faculty_email = user_details.user.email
+    if faculty_email:
+        fac_subject = f'New Message from {dm.sender_name}'
+        fac_body = (
+            f'Hi {user_details.user.username},\n\n'
+            f'You have received a new message from a visitor on your broadcast page.\n\n'
+            f'From: {dm.sender_name} ({dm.sender_email})\n'
+            f'Subject: {dm.subject or "No Subject"}\n'
+            f'Message:\n{dm.body}\n\n'
+            f'You can view and reply to this message from your Sir Kothay dashboard Inbox.\n'
+        )
+        send_email_async(fac_subject, fac_body, django_settings.DEFAULT_FROM_EMAIL, [faculty_email])
+
     return Response(
         {'message': 'Your message has been sent successfully.'},
         status=status.HTTP_201_CREATED,
@@ -74,6 +155,12 @@ def dm_detail(request, pk):
 def reply_dm(request, pk):
     """Authenticated — reply to a DM (appends to conversation, sends email)."""
     dm = get_object_or_404(DirectMessage, pk=pk, broadcaster=request.user)
+    if not dm.allows_replies:
+        return Response(
+            {'error': 'This user has opted out of receiving replies.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     serializer = DirectMessageReplySerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -91,6 +178,15 @@ def reply_dm(request, pk):
     dm.is_read = True
     dm.save(update_fields=['reply_body', 'replied_at', 'is_read'])
 
+    from notifications.models import StatusSubscription
+    sub = StatusSubscription.objects.filter(email=dm.sender_email).first()
+    manage_text = ''
+    if sub:
+        client_base = getattr(django_settings, 'CLIENT_PUBLIC_BASE_URL', 'http://127.0.0.1:5500/client')
+        if not client_base: client_base = 'http://127.0.0.1:5500/client'
+        manage_url = f'{client_base}/broadcast/manage.html?token={sub.unsubscribe_token}'
+        manage_text = f'\n---\nTo manage your active messages or opt out of replies, visit:\n{manage_url}\n'
+
     from_email = getattr(django_settings, 'DEFAULT_FROM_EMAIL', 'noreply@sirkothay.com')
     subject = f'Reply from {request.user.username} — Sir Kothay'
     body = (
@@ -99,6 +195,7 @@ def reply_dm(request, pk):
         f'--- Your message ---\n{dm.body}\n\n'
         f'--- Reply ---\n{reply_text}\n\n'
         f'— Sir Kothay\n'
+        f'{manage_text}'
     )
     send_mail(subject, body, from_email, [dm.sender_email], fail_silently=True)
 

@@ -242,6 +242,38 @@ img { max-width: 100%; height: auto; display: block; }
   padding-right: 2.5rem;
 }
 
+.sk-color-picker {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 42px;
+  background: var(--sk-input-bg);
+  border: 1.5px solid var(--sk-input-border);
+  border-radius: var(--sk-radius-lg);
+  cursor: pointer;
+  padding: 4px;
+  transition: border-color var(--sk-transition-base), box-shadow var(--sk-transition-base);
+}
+
+.sk-color-picker:focus {
+  outline: none;
+  border-color: var(--sk-input-focus);
+  box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.15);
+}
+
+.sk-color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.sk-color-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--sk-radius-lg) - 4px);
+}
+.sk-color-picker::-moz-color-swatch {
+  border: none;
+  border-radius: calc(var(--sk-radius-lg) - 4px);
+}
+
 .sk-label {
   display: block;
   font-size: var(--sk-text-sm);
@@ -958,7 +990,7 @@ img { max-width: 100%; height: auto; display: block; }
   background: rgba(99, 102, 241, 0.12);
   border: 1px solid rgba(99, 102, 241, 0.22);
   color: var(--sk-indigo, #4f46e5);
-  cursor: default;
+  cursor: pointer;
 }
 
 .sk-calendar-more {

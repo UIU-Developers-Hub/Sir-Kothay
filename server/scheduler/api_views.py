@@ -28,6 +28,11 @@ class RecurringScheduleViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return RecurringSchedule.objects.filter(user=self.request.user)
 
+    def perform_update(self, serializer):
+        # When a schedule is edited (e.g. paused/resumed or time changed),
+        # wipe its trigger history so it can fire immediately if it's currently due.
+        serializer.save(last_triggered_at=None)
+
 
 class CalendarEventViewSet(viewsets.ModelViewSet):
     serializer_class = CalendarEventSerializer
@@ -42,6 +47,15 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
         if end:
             qs = qs.filter(start_time__lte=end)
         return qs
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if not instance.is_active:
+            BroadcastMessage.objects.filter(
+                user=instance.user,
+                active=True,
+                message=instance.title
+            ).update(active=False, message=F('message') + ' (Paused)')
 
 
 class QuickStatusTemplateViewSet(viewsets.ModelViewSet):

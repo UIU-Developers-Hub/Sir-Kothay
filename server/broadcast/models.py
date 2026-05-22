@@ -33,10 +33,6 @@ class BroadcastMessage(models.Model):
         expired_user_ids = list(expiring.values_list('user_id', flat=True).distinct())
         expiring.update(active=False)
 
-        # Revert expired users to their default status
-        for uid in expired_user_ids:
-            cls._revert_to_default(uid)
-
         due = cls.objects.filter(active=False, scheduled_for__isnull=False, scheduled_for__lte=now)
         if user is not None:
             due = due.filter(user=user)
@@ -61,6 +57,11 @@ class BroadcastMessage(models.Model):
         except ImportError:
             pass
 
+        # Revert expired users to their default status ONLY IF no new message took over
+        for uid in expired_user_ids:
+            if not cls.objects.filter(user_id=uid, active=True).exists():
+                cls._revert_to_default(uid)
+
     @classmethod
     def _revert_to_default(cls, user_id):
         """When a timed message expires, revert availability to the user's default.
@@ -72,9 +73,10 @@ class BroadcastMessage(models.Model):
             u = CustomUser.objects.get(pk=user_id)
             details = u.details
             # Revert the availability status to the default fallback availability
-            if details.is_available != details.default_availability:
-                details.is_available = details.default_availability
-                details.save(update_fields=['is_available'])
+            # We save unconditionally so the post_save signal fires and sends the fallback email
+            details._force_notify = True
+            details.is_available = details.default_availability
+            details.save(update_fields=['is_available'])
         except Exception:
             pass
 
@@ -87,8 +89,9 @@ class BroadcastMessage(models.Model):
 
     def activate_now(self):
         self.active = True
+        self.scheduled_for = None
         self._set_active_window()
-        self.save(update_fields=['active', 'active_until'])
+        self.save(update_fields=['active', 'active_until', 'scheduled_for'])
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -106,22 +109,46 @@ class BroadcastMessage(models.Model):
 
         _was_deactivated = False
         if self.active:
-            BroadcastMessage.objects.filter(user=self.user, active=True).update(active=False)
+            if is_new:
+                BroadcastMessage.objects.filter(user=self.user, active=True).update(active=False)
+            else:
+                BroadcastMessage.objects.filter(user=self.user, active=True).exclude(pk=self.pk).update(active=False)
             self._set_active_window()
-            # Also apply availability preference if this message is going live
-            if self.set_availability in ['true', 'false']:
+        else:
+            if not is_new:
                 try:
-                    from dashboard.models import UserDetails
-                    details, _ = UserDetails.objects.get_or_create(user=self.user)
-                    details.is_available = (self.set_availability == 'true')
-                    details.save()
-                except Exception:
+                    old_active = BroadcastMessage.objects.get(pk=self.pk).active
+                    if old_active:
+                        _was_deactivated = True
+                except BroadcastMessage.DoesNotExist:
                     pass
+            if self.active_until is not None:
+                self.active_until = None
+                
+        # SAVE FIRST! This ensures the message is in the database before signals fire.
+        super().save(*args, **kwargs)
+
+        if self.active:
+            # Also apply availability preference if this message is going live
+            try:
+                from dashboard.models import UserDetails
+                details, _ = UserDetails.objects.get_or_create(user=self.user)
+                
+                needs_save = False
+                if self.set_availability in ['true', 'false']:
+                    details.is_available = (self.set_availability == 'true')
+                    needs_save = True
+                    
+                if needs_save or became_active:
+                    if became_active:
+                        details._force_notify = True
+                    details.save()
+            except Exception:
+                pass
             
             if became_active:
                 try:
-                    from dashboard.models import FacultyActivity, UserDetails
-                    details = UserDetails.objects.get(user=self.user)
+                    from dashboard.models import FacultyActivity
                     FacultyActivity.objects.create(
                         faculty=self.user,
                         title="New Status",
@@ -131,18 +158,12 @@ class BroadcastMessage(models.Model):
                 except Exception:
                     pass
 
-        else:
-            _was_deactivated = True
-            if self.active_until is not None:
-                self.active_until = None
-        super().save(*args, **kwargs)
-
         # After ANY deactivation (manual stop, expiry, etc.):
         # if no active messages remain, revert to fallback defaults
-        if _was_deactivated and self.pk:
+        if _was_deactivated:
             has_active = BroadcastMessage.objects.filter(
                 user=self.user, active=True
-            ).exclude(pk=self.pk).exists()
+            ).exists()
             if not has_active:
                 BroadcastMessage._revert_to_default(self.user_id)
 

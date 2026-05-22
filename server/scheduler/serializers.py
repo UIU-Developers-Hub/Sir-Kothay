@@ -24,7 +24,7 @@ class CalendarEventSerializer(serializers.ModelSerializer):
         model = CalendarEvent
         fields = [
             'id', 'title', 'description', 'start_time', 'end_time',
-            'color', 'set_availability', 'all_day', 'recurrence_rule',
+            'color', 'set_availability', 'all_day', 'recurrence_rule', 'is_active',
         ]
         read_only_fields = ['id']
 

@@ -58,16 +58,26 @@ def notify_broadcaster_status_change(broadcaster, message_text, new_is_available
 
     just_became_available = (not was_available and new_is_available)
 
-    # --- 1. Notify Anonymous Subscribers (only when becoming available) ---
-    if just_became_available:
-        subs = StatusSubscription.objects.filter(broadcaster=broadcaster, is_active=True)
-        subject = f'{broadcaster.username} is now available!'
-        for sub in subs:
+    # --- 1. Notify Anonymous Subscribers ---
+    subs = StatusSubscription.objects.filter(broadcaster=broadcaster, is_active=True)
+    for sub in subs:
+        should_notify = False
+        pref = getattr(sub, 'notify_preference', 'available')
+        
+        if pref == 'all':
+            should_notify = True
+        elif pref == 'available' and just_became_available:
+            should_notify = True
+            
+        if should_notify:
+            avail_str = "Available" if new_is_available else "Unavailable"
+            subject = f'Update from {broadcaster.username}'
             unsubscribe_url = f'{client_base}/api/notifications/unsubscribe/{sub.unsubscribe_token}/'
             body = (
                 f'Hi!\n\n'
-                f'{broadcaster.username} just updated their status and is now available:\n\n'
-                f'"{message_text}"\n\n'
+                f'Faculty member {broadcaster.username} has updated their status/availability:\n\n'
+                f'Current Update / Event: "{message_text}"\n'
+                f'Availability: {avail_str}\n\n'
                 f'Visit their page to learn more.\n\n'
                 f'---\n'
                 f'To unsubscribe from these notifications, visit:\n{unsubscribe_url}\n'
@@ -95,7 +105,7 @@ def notify_broadcaster_status_change(broadcaster, message_text, new_is_available
             body = (
                 f'Hi {student.username},\n\n'
                 f'Faculty member {broadcaster.username} has updated their status/availability:\n\n'
-                f'Status: "{message_text}"\n'
+                f'Current Update / Event: "{message_text}"\n'
                 f'Availability: {avail_str}\n\n'
                 f'You received this because you enabled updates for {broadcaster.username}.\n\n'
                 f'View their live updates and chat: {dashboard_link}\n\n'

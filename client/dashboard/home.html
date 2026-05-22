@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Dashboard - Sir Kothay</title>
   <meta name="description" content="Faculty Dashboard - Manage your broadcast status, schedules, and messages">
-  <link rel="stylesheet" href="../static/css/style.css?v=ui-premium-sidebar-14">
+  <link rel="stylesheet" href="../static/css/style.css?v=ui-premium-sidebar-16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
@@ -13,8 +13,7 @@
     <!-- Sidebar -->
     <aside class="sk-sidebar">
       <div class="sk-sidebar-logo">
-        <img src="../static/images/logo.png" alt="Sir Kothay">
-        <span class="sk-sidebar-logo-text">Sir <span>Kothay</span></span>
+        <img src="../static/images/nav-logo.png" alt="Sir Kothay">
       </div>
       <nav class="sk-sidebar-nav"></nav>
       <div class="sk-sidebar-footer"></div>
@@ -219,12 +218,32 @@
                 </div>
               </div>
               <div class="sk-card">
-                <div class="sk-card-header">
-                  <div>
-                    <div class="sk-card-title">Recurring Schedules</div>
-                    <div class="sk-card-subtitle">Weekly broadcast rules shown on the calendar</div>
+                <div class="sk-card-header" style="flex-wrap: wrap; gap: 0.5rem;">
+                  <div style="flex: 1 1 100%;">
+                    <div class="sk-card-title">Schedules</div>
+                    <div class="sk-card-subtitle">Calendar events and recurring rules</div>
                   </div>
-                  <button onclick="openNewScheduleModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Schedule</button>
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <select id="scheduleTypeFilter" class="sk-select" style="width: auto; padding: 0.25rem 2rem 0.25rem 0.75rem; font-size: 0.875rem;" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
+                      <option value="all" selected>All Types</option>
+                      <option value="calendar">Calendar Only</option>
+                      <option value="recurring">Recurring Only</option>
+                    </select>
+                    <select id="scheduleStatusFilter" class="sk-select" style="width: auto; padding: 0.25rem 2rem 0.25rem 0.75rem; font-size: 0.875rem;" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
+                      <option value="all" selected>All Statuses</option>
+                      <option value="active">Active Only</option>
+                      <option value="paused">Paused Only</option>
+                    </select>
+                    <select id="scheduleTimeFilter" class="sk-select" style="width: auto; padding: 0.25rem 2rem 0.25rem 0.75rem; font-size: 0.875rem;" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
+                      <option value="upcoming7" selected>Upcoming 7 Days</option>
+                      <option value="upcoming30">Upcoming 30 Days</option>
+                      <option value="upcoming">Upcoming All</option>
+                      <option value="today">Today</option>
+                      <option value="last7">Last 7 Days</option>
+                      <option value="last30">Last 30 Days</option>
+                      <option value="all">All Time</option>
+                    </select>
+                  </div>
                 </div>
                 <div id="schedulesList"></div>
               </div>
@@ -443,7 +462,7 @@
   </div>
 
   <!-- Schedule Modal -->
-  <div id="addScheduleModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('addScheduleModal')">
+  <div id="addScheduleModal" class="sk-modal-overlay hidden" style="z-index: 1000;" onclick="if(event.target===this)closeModal('addScheduleModal')">
     <div class="sk-modal-panel" style="max-width:420px">
       <div class="sk-modal-header">
         <h3 id="scheduleModalTitle" class="sk-modal-title">New Recurring Schedule</h3>
@@ -474,7 +493,7 @@
   </div>
 
   <!-- Event Modal -->
-  <div id="addEventModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('addEventModal')">
+  <div id="addEventModal" class="sk-modal-overlay hidden" style="z-index: 1000;" onclick="if(event.target===this)closeModal('addEventModal')">
     <div class="sk-modal-panel" style="max-width:420px">
       <div class="sk-modal-header">
         <h3 id="eventModalTitle" class="sk-modal-title">New Scheduled Broadcast</h3>
@@ -483,22 +502,37 @@
       <div class="sk-modal-body">
         <input type="hidden" id="evtId">
         <div class="sk-form-group"><label class="sk-label">Message</label><input id="evtTitle" type="text" placeholder="e.g. In a meeting" class="sk-input"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-          <div class="sk-form-group"><label class="sk-label">Start</label><input id="evtStart" type="datetime-local" class="sk-input"></div>
-          <div class="sk-form-group"><label class="sk-label">End</label><input id="evtEnd" type="datetime-local" class="sk-input"></div>
+        <div class="sk-form-group"><label class="sk-label">Start</label><input id="evtStart" type="datetime-local" class="sk-input"></div>
+        <div class="sk-form-group"><label class="sk-label">End</label><input id="evtEnd" type="datetime-local" class="sk-input"></div>
+        <div class="sk-form-group">
+          <label class="sk-label">Color</label>
+          <input id="evtColor" type="color" value="#f68b1f" class="sk-color-picker" style="-webkit-appearance: none; appearance: none; width: 100%; height: 42px; background: var(--sk-input-bg); border: 1.5px solid var(--sk-input-border); border-radius: var(--sk-radius-lg); cursor: pointer; padding: 4px;">
         </div>
-        <div class="sk-form-group"><label class="sk-label">Color</label><input id="evtColor" type="color" value="#f68b1f" class="sk-input" style="height:40px;padding:4px"></div>
         <div class="sk-form-group">
           <label class="sk-label">During event, set availability to:</label>
           <select id="evtAvail" class="sk-select"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
         </div>
       </div>
-      <div class="sk-modal-footer" style="justify-content:space-between">
-        <button id="eventModalDelete" type="button" onclick="deleteEvent()" class="sk-btn sk-btn-ghost" style="color:var(--sk-error);display:none"><i class="bi bi-trash"></i> Delete</button>
-        <div style="display:flex;gap:0.5rem">
-          <button onclick="closeModal('addEventModal')" class="sk-btn sk-btn-secondary">Cancel</button>
-          <button id="eventModalSubmit" onclick="submitEvent()" class="sk-btn sk-btn-primary">Save</button>
-        </div>
+      <div class="sk-modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; width: 100%;">
+        <button id="eventModalDelete" type="button" onclick="deleteEvent()" class="sk-btn sk-btn-ghost" style="color:var(--sk-error); display:none; margin-right:auto;"><i class="bi bi-trash"></i> Delete</button>
+        <button onclick="closeModal('addEventModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button id="eventModalSubmit" onclick="submitEvent()" class="sk-btn sk-btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day View Modal -->
+  <div id="dayViewModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('dayViewModal')">
+    <div class="sk-modal-panel" style="max-width:500px">
+      <div class="sk-modal-header">
+        <h3 id="dayViewModalTitle" class="sk-modal-title">Events</h3>
+        <button class="sk-modal-close" onclick="closeModal('dayViewModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body" style="padding: 1rem; max-height: 60vh; overflow-y: auto;">
+        <div id="dayViewList" class="sk-schedule-list"></div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeModal('dayViewModal')" class="sk-btn sk-btn-secondary">Close</button>
       </div>
     </div>
   </div>
@@ -513,8 +547,8 @@
   <script src="../static/js/sk-modal.js?v=ui-fix-5"></script>
   <script src="../static/js/dashboard-core.js?v=ui-premium-sidebar-4"></script>
   <script src="../static/js/dashboard-templates.js?v=ui-fix-5"></script>
-  <script src="../static/js/dashboard-schedules.js"></script>
-  <script src="../static/js/dashboard-calendar.js"></script>
+  <script src="../static/js/dashboard-schedules.js?v=ui-schedules-5"></script>
+  <script src="../static/js/dashboard-calendar.js?v=ui-schedules-7"></script>
   <script src="../static/js/dashboard-chat.js?v=ui-fix-11"></script>
   <script>
     // Initialize layout with sidebar
