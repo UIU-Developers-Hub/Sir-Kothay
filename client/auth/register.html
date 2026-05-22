@@ -2,355 +2,300 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Sign Up - Sir Kothay</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Create your Sir Kothay account - Leave notes when you're away">
+  <link rel="stylesheet" href="../static/css/style.css?v=ui-fix-30">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
-    body { font-family: 'Poppins', sans-serif; }
-    .brand-color { color: #f68b1f; }
-    .brand-bg { background-color: #f68b1f; }
-    .hover-scale { transition: transform 0.2s ease-in-out; }
-    .hover-scale:hover { transform: scale(1.05); }
+    .sk-role-option {
+      cursor: pointer;
+      transition: all 200ms ease;
+      border: 2px solid var(--sk-border);
+      border-radius: var(--sk-radius-xl);
+      padding: 1rem;
+      text-align: center;
+      flex: 1;
+    }
+    .sk-role-option:hover { border-color: var(--sk-primary-muted); background: var(--sk-primary-light); }
+    .sk-role-option.selected {
+      border-color: var(--sk-primary);
+      background: var(--sk-primary-light);
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+    }
+    .sk-role-option .role-icon {
+      font-size: 1.75rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--sk-text-tertiary);
+    }
+    .sk-role-option.selected .role-icon { color: var(--sk-primary); }
+    .sk-role-option .role-label {
+      font-weight: 600;
+      font-size: var(--sk-text-sm);
+      color: var(--sk-text-secondary);
+    }
+    .sk-role-option.selected .role-label { color: var(--sk-primary); }
+    .sk-student-fields {
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height 300ms ease, opacity 200ms ease, margin 200ms ease;
+      margin-bottom: 0;
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    .sk-role-option {
+      cursor: pointer;
+      transition: all 200ms ease;
+      border: 2px solid var(--sk-border);
+      border-radius: var(--sk-radius-xl);
+      padding: 1rem;
+      text-align: center;
+      flex: 1;
+    }
+    .sk-role-option:hover { border-color: var(--sk-primary-muted); background: var(--sk-primary-light); }
+    .sk-role-option.selected {
+      border-color: var(--sk-primary);
+      background: var(--sk-primary-light);
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+    }
+    .sk-role-option .role-icon {
+      font-size: 1.75rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--sk-text-tertiary);
+    }
+    .sk-role-option.selected .role-icon { color: var(--sk-primary); }
+    .sk-role-option .role-label {
+      font-weight: 600;
+      font-size: var(--sk-text-sm);
+      color: var(--sk-text-secondary);
+    }
+    .sk-role-option.selected .role-label { color: var(--sk-primary); }
+    .sk-student-fields {
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height 300ms ease, opacity 200ms ease, margin 200ms ease;
+      margin-bottom: 0;
+    }
+    .sk-student-fields.show {
+      max-height: 100px; opacity: 1; margin-bottom: 1.25rem;
+    }
   </style>
 </head>
-<body class="bg-gray-100">
+<body>
+  <div class="sk-app">
+    <!-- Sidebar is injected by JS (layout.js) unconditionally -->
 
-  <!-- Fixed Bottom Navbar on Mobile, Top on Desktop -->
-  <nav class="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto z-50 bg-white/80 backdrop-blur-lg border-t md:border-b border-gray-200/50">
-    <div class="max-w-5xl mx-auto">
+    <!-- Main Content -->
+    <main class="sk-main">
+      <div class="sk-page" style="padding-top: 0">
+        <div class="sk-auth-page">
+    <div class="sk-auth-blob sk-auth-blob-1"></div>
+    <div class="sk-auth-blob sk-auth-blob-2"></div>
 
-      <!-- Desktop Navbar (Top) -->
-      <div class="hidden md:flex items-center justify-between px-8 py-4">
-        <!-- Logo -->
-        <a href="../index.html" class="flex items-center gap-3">
-          <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo" />
-        </a>
-
-        <!-- Desktop Links -->
-        <div class="flex items-center gap-6 text-sm font-medium">
-          <a href="../index.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Home</a>
-          <a href="../about.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">About</a>
-          <a href="login.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Login</a>
-          <a href="register.html" class="px-5 py-2 text-white rounded-lg" style="background-color: #f68b1f;" onmouseover="this.style.backgroundColor='#e67a0f'" onmouseout="this.style.backgroundColor='#f68b1f'">Sign Up</a>
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="text-gray-600 hover:text-black">
-            <i class="bi bi-github text-xl"></i>
-          </a>
-        </div>
+    <div class="sk-auth-card sk-fade-up" style="max-width:480px">
+      <div class="sk-auth-logo">
+        <img src="../static/images/logo.png" alt="Sir Kothay">
+        <span class="sk-auth-logo-text">Sir <span>Kothay?</span></span>
       </div>
 
-      <!-- Mobile Bottom Navbar -->
-      <div class="md:hidden">
-        <div class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
-          
-          <!-- Home -->
-          <a href="../index.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;">
-            <i class="bi bi-house-fill text-2xl"></i>
-            <span class="text-xs font-medium">Home</span>
-          </a>
-          
-          <!-- About -->
-          <a href="../about.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;">
-            <i class="bi bi-info-circle-fill text-2xl"></i>
-            <span class="text-xs font-medium">About</span>
-          </a>
-          
-          <!-- Login -->
-          <a href="login.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;">
-            <i class="bi bi-box-arrow-in-right text-2xl"></i>
-            <span class="text-xs font-medium">Login</span>
-          </a>
+      <h1 class="sk-auth-title">Create Account</h1>
+      <p class="sk-auth-subtitle">Join Sir Kothay today</p>
 
-          <!-- Sign Up -->
-          <a href="register.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50" style="color: #f68b1f;">
-            <i class="bi bi-person-plus-fill text-2xl"></i>
-            <span class="text-xs font-medium">Sign Up</span>
-          </a>
+      <!-- Message -->
+      <div id="message" style="display:none;padding:0.75rem 1rem;border-radius:var(--sk-radius-lg);font-size:var(--sk-text-sm);margin-bottom:1.5rem;animation:sk-fade-in 200ms ease"></div>
 
-          <!-- GitHub -->
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-black transition">
-            <i class="bi bi-github text-2xl"></i>
-            <span class="text-xs font-medium">GitHub</span>
-          </a>
-
+      <form id="registerForm" onsubmit="handleRegister(event)">
+        <!-- Role Selection -->
+        <div class="sk-form-group">
+          <label class="sk-label">I am a</label>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <div class="sk-role-option selected" id="roleFaculty" onclick="selectRole('FACULTY')">
+              <i class="bi bi-person-workspace role-icon"></i>
+              <span class="role-label">Faculty</span>
+            </div>
+            <div class="sk-role-option" id="roleStudent" onclick="selectRole('STUDENT')">
+              <i class="bi bi-mortarboard role-icon"></i>
+              <span class="role-label">Student</span>
+            </div>
+          </div>
+          <input type="hidden" id="role" value="FACULTY">
         </div>
-      </div>
-    </div>
-  </nav>
 
-  <!-- Main Content -->
-  <main class="pt-0 md:pt-24 pb-20 md:pb-0 min-h-screen">
-<div class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <!-- Signup Container -->
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md hover-scale">
-        <h2 class="text-3xl font-bold text-center brand-color mb-6">Sign Up for Sir Kothay</h2>
+        <!-- Full Name -->
+        <div class="sk-form-group">
+          <label class="sk-label" for="username">Full Name</label>
+          <input type="text" id="username" class="sk-input" placeholder="Enter your full name" required>
+        </div>
 
-        <!-- Error Messages -->
-        <div id="message" class="text-center mb-4 hidden"></div>
+        <!-- Student ID (conditional) -->
+        <div class="sk-student-fields" id="studentFields">
+          <label class="sk-label" for="student_id">Student ID</label>
+          <input type="text" id="student_id" class="sk-input" placeholder="e.g., 011 221 234">
+        </div>
 
-        <!-- Form -->
-        <form id="registerForm" class="space-y-6">
-            <!-- Role Selection -->
-            <div class="flex gap-4">
-                <label class="flex-1 cursor-pointer">
-                    <input type="radio" name="role" value="FACULTY" class="peer hidden" checked onchange="toggleStudentFields()">
-                    <div class="text-center p-3 border rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-600 transition font-medium">
-                        Faculty
-                    </div>
-                </label>
-                <label class="flex-1 cursor-pointer">
-                    <input type="radio" name="role" value="STUDENT" class="peer hidden" onchange="toggleStudentFields()">
-                    <div class="text-center p-3 border rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-600 transition font-medium">
-                        Student
-                    </div>
-                </label>
-            </div>
+        <!-- Email -->
+        <div class="sk-form-group">
+          <label class="sk-label" for="email">Email</label>
+          <input type="email" id="email" class="sk-input" placeholder="Enter your email" required autocomplete="email">
+        </div>
 
-            <!-- Username Input -->
-            <div>
-                <label for="username" class="block text-gray-700 font-medium mb-2">Full Name</label>
-                <input
-                    class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                    id="username"
-                    name="username"
-                    type="text"
-                    placeholder="Your Full Name"
-                    required
-                />
-            </div>
-
-            <!-- Student ID Input (Hidden by default) -->
-            <div id="studentIdContainer" class="hidden">
-                <label for="student_id" class="block text-gray-700 font-medium mb-2">Student ID</label>
-                <input
-                    class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                    id="student_id"
-                    name="student_id"
-                    type="text"
-                    placeholder="e.g. 011231..."
-                />
-            </div>
-
-            <!-- Email Input -->
-            <div>
-                <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
-                <input
-                    class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="you@somewhere.com"
-                    required
-                />
-            </div>
-
-            <!-- Password Input -->
-            <div>
-                <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
-                <input
-                    class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="********"
-                    required
-                />
-            </div>
-
-            <!-- Confirm Password Input -->
-            <div>
-                <label for="confirm_password" class="block text-gray-700 font-medium mb-2">Confirm Password</label>
-                <input
-                    class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                    id="confirm_password"
-                    name="confirm_password"
-                    type="password"
-                    placeholder="********"
-                    required
-                />
-            </div>
-
-            <!-- Sign Up Button -->
-            <button type="submit" class="w-full text-white py-3 rounded-lg font-semibold hover-scale" style="background: linear-gradient(to right, #f68b1f, #f68b1f);" onmouseover="this.style.background='linear-gradient(to right, #e67a0f, #e67a0f)'" onmouseout="this.style.background='linear-gradient(to right, #f68b1f, #f68b1f)'">
-                Sign Up
+        <!-- Password -->
+        <div class="sk-form-group">
+          <label class="sk-label" for="password">Password</label>
+          <div style="position:relative">
+            <input type="password" id="password" class="sk-input" placeholder="Create a password" required style="padding-right:2.75rem">
+            <button type="button" onclick="togglePwd('password','pwdIcon1')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sk-text-placeholder);cursor:pointer;padding:4px;font-size:1.125rem">
+              <i class="bi bi-eye" id="pwdIcon1"></i>
             </button>
-        </form>
+          </div>
+        </div>
 
-        <!-- Login Link -->
-        <p class="text-sm text-center text-gray-600 mt-6">
-            Already have an account? <a href="login.html" class="text-blue-500 hover:underline font-medium">Login</a>
-        </p>
+        <!-- Confirm Password -->
+        <div class="sk-form-group">
+          <label class="sk-label" for="password2">Confirm Password</label>
+          <div style="position:relative">
+            <input type="password" id="password2" class="sk-input" placeholder="Confirm your password" required style="padding-right:2.75rem">
+            <button type="button" onclick="togglePwd('password2','pwdIcon2')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sk-text-placeholder);cursor:pointer;padding:4px;font-size:1.125rem">
+              <i class="bi bi-eye" id="pwdIcon2"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="sk-btn sk-btn-gradient" style="width:100%;padding:0.75rem;font-size:var(--sk-text-base);margin-top:0.5rem">
+          <span id="btnText">Create Account</span>
+          <i class="bi bi-arrow-right"></i>
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:1.5rem;font-size:var(--sk-text-sm);color:var(--sk-text-tertiary)">
+        Already have an account?
+        <a href="login.html" style="color:var(--sk-primary);font-weight:600">Sign In</a>
+      </p>
+
     </div>
-</div>
+        </div>
+      </div>
+    </main>
 
-<!-- API Config -->
-<script src="../static/js/api-config.js"></script>
+    <!-- Mobile Bottom Nav -->
+    <nav class="sk-bottom-nav">
+      <div class="sk-bottom-nav-items">
+        <!-- Injected by JS -->
+      </div>
+    </nav>
+  </div>
 
-<!-- Register Form Handler -->
-<script>
-  function toggleStudentFields() {
-    const isStudent = document.querySelector('input[name="role"]:checked').value === 'STUDENT';
-    const studentIdContainer = document.getElementById('studentIdContainer');
-    const studentIdInput = document.getElementById('student_id');
-    
-    if (isStudent) {
-      studentIdContainer.classList.remove('hidden');
-      studentIdInput.required = true;
-    } else {
-      studentIdContainer.classList.add('hidden');
-      studentIdInput.required = false;
-      studentIdInput.value = '';
-    }
-  }
+  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/utils.js"></script>
+  <script src="../static/js/theme.js?v=ui-fix-30"></script>
+  <script src="../static/js/components.js"></script>
+  <script src="../static/js/layout.js?v=ui-fix-30"></script>
+  <script>
+    SKLayout.setupPublicNav && SKLayout.setupPublicNav('register');
 
-  document.getElementById('registerForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const role = document.querySelector('input[name="role"]:checked').value;
-    const username = document.getElementById('username').value;
-    const email = document.getElementById('email').value;
-    const studentId = document.getElementById('student_id').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirm_password').value;
-    const messageDiv = document.getElementById('message');
-    
-    if (password !== confirmPassword) {
-      messageDiv.classList.remove('hidden');
-      messageDiv.className = 'text-red-500 text-center mb-4';
-      messageDiv.textContent = 'Passwords do not match!';
-      return;
-    }
-    
-    try {
-      const response = await fetch(API_ENDPOINTS.REGISTER, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          role: role,
-          username: username,
-          email: email,
-          student_id: studentId,
-          password: password,
-          password2: confirmPassword
-        })
-      });
+    let selectedRole = 'FACULTY';
 
-      let data = null;
-      const text = await response.text();
-      if (text) {
-        try {
-          data = JSON.parse(text);
-        } catch (_) {
-          data = { detail: text.slice(0, 200) };
-        }
+    function selectRole(role) {
+      selectedRole = role;
+      document.getElementById('role').value = role;
+      document.getElementById('roleFaculty').classList.toggle('selected', role === 'FACULTY');
+      document.getElementById('roleStudent').classList.toggle('selected', role === 'STUDENT');
+
+      const studentFields = document.getElementById('studentFields');
+      const studentIdInput = document.getElementById('student_id');
+      if (role === 'STUDENT') {
+        studentFields.classList.add('show');
+        studentIdInput.required = true;
+      } else {
+        studentFields.classList.remove('show');
+        studentIdInput.required = false;
+        studentIdInput.value = '';
       }
+    }
 
-      messageDiv.classList.remove('hidden');
-      if (response.ok) {
-        messageDiv.className = 'text-green-500 text-center mb-4';
-        messageDiv.textContent = 'Registration successful! Redirecting to login...';
-        setTimeout(() => {
-          window.location.href = 'login.html';
-        }, 2000);
+    function togglePwd(fieldId, iconId) {
+      const field = document.getElementById(fieldId);
+      const icon = document.getElementById(iconId);
+      if (field.type === 'password') {
+        field.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+      } else {
+        field.type = 'password';
+        icon.className = 'bi bi-eye';
+      }
+    }
+
+    function showMessage(text, isError = true) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.style.display = 'block';
+      msg.style.background = isError ? 'var(--sk-error-bg)' : 'var(--sk-success-bg)';
+      msg.style.color = isError ? 'var(--sk-error)' : 'var(--sk-success)';
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+      const msgDiv = document.getElementById('message');
+      msgDiv.style.display = 'none';
+
+      const password = document.getElementById('password').value;
+      const password2 = document.getElementById('password2').value;
+
+      if (password !== password2) {
+        showMessage('Passwords do not match');
         return;
       }
 
-      messageDiv.className = 'text-red-500 text-center mb-4';
-      if (data && typeof data === 'object') {
-        const parts = [];
-        for (const v of Object.values(data)) {
-          if (Array.isArray(v)) parts.push(...v);
-          else if (v != null) parts.push(String(v));
-        }
-        messageDiv.textContent = parts.length ? parts.join(' ') : ('Registration failed (' + response.status + ').');
-      } else {
-        messageDiv.textContent = 'Registration failed (' + response.status + ').';
-      }
-    } catch (error) {
-      messageDiv.classList.remove('hidden');
-      messageDiv.className = 'text-red-500 text-center mb-4';
-      const msg = (error && error.message) ? String(error.message) : '';
-      if (msg.includes('fetch') || msg.includes('NetworkError')) {
-        messageDiv.textContent = 'Cannot reach the API (network/CORS). Use http:// to open this site (e.g. Live Server) and ensure Django runs at ' + API_BASE_URL + '.';
-      } else {
-        messageDiv.textContent = 'Registration failed. Please try again.';
-      }
-      console.error('Error:', error);
-    }
-  });
+      btn.disabled = true;
+      btnText.textContent = 'Creating account...';
 
-  // Load contributors for footer
-      async function loadFooterContributors() {
-        try {
-          const response = await fetch(window.sirKothayContributorsApiUrl());
-          const contributors = await response.json();
+      const body = {
+        role: selectedRole,
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: password,
+        password2: password2
+      };
 
-          const container = document.getElementById("contributorAvatarsFooter");
-          if (container) {
-            container.innerHTML = contributors
-              .slice(0, 6)
-              .map(
-                (c) =>
-                  `<a href="${c.html_url}" target="_blank">
-              <img src="${c.avatar_url}" class="h-8 w-8 rounded-full" alt="${c.login}">
-            </a>`,
-              )
-              .join("");
+      if (selectedRole === 'STUDENT') {
+        body.student_id = document.getElementById('student_id').value;
+      }
+
+      try {
+        const res = await fetch(API_ENDPOINTS.REGISTER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (res.ok || res.status === 201) {
+          showMessage('Account created successfully! Redirecting to login...', false);
+          setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+        } else {
+          let errorMsg = '';
+          if (typeof data === 'object') {
+            errorMsg = Object.entries(data)
+              .map(([k, v]) => Array.isArray(v) ? v.join(', ') : String(v))
+              .join('. ');
+          } else {
+            errorMsg = String(data).slice(0, 300);
           }
-        } catch (error) {
-          console.error("Error loading contributors:", error);
+          showMessage(errorMsg || 'Registration failed');
         }
+      } catch (err) {
+        if (err.message && err.message.includes('Failed to fetch')) {
+          showMessage('Cannot connect to the server. Please make sure the backend is running.');
+        } else {
+          showMessage('Network error. Please try again.');
+        }
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Create Account';
       }
-      loadFooterContributors();
-</script>
-
-</div>
-  </main>
-
-  <footer class="py-12 px-6 mt-4 mb-20 md:mb-0 bg-gray-900 text-gray-300">
-    <div class="max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <div class="flex items-center gap-3 mb-4 md:justify-center">
-            <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo">
-            <span class="text-2xl font-bold text-white">Sir Kothay?</span>
-          </div>
-          <p class="text-gray-400">Simple notes. Strong bonds.</p>
-        </div>
-
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <h4 class="font-semibold text-white mb-4">Quick Links</h4>
-          <ul class="space-y-2 text-gray-400">
-            <li><a href="../index.html#features" class="hover:text-white transition">Features</a></li>
-            <li><a href="../about.html" class="hover:text-white transition">About Us</a></li>
-            <li><a href="register.html" class="hover:text-white transition">Sign Up</a></li>
-          </ul>
-        </div>
-
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <h4 class="font-semibold text-white mb-4">Connect</h4>
-          <div class="flex gap-4 justify-left md:justify-center">
-            <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" class="text-2xl hover:text-white transition">
-              <i class="bi bi-github"></i>
-            </a>
-            <a href="https://www.facebook.com/uiudevelopershub" class="text-2xl hover:text-white transition">
-              <i class="bi bi-facebook"></i>
-            </a>
-          </div>
-          <div class="flex items-center gap-2 mt-6 text-sm justify-left md:justify-center">
-            <img src="https://github.com/UIU-Developers-Hub.png" class="h-8 w-8 rounded-full" alt="UIU Developers Hub">
-            <span>© 2026 Sir Kothay. Made with ❤️ by <a href="https://github.com/UIU-Developers-Hub" style="color: #f68b1f;" class="hover:underline">UIU Developers Hub</a></span>
-          </div>
-          <div id="contributorAvatarsFooter" class="flex gap-2 mt-2">
-              <!-- Contributors will be loaded dynamically -->
-            </div>
-        </div>
-      </div>
-    </div>
-  </footer>
-
+    }
+  </script>
 </body>
 </html>

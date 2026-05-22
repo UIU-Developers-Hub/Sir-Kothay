@@ -7,40 +7,64 @@ var dayShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 window._recurringSchedules = [];
 
 async function loadSchedules() {
+  var el = document.getElementById('schedulesList');
   try {
     var res = await apiRequest(API_ENDPOINTS.RECURRING_LIST);
     var data = await res.json();
     window._recurringSchedules = Array.isArray(data) ? data : (data.results || []);
-    var el = document.getElementById('schedulesList');
-    if (!res.ok) { el.innerHTML = '<p class="text-red-500">Failed to load schedules</p>'; return; }
-    var items = window._recurringSchedules;
-    if (items.length === 0) {
-      el.innerHTML = '<div class="text-center py-10">' +
-        '<div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-arrow-repeat text-2xl text-indigo-500"></i></div>' +
-        '<h3 class="text-gray-700 font-semibold mb-1">Automate Your Status</h3>' +
-        '<p class="text-gray-400 text-sm mb-2">Set up recurring rules like "Every Monday at 9am → In a Meeting".<br>These also appear on your <a onclick="document.querySelector(\'[data-tab=calendar]\').click()" class="text-indigo-500 cursor-pointer underline">Calendar</a> view.</p>' +
-        '<button onclick="openNewScheduleModal()" class="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-indigo-700 transition">Create Your First Schedule</button></div>';
+    if (!el) {
+      if (typeof renderCalendar === 'function') renderCalendar();
       return;
     }
-    el.innerHTML = items.map(function (s) {
-      var durText = s.duration_minutes ? (s.duration_minutes < 60 ? s.duration_minutes + 'min' : (s.duration_minutes / 60) + 'h') : '∞';
-      var statusDot = s.is_active ? '<span class="w-2 h-2 bg-green-500 rounded-full"></span>' : '<span class="w-2 h-2 bg-gray-300 rounded-full"></span>';
-      return '<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-2 hover:shadow-md transition-shadow">' +
-        '<div class="flex items-start gap-3 flex-1 min-w-0">' +
-        '<div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"><i class="bi bi-arrow-repeat text-indigo-500"></i></div>' +
-        '<div class="min-w-0"><div class="flex items-center gap-2">' + statusDot +
-        '<p class="font-semibold text-sm text-gray-800">' + (s.day_label || dayNames[s.day_of_week]) + ' at ' + s.time_of_day.slice(0, 5) + '</p></div>' +
-        '<p class="text-xs text-gray-500 mt-0.5 truncate">"' + escapeHtml(s.message) + '"</p>' +
-        '<p class="text-xs text-gray-400 mt-0.5">Duration: ' + durText + (s.last_triggered_at ? ' · Last ran: ' + timeAgo(s.last_triggered_at) : '') + '</p></div></div>' +
-        '<div class="flex gap-1.5 mt-2 sm:mt-0 flex-shrink-0">' +
-        '<button onclick="toggleSchedule(' + s.id + ',' + s.is_active + ')" class="text-xs px-3 py-1.5 rounded-lg border transition ' + (s.is_active ? 'border-yellow-200 text-yellow-600 hover:bg-yellow-50' : 'border-green-200 text-green-600 hover:bg-green-50') + '">' + (s.is_active ? '<i class="bi bi-pause-fill"></i> Pause' : '<i class="bi bi-play-fill"></i> Resume') + '</button>' +
-        '<button onclick="openEditScheduleModal(' + s.id + ',\'' + escapeHtml(s.message).replace(/'/g, "\\'") + '\',' + s.day_of_week + ',\'' + s.time_of_day.slice(0, 5) + '\',\'' + (s.duration_minutes || '') + '\',\'' + (s.set_availability || '') + '\')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"><i class="bi bi-pencil"></i></button>' +
-        '<button onclick="deleteSchedule(' + s.id + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500"><i class="bi bi-trash"></i></button>' +
+    if (!res.ok) {
+      el.innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><h3>Failed to load schedules</h3></div>';
+      return;
+    }
+    var items = window._recurringSchedules;
+    if (items.length === 0) {
+      el.innerHTML = '<div class="sk-empty-state compact">' +
+        '<div class="sk-empty-icon"><i class="bi bi-arrow-repeat"></i></div>' +
+        '<h3>No recurring schedules</h3>' +
+        '<button onclick="openNewScheduleModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> Create Schedule</button>' +
+        '</div>';
+      if (typeof renderCalendar === 'function') renderCalendar();
+      return;
+    }
+    el.innerHTML = '<div class="sk-schedule-list">' + items.map(function (s) {
+      var durText = formatDurationSeconds(s.duration_seconds);
+      var activeClass = s.is_active ? 'active' : 'paused';
+      return '<div class="sk-schedule-item">' +
+        '<div class="sk-schedule-main">' +
+        '<div class="sk-schedule-icon ' + activeClass + '"><i class="bi bi-arrow-repeat"></i></div>' +
+        '<div class="sk-schedule-copy">' +
+        '<div class="sk-schedule-title"><span class="sk-status-dot ' + activeClass + '"></span>' + escapeHtml(s.day_label || dayNames[s.day_of_week]) + ' at ' + escapeHtml(s.time_of_day.slice(0, 5)) + '</div>' +
+        '<div class="sk-schedule-message">' + escapeHtml(s.message) + '</div>' +
+        '<div class="sk-schedule-meta">Duration: ' + escapeHtml(durText) + (s.last_triggered_at ? ' · Last ran: ' + escapeHtml(timeAgo(s.last_triggered_at)) : '') + '</div>' +
+        '</div></div>' +
+        '<div class="sk-schedule-actions">' +
+        '<button onclick="toggleSchedule(' + s.id + ',' + s.is_active + ')" class="sk-btn sk-btn-secondary sk-btn-sm">' + (s.is_active ? '<i class="bi bi-pause-fill"></i> Pause' : '<i class="bi bi-play-fill"></i> Resume') + '</button>' +
+        '<button onclick="openEditScheduleModalFromList(' + s.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon" title="Edit schedule"><i class="bi bi-pencil"></i></button>' +
+        '<button onclick="deleteSchedule(' + s.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete schedule"><i class="bi bi-trash"></i></button>' +
         '</div></div>';
-    }).join('');
+    }).join('') + '</div>';
+    if (typeof renderCalendar === 'function') renderCalendar();
   } catch (e) {
-    document.getElementById('schedulesList').innerHTML = '<p class="text-red-500">Error loading schedules</p>';
+    if (el) el.innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><h3>Error loading schedules</h3></div>';
   }
+}
+
+function openEditScheduleModalFromList(id) {
+  var s = (window._recurringSchedules || []).find(function (item) { return item.id === id; });
+  if (!s) return;
+  openEditScheduleModal(s.id, s.message, s.day_of_week, s.time_of_day.slice(0, 5), s.duration_seconds || '', s.set_availability || '');
+}
+
+function formatDurationSeconds(seconds) {
+  if (!seconds) return 'No expiry';
+  if (seconds % 86400 === 0) return (seconds / 86400) + ' day' + (seconds / 86400 === 1 ? '' : 's');
+  if (seconds % 3600 === 0) return (seconds / 3600) + ' hr';
+  if (seconds % 60 === 0) return (seconds / 60) + ' min';
+  return seconds + ' sec';
 }
 
 function openNewScheduleModal() {
@@ -110,6 +134,7 @@ async function submitSchedule() {
       closeModal('addScheduleModal');
       await skNotify(id ? 'Schedule updated!' : 'Schedule created! It will also appear on your Calendar.', { variant: 'success', title: 'Schedules' });
       loadSchedules();
+      if (typeof loadCalendarEvents === 'function') loadCalendarEvents();
     } else { var d = await res.json(); await skNotify(JSON.stringify(d), { variant: 'error', title: 'Schedules' }); }
   } catch (e) { await skNotify('Failed to save schedule', { variant: 'error', title: 'Schedules' }); }
 }
@@ -119,7 +144,10 @@ async function toggleSchedule(id, currentActive) {
     var res = await apiRequest(API_ENDPOINTS.RECURRING_LIST + id + '/', {
       method: 'PATCH', body: JSON.stringify({ is_active: !currentActive })
     });
-    if (res.ok) { loadSchedules(); }
+    if (res.ok) {
+      loadSchedules();
+      if (typeof loadCalendarEvents === 'function') loadCalendarEvents();
+    }
   } catch (e) { await skNotify('Failed to update', { variant: 'error', title: 'Schedules' }); }
 }
 
@@ -128,6 +156,10 @@ async function deleteSchedule(id) {
   if (!ok) return;
   try {
     var res = await apiRequest(API_ENDPOINTS.RECURRING_LIST + id + '/', { method: 'DELETE' });
-    if (res.ok) { await skNotify('Deleted!', { variant: 'success', title: 'Schedules' }); loadSchedules(); }
+    if (res.ok) {
+      await skNotify('Deleted!', { variant: 'success', title: 'Schedules' });
+      loadSchedules();
+      if (typeof loadCalendarEvents === 'function') loadCalendarEvents();
+    }
   } catch (e) { await skNotify('Failed to delete', { variant: 'error', title: 'Schedules' }); }
 }

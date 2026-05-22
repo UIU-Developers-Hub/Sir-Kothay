@@ -3,6 +3,30 @@ var _allConvos = [];
 var _chatFilter = 'all';
 var _activeConvo = null;
 
+function _convoAvatar(src, name, variant) {
+  var initial = (name || '?').charAt(0).toUpperCase();
+  var extra = variant === 'visitor' ? ' visitor' : '';
+  if (src && src !== '../static/images/image.png') {
+    return '<div class="sk-convo-avatar' + extra + '"><img src="' + src + '" alt="' + escapeHtml(name || 'User') + '"></div>';
+  }
+  return '<div class="sk-convo-avatar' + extra + '">' + initial + '</div>';
+}
+
+function _chatHeaderAvatar(src, name, variant) {
+  var initial = (name || '?').charAt(0).toUpperCase();
+  var extra = variant === 'visitor' ? ' visitor' : '';
+  if (src && src !== '../static/images/image.png') {
+    return '<div class="sk-chat-header-avatar' + extra + '"><img src="' + src + '" alt="' + escapeHtml(name || 'User') + '"></div>';
+  }
+  return '<div class="sk-chat-header-avatar' + extra + '">' + initial + '</div>';
+}
+
+function _statusDot(status) {
+  if (status === 'PENDING') return '<span class="sk-convo-dot pending" title="Awaiting"></span>';
+  if (status === 'ACTIVE' || status === 'OPEN') return '<span class="sk-convo-dot active" title="Open"></span>';
+  return '<span class="sk-convo-dot" title="Closed"></span>';
+}
+
 async function loadUnifiedInbox() {
   var threads = [], dms = [];
   try {
@@ -46,8 +70,7 @@ async function loadUnifiedInbox() {
 function _initFilterBtns() {
   document.querySelectorAll('.chat-filter-btn').forEach(function (b) {
     var f = b.dataset.filter;
-    if (f === _chatFilter) { b.className = 'chat-filter-btn text-[10px] px-2 py-1 rounded-md font-bold border border-blue-300 bg-blue-50 text-blue-600 transition'; }
-    else { b.className = 'chat-filter-btn text-[10px] px-2 py-1 rounded-md font-bold border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition'; }
+    b.className = 'chat-filter-btn sk-chat-filter-btn' + (f === _chatFilter ? ' active' : '');
   });
 }
 
@@ -67,36 +90,29 @@ function _renderConvoList() {
   });
 
   if (!items.length) {
-    el.innerHTML = '<div class="py-16 text-center"><i class="bi bi-chat-square text-3xl text-gray-200 mb-2 block"></i><p class="text-xs text-gray-400">No conversations found</p></div>';
+    el.innerHTML = '<div class="sk-convo-empty"><i class="bi bi-chat-square"></i><p>No conversations found</p></div>';
     return;
   }
 
   el.innerHTML = items.map(function (c) {
     var isActive = _activeConvo && _activeConvo.type === c.type && _activeConvo.id === c.id;
-    var initial = c.name.charAt(0).toUpperCase();
-    var color = c.type === 'thread' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600';
     var badge = '';
     if (c.type === 'thread') {
-      if (c.status === 'PENDING') badge = '<span class="w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0" title="Awaiting"></span>';
-      else if (c.status === 'ACTIVE') badge = '<span class="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" title="Open"></span>';
-      else badge = '<span class="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" title="Closed"></span>';
+      badge = _statusDot(c.status);
     }
-    var verified = c.studentId ? '<i class="bi bi-patch-check-fill text-blue-500 text-[9px]"></i>' : '';
-    var typeBadge = c.type === 'dm' ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-orange-50 text-orange-500 border border-orange-100 font-bold">Visitor</span>' : '';
-    var unreadDot = c.unread ? '<span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></span>' : '';
-    var avatarHtml = c.avatar && c.avatar !== '../static/images/image.png'
-      ? '<img src="' + c.avatar + '" class="w-9 h-9 rounded-full object-cover flex-shrink-0">'
-      : '<div class="w-9 h-9 rounded-full ' + color + ' flex items-center justify-center text-sm font-bold flex-shrink-0">' + initial + '</div>';
-    return '<div class="flex gap-2.5 px-4 py-3 cursor-pointer border-b border-gray-50 hover:bg-blue-50/50 transition-colors ' + (isActive ? 'bg-blue-50 border-l-2 border-l-blue-500' : '') + '" onclick="openConversation(\'' + c.type + '\',' + c.id + ')">' +
-      avatarHtml +
-      '<div class="flex-1 min-w-0">' +
-        '<div class="flex items-center gap-1.5">' +
-          '<span class="text-xs font-semibold text-gray-800 truncate">' + escapeHtml(c.name) + '</span>' +
+    var verified = c.studentId ? '<i class="bi bi-patch-check-fill" style="color:var(--sk-primary);font-size:0.625rem"></i>' : '';
+    var typeBadge = c.type === 'dm' ? '<span class="sk-convo-type visitor">Visitor</span>' : '';
+    var unreadDot = c.unread ? '<span class="sk-convo-dot unread"></span>' : '';
+    return '<div class="sk-convo-item ' + (isActive ? 'active' : '') + '" onclick="openConversation(\'' + c.type + '\',' + c.id + ')">' +
+      _convoAvatar(c.avatar, c.name, c.type === 'dm' ? 'visitor' : '') +
+      '<div class="sk-convo-main">' +
+        '<div class="sk-convo-row">' +
+          '<span class="sk-convo-name">' + escapeHtml(c.name) + '</span>' +
           verified + badge + typeBadge + unreadDot +
-          '<span class="text-[10px] text-gray-400 ml-auto flex-shrink-0">' + _tAgo(c.lastTime) + '</span>' +
+          '<span class="sk-convo-time">' + _tAgo(c.lastTime) + '</span>' +
         '</div>' +
-        '<p class="text-[11px] text-gray-500 truncate font-medium">' + escapeHtml(c.subject) + '</p>' +
-        '<p class="text-[10px] text-gray-400 truncate">' + escapeHtml(c.lastMsg || '') + '</p>' +
+        '<p class="sk-convo-subject">' + escapeHtml(c.subject) + '</p>' +
+        '<p class="sk-convo-preview">' + escapeHtml(c.lastMsg || '') + '</p>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -108,12 +124,19 @@ async function openConversation(type, id) {
   _activeConvo = c;
   _renderConvoList(); // highlight active
 
-  // On mobile, hide list panel and show detail
-  document.getElementById('chatListPanel').classList.add('hidden', 'md:flex');
-  document.getElementById('chatDetailPanel').classList.remove('hidden');
-  document.getElementById('chatDetailPanel').classList.add('flex');
+  // On mobile, detail replaces the list. On desktop, keep the split view visible.
+  var isMobile = window.innerWidth < 768;
+  var listPanel = document.getElementById('chatListPanel');
+  var detailPanel = document.getElementById('chatDetailPanel');
+  listPanel.classList.remove('hidden', 'md:flex');
+  if (isMobile) listPanel.classList.add('hidden-mobile');
+  else listPanel.classList.remove('hidden-mobile');
+  detailPanel.classList.remove('hidden', 'hidden-mobile');
+  detailPanel.classList.add('flex');
   document.getElementById('chatEmptyState').classList.add('hidden');
-  document.getElementById('chatActiveConvo').classList.remove('hidden');
+  var activePanel = document.getElementById('chatActiveConvo');
+  activePanel.classList.remove('hidden');
+  activePanel.style.display = 'flex';
 
   if (type === 'thread') await _renderThreadConvo(c);
   else _renderDmConvo(c);
@@ -128,24 +151,21 @@ async function _renderThreadConvo(c) {
     c.raw = thread; // update raw
     var stu = thread.student_info || {};
     var stuAvatarUrl = resolveProfileImage(stu.profile_image_url);
-    var verified = stu.student_id ? ' <i class="bi bi-patch-check-fill text-blue-500 text-xs"></i>' : '';
-    var stuAvatarHtml = stuAvatarUrl && stuAvatarUrl !== '../static/images/image.png'
-      ? '<img src="' + stuAvatarUrl + '" class="w-9 h-9 rounded-full object-cover flex-shrink-0">'
-      : '<div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">' + (stu.username || 'S').charAt(0).toUpperCase() + '</div>';
+    var verified = stu.student_id ? ' <i class="bi bi-patch-check-fill" style="color:var(--sk-primary)"></i>' : '';
 
     // Header
     var headerHtml =
-      '<button onclick="_backToList()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 mr-1"><i class="bi bi-arrow-left"></i></button>' +
-      stuAvatarHtml +
-      '<div class="flex-1 min-w-0">' +
-        '<p class="text-sm font-bold text-gray-800 truncate">' + escapeHtml(stu.username || 'Student') + verified + '</p>' +
-        '<p class="text-[10px] text-gray-400 truncate">' + escapeHtml(thread.subject) + ' · ' + _statusLabel(thread.status) + '</p>' +
+      '<button onclick="_backToList()" class="sk-btn sk-btn-ghost sk-btn-icon sk-chat-back" title="Back"><i class="bi bi-arrow-left"></i></button>' +
+      _chatHeaderAvatar(stuAvatarUrl, stu.username || 'Student') +
+      '<div class="sk-chat-header-main">' +
+        '<p class="sk-chat-header-title">' + escapeHtml(stu.username || 'Student') + verified + '</p>' +
+        '<p class="sk-chat-header-meta">' + escapeHtml(thread.subject) + ' · ' + _statusLabel(thread.status) + '</p>' +
       '</div>' +
-      '<div class="flex items-center gap-2 flex-shrink-0">' +
-        (stu.student_id ? '<button onclick="_viewProfile(' + JSON.stringify(JSON.stringify(stu)).replace(/"/g, '&quot;') + ')" class="text-[10px] px-2 py-1 rounded-lg border border-gray-200 text-blue-500 hover:bg-blue-50"><i class="bi bi-person-circle mr-0.5"></i>Profile</button>' : '') +
-        (thread.status === 'PENDING' ? '<button onclick="_acceptThread(' + thread.id + ')" class="text-[10px] px-2.5 py-1 rounded-lg bg-green-500 text-white hover:bg-green-600 font-bold"><i class="bi bi-check-lg mr-0.5"></i>Accept</button>' : '') +
-        (thread.status !== 'CLOSED' ? '<button onclick="_closeThread(' + thread.id + ')" class="text-[10px] px-2 py-1 rounded-lg border border-red-200 text-red-500 hover:bg-red-50" title="Close"><i class="bi bi-x-circle"></i></button>' : '') +
-        '<button onclick="_deleteThreadInline(' + thread.id + ')" class="text-[10px] px-2 py-1 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500" title="Delete"><i class="bi bi-trash"></i></button>' +
+      '<div class="sk-chat-header-actions">' +
+        (stu.student_id ? '<button onclick="_viewProfile(' + JSON.stringify(JSON.stringify(stu)).replace(/"/g, '&quot;') + ')" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-person-circle"></i> Profile</button>' : '') +
+        (thread.status === 'PENDING' ? '<button onclick="_acceptThread(' + thread.id + ')" class="sk-btn sk-btn-success sk-btn-sm"><i class="bi bi-check-lg"></i> Accept</button>' : '') +
+        (thread.status !== 'CLOSED' ? '<button onclick="_closeThread(' + thread.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Close"><i class="bi bi-x-circle"></i></button>' : '') +
+        '<button onclick="_deleteThreadInline(' + thread.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete"><i class="bi bi-trash"></i></button>' +
       '</div>';
     document.getElementById('chatConvoHeader').innerHTML = headerHtml;
 
@@ -154,22 +174,22 @@ async function _renderThreadConvo(c) {
       var isMe = m.sender_role === 'FACULTY';
       return _renderBubble(m.body, m.sender_name, m.created_at, isMe);
     }).join('');
-    if (!msgs) msgs = '<p class="text-center text-gray-300 text-xs py-8">No messages yet.</p>';
-    if (thread.status === 'PENDING') msgs = '<div class="bg-yellow-50 text-yellow-700 text-xs font-medium px-4 py-2 rounded-xl border border-yellow-200 mb-3 text-center"><i class="bi bi-hourglass-split mr-1"></i>Pending — accept to start chatting.</div>' + msgs;
-    if (thread.status === 'CLOSED') msgs += '<div class="bg-gray-50 text-gray-400 text-xs font-medium px-4 py-2 rounded-xl border border-gray-200 mt-3 text-center"><i class="bi bi-lock mr-1"></i>Closed' + (thread.closed_by_name ? ' by ' + escapeHtml(thread.closed_by_name) : '') + '</div>';
+    if (!msgs) msgs = '<div class="sk-convo-empty"><p>No messages yet</p></div>';
+    if (thread.status === 'PENDING') msgs = '<div class="sk-chat-system warning"><i class="bi bi-hourglass-split"></i> Pending - accept to start chatting.</div>' + msgs;
+    if (thread.status === 'CLOSED') msgs += '<div class="sk-chat-system"><i class="bi bi-lock"></i> Closed' + (thread.closed_by_name ? ' by ' + escapeHtml(thread.closed_by_name) : '') + '</div>';
     document.getElementById('chatConvoMessages').innerHTML = msgs;
 
     // Reply bar
     if (thread.status === 'ACTIVE') {
       document.getElementById('chatReplyBar').innerHTML =
-        '<div class="flex gap-2">' +
-          '<input type="text" id="replyInput" placeholder="Type a reply..." class="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" onkeydown="if(event.key===\'Enter\')_sendThreadReply(' + thread.id + ')">' +
-          '<button onclick="_sendThreadReply(' + thread.id + ')" class="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-600 transition shadow-sm"><i class="bi bi-send"></i></button>' +
+        '<div class="sk-chat-reply-form">' +
+          '<input type="text" id="replyInput" placeholder="Type a reply..." class="sk-input" onkeydown="if(event.key===\'Enter\')_sendThreadReply(' + thread.id + ')">' +
+          '<button onclick="_sendThreadReply(' + thread.id + ')" class="sk-btn sk-btn-primary"><i class="bi bi-send"></i></button>' +
         '</div>';
     } else if (thread.status === 'PENDING') {
-      document.getElementById('chatReplyBar').innerHTML = '<p class="text-xs text-gray-400 text-center">Accept this chat to reply.</p>';
+      document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta" style="text-align:center">Accept this chat to reply.</p>';
     } else {
-      document.getElementById('chatReplyBar').innerHTML = '<p class="text-xs text-gray-400 text-center">This conversation is closed.</p>';
+      document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta" style="text-align:center">This conversation is closed.</p>';
     }
     _scrollMsgs();
   } catch (e) { console.error(e); }
@@ -178,7 +198,7 @@ async function _renderThreadConvo(c) {
 /* ---- DM conversation ---- */
 function _renderDmConvo(c) {
   var dm = c.raw;
-  var verified = c.isRegistered ? ' <i class="bi bi-patch-check-fill text-blue-500 text-xs"></i>' : '';
+  var verified = c.isRegistered ? ' <i class="bi bi-patch-check-fill" style="color:var(--sk-primary)"></i>' : '';
 
   // Mark as read
   if (!dm.is_read) {
@@ -189,16 +209,16 @@ function _renderDmConvo(c) {
 
   // Header
   document.getElementById('chatConvoHeader').innerHTML =
-    '<button onclick="_backToList()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 mr-1"><i class="bi bi-arrow-left"></i></button>' +
-    '<div class="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold flex-shrink-0">' + c.name.charAt(0).toUpperCase() + '</div>' +
-    '<div class="flex-1 min-w-0">' +
-      '<p class="text-sm font-bold text-gray-800 truncate">' + escapeHtml(c.name) + verified + ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-orange-50 text-orange-500 border border-orange-100 font-bold">Visitor</span></p>' +
-      '<p class="text-[10px] text-gray-400 truncate">' + escapeHtml(c.email) + (c.subject ? ' · ' + escapeHtml(c.subject) : '') + '</p>' +
+    '<button onclick="_backToList()" class="sk-btn sk-btn-ghost sk-btn-icon sk-chat-back" title="Back"><i class="bi bi-arrow-left"></i></button>' +
+    _chatHeaderAvatar('', c.name, 'visitor') +
+    '<div class="sk-chat-header-main">' +
+      '<p class="sk-chat-header-title">' + escapeHtml(c.name) + verified + ' <span class="sk-convo-type visitor">Visitor</span></p>' +
+      '<p class="sk-chat-header-meta">' + escapeHtml(c.email) + (c.subject ? ' · ' + escapeHtml(c.subject) : '') + '</p>' +
     '</div>' +
-    '<div class="flex items-center gap-2 flex-shrink-0">' +
-      (c.isRegistered ? '<button onclick="_viewProfile(' + JSON.stringify(JSON.stringify({username:c.name,email:c.email,student_id:c.studentId})).replace(/"/g,'&quot;') + ')" class="text-[10px] px-2 py-1 rounded-lg border border-gray-200 text-blue-500 hover:bg-blue-50"><i class="bi bi-person-circle mr-0.5"></i>Profile</button>' : '') +
-      '<button onclick="_closeDmInline(' + dm.id + ')" class="text-[10px] px-2 py-1 rounded-lg border border-gray-200 text-gray-400 hover:bg-yellow-50 hover:text-yellow-600"><i class="bi bi-check-circle mr-0.5"></i>Close</button>' +
-      '<button onclick="_deleteDmInline(' + dm.id + ')" class="text-[10px] px-2 py-1 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500"><i class="bi bi-trash"></i></button>' +
+    '<div class="sk-chat-header-actions">' +
+      (c.isRegistered ? '<button onclick="_viewProfile(' + JSON.stringify(JSON.stringify({username:c.name,email:c.email,student_id:c.studentId})).replace(/"/g,'&quot;') + ')" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-person-circle"></i> Profile</button>' : '') +
+      '<button onclick="_closeDmInline(' + dm.id + ')" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-check-circle"></i> Close</button>' +
+      '<button onclick="_deleteDmInline(' + dm.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger"><i class="bi bi-trash"></i></button>' +
     '</div>';
 
   // Messages
@@ -212,12 +232,12 @@ function _renderDmConvo(c) {
   // Reply bar
   if (!dm.is_closed) {
     document.getElementById('chatReplyBar').innerHTML =
-      '<div class="flex gap-2">' +
-        '<input type="text" id="replyInput" placeholder="Type a reply..." class="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300" onkeydown="if(event.key===\'Enter\')_sendDmReply(' + dm.id + ')">' +
-        '<button onclick="_sendDmReply(' + dm.id + ')" class="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-orange-600 transition shadow-sm"><i class="bi bi-send"></i></button>' +
+      '<div class="sk-chat-reply-form">' +
+        '<input type="text" id="replyInput" placeholder="Type a reply..." class="sk-input" onkeydown="if(event.key===\'Enter\')_sendDmReply(' + dm.id + ')">' +
+        '<button onclick="_sendDmReply(' + dm.id + ')" class="sk-btn sk-btn-primary"><i class="bi bi-send"></i></button>' +
       '</div>';
   } else {
-    document.getElementById('chatReplyBar').innerHTML = '<p class="text-xs text-gray-400 text-center">This conversation is closed.</p>';
+    document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta" style="text-align:center">This conversation is closed.</p>';
   }
   _scrollMsgs();
 }
@@ -311,48 +331,49 @@ async function _closeAndDeleteAll() {
 
 function _viewProfile(jsonStr) {
   var s = JSON.parse(jsonStr);
-  var badge = s.student_id ? '<span class="inline-flex items-center gap-1 bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-semibold border border-blue-200 mt-2"><i class="bi bi-patch-check-fill"></i>Verified</span>' : '';
+  var badge = s.student_id ? '<span class="sk-profile-pill" style="margin-top:0.75rem"><i class="bi bi-patch-check-fill"></i>Verified</span>' : '';
   skModal.open(
-    '<div class="text-center">' +
-      '<div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-2xl mx-auto">' + (s.username||'S').charAt(0).toUpperCase() + '</div>' +
-      '<h3 class="font-bold text-gray-800 text-lg mt-3">' + escapeHtml(s.username||'User') + '</h3>' +
-      (s.email ? '<p class="text-sm text-gray-500 mt-1">' + escapeHtml(s.email) + '</p>' : '') +
-      (s.student_id ? '<p class="text-sm text-gray-500 mt-1">ID: ' + escapeHtml(s.student_id) + '</p>' : '') +
+    '<div style="text-align:center">' +
+      '<div class="sk-chat-header-avatar" style="width:64px;height:64px;margin:0 auto;font-size:1.5rem">' + (s.username||'S').charAt(0).toUpperCase() + '</div>' +
+      '<h3 class="sk-profile-summary-title" style="margin-top:0.75rem">' + escapeHtml(s.username||'User') + '</h3>' +
+      (s.email ? '<p class="sk-profile-summary-subtitle">' + escapeHtml(s.email) + '</p>' : '') +
+      (s.student_id ? '<p class="sk-chat-header-meta">ID: ' + escapeHtml(s.student_id) + '</p>' : '') +
       badge + '</div>',
     { title: 'Profile', maxWidth: 'max-w-sm' }
   );
 }
 
 function _backToList() {
-  document.getElementById('chatListPanel').classList.remove('hidden', 'md:flex');
-  document.getElementById('chatListPanel').classList.add('flex');
-  document.getElementById('chatDetailPanel').classList.add('hidden');
-  document.getElementById('chatDetailPanel').classList.remove('flex');
+  var isMobile = window.innerWidth < 768;
+  var listPanel = document.getElementById('chatListPanel');
+  var detailPanel = document.getElementById('chatDetailPanel');
+  listPanel.classList.remove('hidden', 'hidden-mobile', 'md:flex');
+  listPanel.classList.add('flex');
+  detailPanel.classList.remove('hidden');
+  detailPanel.classList.add('flex');
+  if (isMobile) detailPanel.classList.add('hidden-mobile');
+  else detailPanel.classList.remove('hidden-mobile');
   document.getElementById('chatEmptyState').classList.remove('hidden');
-  document.getElementById('chatActiveConvo').classList.add('hidden');
-  // On desktop keep detail visible
-  if (window.innerWidth >= 768) {
-    document.getElementById('chatDetailPanel').classList.remove('hidden');
-    document.getElementById('chatDetailPanel').classList.add('flex');
-  }
+  var activePanel = document.getElementById('chatActiveConvo');
+  activePanel.classList.add('hidden');
+  activePanel.style.display = 'none';
 }
 
 /* ---- Helpers ---- */
 function _renderBubble(body, name, time, isMe) {
-  var align = isMe ? 'items-end' : 'items-start';
-  var bg = isMe ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800';
-  return '<div class="flex flex-col ' + align + ' mb-2.5">' +
-    '<div class="' + bg + ' px-4 py-2.5 rounded-2xl max-w-[80%] shadow-sm">' +
-      '<p class="text-sm leading-relaxed">' + escapeHtml(body) + '</p>' +
+  var side = isMe ? 'sent' : 'received';
+  return '<div class="sk-chat-message ' + side + '">' +
+    '<div class="sk-chat-bubble ' + side + '">' +
+      '<div>' + escapeHtml(body) + '</div>' +
     '</div>' +
-    '<span class="text-[10px] text-gray-400 mt-0.5 px-1">' + escapeHtml(name) + ' · ' + _tAgo(time) + '</span>' +
+    '<span class="sk-chat-meta">' + escapeHtml(name) + ' · ' + _tAgo(time) + '</span>' +
   '</div>';
 }
 
 function _statusLabel(s) {
-  if (s === 'PENDING') return '<span class="text-yellow-600">Awaiting</span>';
-  if (s === 'ACTIVE') return '<span class="text-green-600">Open</span>';
-  return '<span class="text-gray-400">Closed</span>';
+  if (s === 'PENDING') return '<span style="color:#b45309">Awaiting</span>';
+  if (s === 'ACTIVE') return '<span style="color:var(--sk-success)">Open</span>';
+  return '<span style="color:var(--sk-text-placeholder)">Closed</span>';
 }
 
 function _scrollMsgs() {

@@ -24,25 +24,42 @@ function _relativeTime(dateStr) {
   return d.toLocaleDateString();
 }
 
+function _esc(value) {
+  var d = document.createElement('div');
+  d.textContent = value == null ? '' : String(value);
+  return d.innerHTML;
+}
+
+function _initial(name) {
+  return _esc((name || 'U').charAt(0).toUpperCase());
+}
+
 function _roleBadge(role) {
-  if (!role) return '<span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs font-semibold italic">— None —</span>';
-  var map = { 'FACULTY': 'bg-blue-100 text-blue-800', 'STUDENT': 'bg-green-100 text-green-800' };
-  return '<span class="' + (map[role] || 'bg-gray-200 text-gray-700') + ' px-2 py-1 rounded text-xs font-semibold">' + role + '</span>';
+  if (!role) return '<span class="sk-admin-badge role-none">None</span>';
+  var cls = role === 'FACULTY' ? 'role-faculty' : (role === 'STUDENT' ? 'role-student' : 'role-none');
+  return '<span class="sk-admin-badge ' + cls + '">' + _esc(role) + '</span>';
 }
 
 function _statusBadge(u) {
-  if (u.is_banned) return '<span class="bg-red-200 text-red-900 px-2 py-1 rounded text-xs font-semibold"><i class="bi bi-slash-circle-fill mr-1"></i>Banned</span>';
-  if (!u.is_active) return '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-semibold"><i class="bi bi-pause-circle-fill mr-1"></i>Deactivated</span>';
-  return '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold"><i class="bi bi-check-circle-fill mr-1"></i>Active</span>';
+  if (u.is_banned) return '<span class="sk-admin-badge status-banned"><i class="bi bi-slash-circle-fill"></i>Banned</span>';
+  if (!u.is_active) return '<span class="sk-admin-badge status-deactivated"><i class="bi bi-pause-circle-fill"></i>Deactivated</span>';
+  return '<span class="sk-admin-badge status-active"><i class="bi bi-check-circle-fill"></i>Active</span>';
 }
 
 function _adminBadge(u) {
-  if (u.is_staff) return ' <span class="bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-[10px] font-bold ml-1">ADMIN</span>';
+  if (u.is_staff) return ' <span class="sk-admin-badge role-admin">ADMIN</span>';
   return '';
 }
 
 function _headers() {
   return { 'Authorization': 'Bearer ' + localStorage.getItem('access_token'), 'Content-Type': 'application/json' };
+}
+
+function _setStudentIdGroupVisible(visible) {
+  var group = document.getElementById('crStudentIdGroup');
+  if (!group) return;
+  group.classList.toggle('hidden', !visible);
+  group.style.display = visible ? 'block' : 'none';
 }
 
 /* ── Init ── */
@@ -174,37 +191,35 @@ function renderAdminUsers() {
     var isSelf = currentAdminUser && u.id === currentAdminUser.id;
     var actions = '';
 
-    // View details
-    actions += '<button onclick="event.stopPropagation(); showUserDetail(' + u.id + ')" class="text-gray-500 hover:text-orange-600 mr-1 transition" title="View details"><i class="bi bi-eye"></i></button>';
+    actions += '<button onclick="event.stopPropagation(); showUserDetail(' + u.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon" title="View details" aria-label="View details"><i class="bi bi-eye"></i></button>';
 
-    // Status actions
     if (u.is_banned) {
-      actions += '<button onclick="event.stopPropagation(); unbanUser(' + u.id + ')" class="px-2 py-1 rounded text-xs font-medium text-green-600 bg-green-50 hover:bg-green-500 hover:text-white transition" title="Unban"><i class="bi bi-unlock mr-1"></i>Unban</button>';
+      actions += '<button onclick="event.stopPropagation(); unbanUser(' + u.id + ')" class="sk-btn sk-btn-success sk-btn-sm" title="Unban"><i class="bi bi-unlock"></i>Unban</button>';
     } else if (!u.is_active) {
-      actions += '<button onclick="event.stopPropagation(); toggleUserActive(' + u.id + ')" class="px-2 py-1 rounded text-xs font-medium text-green-600 bg-green-50 hover:bg-green-500 hover:text-white transition mr-1" title="Activate"><i class="bi bi-check-circle mr-1"></i>Activate</button>';
-      actions += '<button onclick="event.stopPropagation(); banUser(' + u.id + ')" class="px-2 py-1 rounded text-xs font-medium text-red-600 bg-red-50 hover:bg-red-500 hover:text-white transition" title="Ban"><i class="bi bi-slash-circle mr-1"></i>Ban</button>';
+      actions += '<button onclick="event.stopPropagation(); toggleUserActive(' + u.id + ')" class="sk-btn sk-btn-success sk-btn-sm" title="Activate"><i class="bi bi-check-circle"></i>Activate</button>';
+      actions += '<button onclick="event.stopPropagation(); banUser(' + u.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Ban" aria-label="Ban"><i class="bi bi-slash-circle"></i></button>';
     } else {
-      actions += '<button onclick="event.stopPropagation(); toggleUserActive(' + u.id + ')" class="px-2 py-1 rounded text-xs font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-500 hover:text-white transition mr-1" title="Deactivate"><i class="bi bi-pause-circle mr-1"></i>Deact.</button>';
-      actions += '<button onclick="event.stopPropagation(); banUser(' + u.id + ')" class="px-2 py-1 rounded text-xs font-medium text-red-600 bg-red-50 hover:bg-red-500 hover:text-white transition" title="Ban"><i class="bi bi-slash-circle mr-1"></i>Ban</button>';
+      actions += '<button onclick="event.stopPropagation(); toggleUserActive(' + u.id + ')" class="sk-btn sk-btn-secondary sk-btn-sm" title="Deactivate"><i class="bi bi-pause-circle"></i>Deactivate</button>';
+      actions += '<button onclick="event.stopPropagation(); banUser(' + u.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Ban" aria-label="Ban"><i class="bi bi-slash-circle"></i></button>';
     }
 
-    // Delete
-    actions += ' <button onclick="event.stopPropagation(); deleteUser(' + u.id + ')" class="text-gray-400 hover:text-red-600 ml-1 transition" title="Delete"><i class="bi bi-trash"></i></button>';
+    actions += '<button onclick="event.stopPropagation(); deleteUser(' + u.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></button>';
 
-    return '<tr class="hover:bg-gray-50 transition cursor-pointer" ondblclick="showUserDetail(' + u.id + ')">' +
-      '<td class="p-3 text-gray-500">' + u.id + '</td>' +
-      '<td class="p-3"><div class="flex items-center gap-2">' +
-        '<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">' + u.username.charAt(0).toUpperCase() + '</div>' +
-        '<div><span class="font-medium text-gray-800">' + u.username + '</span>' +
-        (isSelf ? ' <span class="text-xs text-orange-500 font-bold">(You)</span>' : '') +
+    return '<tr ondblclick="showUserDetail(' + u.id + ')">' +
+      '<td>' + u.id + '</td>' +
+      '<td><div class="sk-admin-user-cell">' +
+        '<div class="sk-admin-avatar">' + _initial(u.username) + '</div>' +
+        '<div><div class="sk-admin-name">' + _esc(u.username) +
+        (isSelf ? ' <span class="sk-admin-self">(You)</span>' : '') +
         _adminBadge(u) +
-        (u.student_id ? '<br><span class="text-xs text-gray-400">ID: ' + u.student_id + '</span>' : '') +
+        '</div>' +
+        (u.student_id ? '<div class="sk-admin-sub">ID: ' + _esc(u.student_id) + '</div>' : '') +
         '</div></div></td>' +
-      '<td class="p-3 text-gray-600 text-xs">' + u.email + '</td>' +
-      '<td class="p-3">' + _roleBadge(u.role) + '</td>' +
-      '<td class="p-3">' + _statusBadge(u) + '</td>' +
-      '<td class="p-3 text-gray-400 text-xs" title="' + new Date(u.date_joined).toLocaleString() + '">' + _relativeTime(u.date_joined) + '</td>' +
-      '<td class="p-3 text-center whitespace-nowrap">' + actions + '</td>' +
+      '<td><span class="sk-admin-sub">' + _esc(u.email) + '</span></td>' +
+      '<td>' + _roleBadge(u.role) + '</td>' +
+      '<td>' + _statusBadge(u) + '</td>' +
+      '<td><span class="sk-admin-sub" title="' + new Date(u.date_joined).toLocaleString() + '">' + _relativeTime(u.date_joined) + '</span></td>' +
+      '<td><div class="sk-admin-actions">' + actions + '</div></td>' +
       '</tr>';
   }).join('');
 }
@@ -266,7 +281,7 @@ async function unbanUser(userId) {
 async function deleteUser(userId) {
   var user = adminUsers.find(function(u) { return u.id === userId; });
   if (!user) return;
-  var confirmed = await _confirm('⚠️ Permanently delete "' + user.username + '" (' + user.email + ')?\n\nThis cannot be undone.');
+  var confirmed = await _confirm('Permanently delete "' + user.username + '" (' + user.email + ')?\n\nThis cannot be undone.');
   if (!confirmed) return;
   try {
     var res = await fetch(API_BASE_URL + '/api/dashboard/admin-users/' + userId + '/', {
@@ -307,7 +322,7 @@ function changeRole(userId) {
   document.getElementById('crUserId').value = userId;
   document.getElementById('crUserName').textContent = user.username;
   document.getElementById('crStudentId').value = '';
-  document.getElementById('crStudentIdGroup').classList.add('hidden');
+  _setStudentIdGroupVisible(false);
 
   // Build radio options (exclude current role)
   var allRoles = [
@@ -319,20 +334,18 @@ function changeRole(userId) {
 
   var html = '';
   options.forEach(function(opt, i) {
-    html += '<label class="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition cr-role-label">' +
-      '<input type="radio" name="crRole" value="' + opt.value + '" class="accent-blue-600 w-4 h-4"' + (i === 0 ? ' checked' : '') +
-      ' onchange="document.getElementById(\'crStudentIdGroup\').classList.toggle(\'hidden\', this.value !== \'STUDENT\')">' +
-      '<i class="bi ' + opt.icon + ' text-lg text-gray-600"></i>' +
-      '<div><span class="font-medium text-sm text-gray-800">' + opt.label + '</span>' +
-      '<p class="text-xs text-gray-400">' + opt.desc + '</p></div>' +
+    html += '<label class="sk-role-option">' +
+      '<input type="radio" name="crRole" value="' + opt.value + '"' + (i === 0 ? ' checked' : '') +
+      ' onchange="_setStudentIdGroupVisible(this.value === \'STUDENT\')">' +
+      '<i class="bi ' + opt.icon + '"></i>' +
+      '<div><span class="sk-role-option-title">' + opt.label + '</span>' +
+      '<p class="sk-role-option-desc">' + opt.desc + '</p></div>' +
       '</label>';
   });
   document.getElementById('crRoleOptions').innerHTML = html;
 
   // Show student ID input if first option is STUDENT
-  if (options[0] && options[0].value === 'STUDENT') {
-    document.getElementById('crStudentIdGroup').classList.remove('hidden');
-  }
+  _setStudentIdGroupVisible(!!(options[0] && options[0].value === 'STUDENT'));
 
   document.getElementById('changeRoleModal').classList.remove('hidden');
 }
@@ -387,64 +400,53 @@ function showUserDetail(userId) {
 
   var body = document.getElementById('userDetailBody');
   var html = '' +
-    '<div class="text-center mb-6">' +
-      '<div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-bold mx-auto mb-3 shadow-lg">' +
-        user.username.charAt(0).toUpperCase() +
-      '</div>' +
-      '<h3 class="text-xl font-bold text-gray-800">' + user.username +
-        (isSelf ? ' <span class="text-sm text-orange-500">(You)</span>' : '') +
+    '<div class="sk-admin-detail-head">' +
+      '<div class="sk-admin-avatar lg">' + _initial(user.username) + '</div>' +
+      '<h3 class="sk-admin-detail-name">' + _esc(user.username) +
+        (isSelf ? ' <span class="sk-admin-self">(You)</span>' : '') +
       '</h3>' +
-      '<p class="text-gray-500 text-sm">' + user.email + '</p>' +
+      '<p class="sk-admin-detail-email">' + _esc(user.email) + '</p>' +
       _adminBadge(user) +
     '</div>' +
-    '<div class="space-y-3">';
+    '<div class="sk-admin-detail-list">';
 
-  // Info rows
   var rows = [
     ['User ID', '#' + user.id],
     ['Role', _roleBadge(user.role)],
     ['Status', _statusBadge(user)],
-    ['Admin', user.is_staff ? '<span class="text-purple-700 font-bold">Yes</span>' : '<span class="text-gray-400">No</span>'],
+    ['Admin', user.is_staff ? '<span class="sk-admin-badge role-admin">Yes</span>' : '<span class="sk-admin-badge role-none">No</span>'],
   ];
-  if (user.student_id) rows.push(['Student ID', '<span class="font-mono font-bold">' + user.student_id + '</span>']);
-  if (user.first_name || user.last_name) rows.push(['Full Name', ((user.first_name || '') + ' ' + (user.last_name || '')).trim()]);
-  rows.push(['Joined', new Date(user.date_joined).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })]);
+  if (user.student_id) rows.push(['Student ID', '<strong>' + _esc(user.student_id) + '</strong>']);
+  if (user.first_name || user.last_name) rows.push(['Full Name', _esc(((user.first_name || '') + ' ' + (user.last_name || '')).trim())]);
+  rows.push(['Joined', _esc(new Date(user.date_joined).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))]);
 
   rows.forEach(function(r) {
-    html += '<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">' +
-      '<span class="text-sm text-gray-600 font-medium">' + r[0] + '</span>' +
-      '<span class="text-sm text-gray-800">' + r[1] + '</span>' +
+    html += '<div class="sk-admin-detail-row">' +
+      '<span class="sk-admin-detail-label">' + _esc(r[0]) + '</span>' +
+      '<span class="sk-admin-detail-value">' + r[1] + '</span>' +
     '</div>';
   });
   html += '</div>';
 
-  // Actions
-  html += '<div class="mt-6 space-y-2">' +
-    '<h4 class="text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Actions</h4>';
+  html += '<div class="sk-admin-detail-actions">' +
+    '<h4 class="sk-admin-action-title">Actions</h4>';
 
-  // Role change
-  html += '<button onclick="changeRole(' + user.id + ')" class="w-full py-2.5 rounded-lg text-sm font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition">' +
-    '<i class="bi bi-arrow-left-right mr-2"></i>Change Role</button>';
+  html += '<button onclick="changeRole(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-arrow-left-right"></i>Change Role</button>';
 
-  // Admin toggle
-  html += '<button onclick="toggleAdmin(' + user.id + ')" class="w-full py-2.5 rounded-lg text-sm font-semibold ' +
-    (user.is_staff ? 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200' : 'bg-gray-50 text-gray-700 hover:bg-purple-50 hover:text-purple-700 border border-gray-200') + ' transition">' +
-    '<i class="bi bi-shield-lock mr-2"></i>' + (user.is_staff ? 'Remove Admin Privilege' : 'Grant Admin Privilege') + '</button>';
+  html += '<button onclick="toggleAdmin(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-shield-lock"></i>' + (user.is_staff ? 'Remove Admin Privilege' : 'Grant Admin Privilege') + '</button>';
 
-  // Status actions
   if (user.is_banned) {
-    html += '<button onclick="unbanUser(' + user.id + ')" class="w-full py-2.5 rounded-lg text-sm font-semibold bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition"><i class="bi bi-unlock mr-2"></i>Unban User</button>';
+    html += '<button onclick="unbanUser(' + user.id + ')" class="sk-btn sk-btn-success"><i class="bi bi-unlock"></i>Unban User</button>';
   } else {
     if (user.is_active) {
-      html += '<button onclick="toggleUserActive(' + user.id + ')" class="w-full py-2.5 rounded-lg text-sm font-semibold bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border border-yellow-200 transition"><i class="bi bi-pause-circle mr-2"></i>Deactivate User</button>';
+      html += '<button onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-pause-circle"></i>Deactivate User</button>';
     } else {
-      html += '<button onclick="toggleUserActive(' + user.id + ')" class="w-full py-2.5 rounded-lg text-sm font-semibold bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition"><i class="bi bi-check-circle mr-2"></i>Activate User</button>';
+      html += '<button onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-success"><i class="bi bi-check-circle"></i>Activate User</button>';
     }
-    html += '<button onclick="banUser(' + user.id + ')" class="w-full py-2.5 rounded-lg text-sm font-semibold bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition"><i class="bi bi-slash-circle mr-2"></i>Ban User</button>';
+    html += '<button onclick="banUser(' + user.id + ')" class="sk-btn sk-btn-danger"><i class="bi bi-slash-circle"></i>Ban User</button>';
   }
 
-  // Delete
-  html += '<button onclick="deleteUser(' + user.id + ')" class="w-full py-2.5 rounded-lg text-sm font-semibold bg-gray-50 text-gray-600 hover:bg-red-50 hover:text-red-700 border border-gray-200 hover:border-red-200 transition"><i class="bi bi-trash mr-2"></i>Delete User Permanently</button>';
+  html += '<button onclick="deleteUser(' + user.id + ')" class="sk-btn sk-btn-ghost danger"><i class="bi bi-trash"></i>Delete User Permanently</button>';
 
   html += '</div>';
 

@@ -1,607 +1,241 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Sir Kothay? - Leave Notes When You're Away</title>
-
-    <!-- Tailwind CSS v3 -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
-
+    <meta name="description" content="Sir Kothay helps you send clean, beautiful notes with QR codes so people stay informed without confusion.">
+    <link rel="stylesheet" href="./static/css/style.css?v=ui-fix-30">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-      :root {
-        --brand: #f68b1f;
-        --brand-dark: #e67a0f;
-        --ink: #111827;
+      .sk-hero-gradient {
+        background: radial-gradient(ellipse at 20% 20%, rgba(249,115,22,0.12), transparent 50%),
+                    radial-gradient(ellipse at 80% 10%, rgba(234,88,12,0.08), transparent 40%),
+                    radial-gradient(ellipse at 50% 80%, rgba(120,113,108,0.04), transparent 50%);
       }
-
-      html {
-        scroll-behavior: smooth;
+      [data-theme="dark"] .sk-hero-gradient {
+        background: radial-gradient(ellipse at 20% 20%, rgba(249,115,22,0.08), transparent 50%),
+                    radial-gradient(ellipse at 80% 10%, rgba(234,88,12,0.05), transparent 40%);
       }
-
-      body {
-        font-family: "Poppins", sans-serif;
-        color: var(--ink);
+      .sk-hero-title-gradient {
+        background: linear-gradient(135deg, var(--sk-orange-500), var(--sk-orange-700));
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
-
-      .hero-noise {
-        background-image:
-          radial-gradient(
-            circle at 20% 20%,
-            rgba(246, 139, 31, 0.16),
-            transparent 28%
-          ),
-          radial-gradient(
-            circle at 80% 10%,
-            rgba(230, 122, 15, 0.14),
-            transparent 22%
-          ),
-          radial-gradient(
-            circle at 50% 70%,
-            rgba(17, 24, 39, 0.05),
-            transparent 28%
-          );
+      .sk-card-glass {
+        background: var(--sk-glass-bg);
+        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--sk-glass-border);
+        border-radius: var(--sk-radius-2xl);
+        transition: transform 200ms ease, box-shadow 200ms ease;
       }
-
-      .glass-panel {
-        background: rgba(255, 255, 255, 0.72);
-        backdrop-filter: blur(18px);
-        border: 1px solid rgba(255, 255, 255, 0.72);
-        box-shadow: 0 24px 80px -24px rgba(17, 24, 39, 0.3);
+      .sk-card-glass:hover { transform: translateY(-3px); box-shadow: var(--sk-shadow-lg); }
+      .sk-feature-icon {
+        width:56px; height:56px; border-radius: var(--sk-radius-xl);
+        display:flex; align-items:center; justify-content:center;
+        font-size:1.5rem; margin:0 auto 1.25rem;
+        background: var(--sk-primary-muted); color: var(--sk-primary);
       }
-
-      .section-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        border-radius: 9999px;
-        border: 1px solid rgba(246, 139, 31, 0.18);
-        background: rgba(255, 255, 255, 0.8);
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #374151;
-        box-shadow: 0 10px 25px -18px rgba(17, 24, 39, 0.35);
+      .sk-cta-section {
+        background: linear-gradient(135deg, var(--sk-orange-500), var(--sk-orange-600));
+        border-radius: var(--sk-radius-2xl);
+        position: relative; overflow: hidden;
       }
-
-      .feature-card {
-        transition:
-          transform 180ms ease,
-          box-shadow 180ms ease,
-          border-color 180ms ease;
-      }
-
-      .feature-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 22px 40px -24px rgba(17, 24, 39, 0.35);
-        border-color: rgba(246, 139, 31, 0.22);
-      }
-
-      .fade-up {
-        animation: fadeUp 700ms ease both;
-      }
-
-      .fade-up-delay-1 {
-        animation-delay: 120ms;
-      }
-
-      .fade-up-delay-2 {
-        animation-delay: 220ms;
-      }
-
-      .fade-up-delay-3 {
-        animation-delay: 320ms;
-      }
-
-      @keyframes fadeUp {
-        from {
-          opacity: 0;
-          transform: translateY(18px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @media (max-width: 640px) {
-        .section-tag {
-          width: 100%;
-          justify-content: center;
-        }
+      .sk-hero-grid { grid-template-columns: 1fr; }
+      .sk-hero-align { text-align: center; display: flex; flex-direction: column; align-items: center; }
+      .sk-hero-align .sk-hero-buttons { justify-content: center; }
+      .sk-hero-align .sk-hero-stats { margin-left: auto; margin-right: auto; }
+      @media (min-width: 1024px) {
+        .sk-hero-grid { grid-template-columns: 1fr 1fr; }
+        .sk-hero-align { text-align: left; align-items: flex-start; }
+        .sk-hero-align .sk-hero-buttons { justify-content: flex-start; }
+        .sk-hero-align .sk-hero-stats { margin-left: 0; margin-right: 0; }
       }
     </style>
   </head>
-  <body class="bg-[#f8f4ee] text-gray-900 antialiased">
-    <div
-      aria-hidden="true"
-      class="pointer-events-none fixed inset-0 hero-noise"
-    ></div>
-    <!-- Fixed Bottom Navbar on Mobile, Top on Desktop -->
-    <nav
-      class="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto z-50 bg-white/80 backdrop-blur-lg border-t md:border-b border-gray-200/50"
-    >
-      <div class="max-w-5xl mx-auto">
-        <!-- Desktop Navbar (Top) -->
-        <div class="hidden md:flex items-center justify-between px-8 py-4">
-          <!-- Logo -->
-          <a href="index.html" class="flex items-center gap-3">
-            <img
-              src="./static/images/nav-logo.png"
-              class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain"
-              alt="Logo"
-            />
-          </a>
+  <body>
+    <!-- Background noise layer -->
+    <div class="sk-hero-gradient" style="position:fixed;inset:0;pointer-events:none;z-index:0" aria-hidden="true"></div>
 
-          <!-- Desktop Links -->
-          <div
-            id="desktopNav"
-            class="flex items-center gap-6 text-sm font-medium"
-          >
-            <a
-              href="index.html"
-              class="text-gray-700"
-              style="transition: color 0.2s"
-              onmouseover="this.style.color = '#f68b1f'"
-              onmouseout="this.style.color = ''"
-              >Home</a
-            >
-            <a
-              href="about.html"
-              class="text-gray-700"
-              style="transition: color 0.2s"
-              onmouseover="this.style.color = '#f68b1f'"
-              onmouseout="this.style.color = ''"
-              >About</a
-            >
-            <a
-              href="auth/login.html"
-              class="text-gray-700"
-              style="transition: color 0.2s"
-              onmouseover="this.style.color = '#f68b1f'"
-              onmouseout="this.style.color = ''"
-              >Login</a
-            >
-            <a
-              href="auth/register.html"
-              class="px-5 py-2 text-white rounded-lg"
-              style="background-color: #f68b1f"
-              onmouseover="this.style.backgroundColor = '#e67a0f'"
-              onmouseout="this.style.backgroundColor = '#f68b1f'"
-              >Sign Up</a
-            >
-            <a
-              href="https://github.com/UIU-Developers-Hub/Sir-Kothay"
-              target="_blank"
-              class="text-gray-600 hover:text-black"
-            >
-              <i class="bi bi-github text-xl"></i>
-            </a>
-          </div>
-        </div>
+    <div class="sk-app">
+      <!-- Sidebar is injected by JS (layout.js) unconditionally -->
 
-        <!-- Mobile Bottom Navbar -->
-        <div class="md:hidden">
-          <div
-            class="flex items-center justify-around py-3 bg-white border-t border-gray-200"
-          >
-            <!-- Home -->
-            <a
-              href="index.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50"
-              style="color: #f68b1f"
-            >
-              <i class="bi bi-house-fill text-2xl"></i>
-              <span class="text-xs font-medium">Home</span>
-            </a>
+      <!-- Main Content -->
+      <main class="sk-main">
+        <div class="sk-page" style="padding-top: 0">
 
-            <!-- About -->
-            <a
-              href="about.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50"
-              style="color: #4b5563"
-            >
-              <i class="bi bi-info-circle-fill text-2xl"></i>
-              <span class="text-xs font-medium">About</span>
-            </a>
+    <div class="sk-public-main" style="position:relative;z-index:1">
+      <!-- ═══════════════ HERO ═══════════════ -->
+      <section style="padding:4rem 1.5rem 3rem;max-width:var(--sk-content-max-width);margin:0 auto;position:relative">
+        <div style="display:grid;gap:3rem;align-items:center" class="sk-hero-grid">
+          <!-- Text -->
+          <div class="sk-fade-up sk-hero-align">
+            <div style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;border-radius:var(--sk-radius-full);border:1px solid var(--sk-border);background:var(--sk-glass-bg);font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-secondary);margin-bottom:1.5rem">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--sk-primary)"></span>
+              Designed for quick, caring updates
+            </div>
 
-            <!-- Login -->
-            <a
-              href="auth/login.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:bg-orange-50 transition"
-              style="color: #4b5563"
-            >
-              <i class="bi bi-box-arrow-in-right text-2xl"></i>
-              <span class="text-xs font-medium">Login</span>
-            </a>
+            <h1 style="font-size:clamp(2.25rem,5vw,3.75rem);font-weight:800;line-height:1.1;color:var(--sk-text-primary);margin-bottom:1.5rem">
+              Leave Notes
+              <span class="sk-hero-title-gradient" style="display:block">Effortlessly</span>
+            </h1>
 
-            <!-- Sign Up -->
-            <a
-              href="auth/register.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:bg-orange-50 transition"
-            >
-              <i class="bi bi-person-plus-fill text-2xl"></i>
-              <span class="text-xs font-medium">Sign Up</span>
-            </a>
+            <p style="font-size:var(--sk-text-lg);color:var(--sk-text-secondary);max-width:600px;margin-bottom:2rem;line-height:1.7">
+              Sir Kothay helps you send a clean, beautiful note with a link or QR code, so the people you care about stay informed without extra calls or confusion.
+            </p>
 
-            <!-- GitHub -->
-            <a
-              href="https://github.com/UIU-Developers-Hub/Sir-Kothay"
-              target="_blank"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-black transition"
-            >
-              <i class="bi bi-github text-2xl"></i>
-              <span class="text-xs font-medium">GitHub</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </nav>
+            <div class="sk-hero-buttons" style="display:flex;gap:1rem;flex-wrap:wrap">
+              <a href="auth/register.html" class="sk-btn sk-btn-gradient sk-btn-lg">
+                Get Started Free <i class="bi bi-arrow-right"></i>
+              </a>
+              <a href="#features" class="sk-btn sk-btn-secondary sk-btn-lg">
+                Explore Features
+              </a>
+            </div>
 
-    <!-- Main Content -->
-    <main
-      class="relative z-10 flex-1 pt-0 md:pt-24 pb-20 md:pb-0 min-h-screen flex flex-col"
-    >
-      <div class="px-4">
-        <!-- Hero Section -->
-        <section
-          class="relative overflow-hidden pt-16 pb-16 px-4 sm:px-6 lg:px-8"
-        >
-          <div
-            class="absolute inset-x-0 top-10 mx-auto h-72 w-72 rounded-full bg-[#f68b1f]/20 blur-3xl"
-          ></div>
-          <div
-            class="absolute left-0 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-white/50 blur-3xl"
-          ></div>
-          <div class="max-w-7xl mx-auto relative">
-            <div class="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
-              <div class="max-w-2xl text-center lg:text-left fade-up">
-                <div class="section-tag mx-auto lg:mx-0">
-                  <span class="h-2 w-2 rounded-full bg-[#f68b1f]"></span>
-                  Designed for quick, caring updates
-                </div>
-                <h1
-                  class="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-950 leading-[1.05]"
-                >
-                  Leave Notes
-                  <span
-                    class="block text-transparent bg-clip-text"
-                    style="
-                      background-image: linear-gradient(
-                        to right,
-                        #f68b1f,
-                        #e67a0f
-                      );
-                    "
-                  >
-                    Effortlessly
-                  </span>
-                </h1>
-                <p
-                  class="mt-6 text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto lg:mx-0"
-                >
-                  Sir Kothay helps you send a clean, beautiful note with a link
-                  or QR code, so the people you care about stay informed without
-                  extra calls or confusion.
-                </p>
-
-                <div
-                  class="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
-                >
-                  <a
-                    href="auth/register.html"
-                    class="px-8 py-4 text-white font-semibold rounded-2xl hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-center"
-                    style="
-                      background: linear-gradient(to right, #f68b1f, #e67a0f);
-                      box-shadow: 0 20px 25px -5px rgba(246, 139, 31, 0.3);
-                    "
-                  >
-                    Get Started Free
-                  </a>
-                  <a
-                    href="#features"
-                    class="px-8 py-4 bg-white/90 border border-gray-200 text-gray-800 font-semibold rounded-2xl hover:border-[#f68b1f]/40 hover:bg-white transition-all duration-300 shadow-sm text-center"
-                  >
-                    Explore Features
-                  </a>
-                </div>
-
-                <div class="hidden md:mt-8 md:grid md:grid-cols-3 md:gap-3">
-                  <div class="glass-panel rounded-2xl p-4 text-left">
-                    <p class="text-2xl font-bold text-gray-950">QR</p>
-                    <p class="text-sm text-gray-600">Share in seconds</p>
-                  </div>
-                  <div class="glass-panel rounded-2xl p-4 text-left">
-                    <p class="text-2xl font-bold text-gray-950">Safe</p>
-                    <p class="text-sm text-gray-600">Notes stay private</p>
-                  </div>
-                  <div class="glass-panel rounded-2xl p-4 text-left">
-                    <p class="text-2xl font-bold text-gray-950">Fast</p>
-                    <p class="text-sm text-gray-600">No extra steps</p>
-                  </div>
-                </div>
+            <!-- Stats -->
+            <div class="sk-hero-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:3rem;max-width:480px">
+              <div class="sk-card-glass" style="padding:1.25rem;text-align:center">
+                <div style="font-size:var(--sk-text-2xl);font-weight:800;color:var(--sk-text-primary)">QR</div>
+                <div style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary)">Share in seconds</div>
               </div>
-
-              <!-- Hero Image -->
-              <div
-                class="relative mx-auto w-full max-w-2xl fade-up fade-up-delay-1"
-              >
-                <div
-                  class="absolute -left-4 -top-4 h-24 w-24 rounded-3xl bg-[#f68b1f]/15 blur-xl"
-                ></div>
-                <div
-                  class="absolute -right-4 bottom-8 h-20 w-20 rounded-full bg-[#e67a0f]/20 blur-2xl"
-                ></div>
-                <div
-                  class="glass-panel relative overflow-hidden rounded-[2rem] p-4 md:p-6"
-                >
-                  <img
-                    src="./static/images/card.jpeg"
-                    alt="Sir Kothay App Preview"
-                    class="w-full rounded-[1.5rem] shadow-lg"
-                  />
-                </div>
+              <div class="sk-card-glass" style="padding:1.25rem;text-align:center">
+                <div style="font-size:var(--sk-text-2xl);font-weight:800;color:var(--sk-text-primary)">Safe</div>
+                <div style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary)">Notes stay private</div>
+              </div>
+              <div class="sk-card-glass" style="padding:1.25rem;text-align:center">
+                <div style="font-size:var(--sk-text-2xl);font-weight:800;color:var(--sk-text-primary)">Fast</div>
+                <div style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary)">No extra steps</div>
               </div>
             </div>
           </div>
-        </section>
 
-        <!-- Features Section -->
-        <section id="features" class="py-16 px-4 sm:px-6 lg:px-8">
-          <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-12">
-              <span class="section-tag">Why people love it</span>
-              <h2 class="mt-4 text-3xl sm:text-4xl font-bold text-gray-950">
-                Built to feel smooth on mobile, polished on desktop
+          <!-- Hero Image -->
+          <div class="sk-fade-up sk-stagger-2" style="max-width:600px;margin:0 auto;width:100%">
+            <div class="sk-card-glass" style="padding:1.25rem;position:relative">
+              <img src="./static/images/card.jpeg" alt="Sir Kothay App Preview" style="width:100%;border-radius:var(--sk-radius-xl);box-shadow:var(--sk-shadow-md)">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ FEATURES ═══════════════ -->
+      <section id="features" style="padding:4rem 1.5rem;max-width:var(--sk-content-max-width);margin:0 auto">
+        <div style="text-align:center;margin-bottom:3rem">
+          <div style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;border-radius:var(--sk-radius-full);border:1px solid var(--sk-border);background:var(--sk-glass-bg);font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-secondary);margin-bottom:1rem">
+            Why people love it
+          </div>
+          <h2 style="font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;color:var(--sk-text-primary);margin-bottom:1rem">
+            Built to feel smooth on mobile, polished on desktop
+          </h2>
+          <p style="color:var(--sk-text-secondary);max-width:560px;margin:0 auto;font-size:var(--sk-text-base)">
+            Every section is designed to stay readable, breathable, and visually focused across screen sizes.
+          </p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem">
+          <div class="sk-card-glass sk-fade-up sk-stagger-1" style="padding:2rem;text-align:center">
+            <div class="sk-feature-icon"><i class="bi bi-shield-lock"></i></div>
+            <h3 style="font-size:var(--sk-text-lg);font-weight:700;color:var(--sk-text-primary);margin-bottom:0.75rem">Secure & Private</h3>
+            <p style="color:var(--sk-text-secondary);font-size:var(--sk-text-sm);line-height:1.7">Your messages are encrypted and only visible to people you choose.</p>
+          </div>
+          <div class="sk-card-glass sk-fade-up sk-stagger-2" style="padding:2rem;text-align:center">
+            <div class="sk-feature-icon"><i class="bi bi-lightning-charge"></i></div>
+            <h3 style="font-size:var(--sk-text-lg);font-weight:700;color:var(--sk-text-primary);margin-bottom:0.75rem">Instant Delivery</h3>
+            <p style="color:var(--sk-text-secondary);font-size:var(--sk-text-sm);line-height:1.7">Your note appears immediately when they open the app.</p>
+          </div>
+          <div class="sk-card-glass sk-fade-up sk-stagger-3" style="padding:2rem;text-align:center">
+            <div class="sk-feature-icon"><i class="bi bi-heart"></i></div>
+            <h3 style="font-size:var(--sk-text-lg);font-weight:700;color:var(--sk-text-primary);margin-bottom:0.75rem">Simple & Caring</h3>
+            <p style="color:var(--sk-text-secondary);font-size:var(--sk-text-sm);line-height:1.7">Designed with love for families, roommates, and couples.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ CTA ═══════════════ -->
+      <section style="padding:2rem 1.5rem 4rem;max-width:var(--sk-content-max-width);margin:0 auto">
+        <div class="sk-cta-section" style="padding:3.5rem 2.5rem;position:relative">
+          <div style="display:grid;grid-template-columns:1fr;gap:2rem;align-items:center;position:relative;z-index:1" class="sk-cta-grid">
+            <div style="text-align:center">
+              <span style="display:inline-flex;align-items:center;padding:0.5rem 1rem;border-radius:var(--sk-radius-full);background:rgba(255,255,255,0.15);font-size:var(--sk-text-sm);font-weight:600;color:rgba(255,255,255,0.95);margin-bottom:1.25rem">
+                Ready to stay connected?
+              </span>
+              <h2 style="font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;color:white;line-height:1.2;margin-bottom:1rem">
+                Start using Sir Kothay in a layout that feels calm, fast, and easy.
               </h2>
-              <p class="mt-4 mx-auto max-w-2xl text-gray-600">
-                Every section is designed to stay readable, breathable, and
-                visually focused across screen sizes.
+              <p style="color:rgba(255,255,255,0.85);font-size:var(--sk-text-base);max-width:560px;margin:0 auto 2rem">
+                A stronger first impression helps users trust the product faster, especially on small screens.
               </p>
-            </div>
-
-            <div
-              class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
-            >
-              <div
-                class="feature-card glass-panel rounded-3xl p-7 sm:p-8 text-center"
-              >
-                <div
-                  class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-[#f68b1f]/12 text-[#f68b1f]"
-                >
-                  <i class="bi bi-shield-lock text-2xl"></i>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-3">
-                  Secure & Private
-                </h3>
-                <p class="text-gray-600">
-                  Your messages are encrypted and only visible to people you
-                  choose.
-                </p>
-              </div>
-
-              <div
-                class="feature-card glass-panel rounded-3xl p-7 sm:p-8 text-center"
-              >
-                <div
-                  class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-[#f68b1f]/12 text-[#f68b1f]"
-                >
-                  <i class="bi bi-lightning-charge text-2xl"></i>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-3">
-                  Instant Delivery
-                </h3>
-                <p class="text-gray-600">
-                  Your note appears immediately when they open the app.
-                </p>
-              </div>
-
-              <div
-                class="feature-card glass-panel rounded-3xl p-7 sm:p-8 text-center"
-              >
-                <div
-                  class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-[#f68b1f]/12 text-[#f68b1f]"
-                >
-                  <i class="bi bi-heart text-2xl"></i>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-3">
-                  Simple & Caring
-                </h3>
-                <p class="text-gray-600">
-                  Designed with love for families, roommates, and couples.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Final CTA -->
-        <section class="px-4 sm:px-6 lg:px-8 py-6">
-          <div
-            class="max-w-7xl mx-auto overflow-hidden rounded-[2rem] bg-gradient-to-r from-[#f68b1f] to-[#e67a0f] px-6 py-12 sm:px-10 sm:py-14 shadow-[0_28px_80px_-24px_rgba(246,139,31,0.45)]"
-          >
-            <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-              <div class="text-center lg:text-left">
-                <span
-                  class="inline-flex items-center rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white/95"
-                >
-                  Ready to stay connected?
-                </span>
-                <h2
-                  class="mt-5 text-3xl sm:text-4xl font-bold text-white leading-tight"
-                >
-                  Start using Sir Kothay in a layout that feels calm, fast, and
-                  easy.
-                </h2>
-                <p
-                  class="mt-4 text-base sm:text-lg text-white/90 max-w-2xl mx-auto lg:mx-0"
-                >
-                  A stronger first impression helps users trust the product
-                  faster, especially on small screens.
-                </p>
-              </div>
-
-              <div class="flex flex-col gap-3 sm:flex-row lg:justify-end">
-                <a
-                  href="auth/register.html"
-                  class="inline-flex items-center justify-center rounded-2xl bg-white px-8 py-4 text-base font-bold text-[#f68b1f] shadow-lg transition hover:bg-gray-50"
-                >
+              <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+                <a href="auth/register.html" style="display:inline-flex;align-items:center;justify-content:center;padding:0.875rem 2rem;border-radius:var(--sk-radius-xl);background:white;color:var(--sk-orange-600);font-weight:700;font-size:var(--sk-text-base);box-shadow:var(--sk-shadow-lg);transition:all 200ms;text-decoration:none">
                   Create an account
                 </a>
-                <a
-                  href="about.html"
-                  class="inline-flex items-center justify-center rounded-2xl border border-white/35 bg-white/10 px-8 py-4 text-base font-semibold text-white backdrop-blur transition hover:bg-white/15"
-                >
+                <a href="about.html" style="display:inline-flex;align-items:center;justify-content:center;padding:0.875rem 2rem;border-radius:var(--sk-radius-xl);border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:white;font-weight:600;font-size:var(--sk-text-base);backdrop-filter:blur(4px);transition:all 200ms;text-decoration:none">
                   See how it works
                 </a>
               </div>
             </div>
           </div>
-        </section>
-      </div>
-    </main>
+        </div>
+      </section>
+    </div>
 
-    <footer class="py-12 px-6 mt-4 mb-20 md:mb-0 bg-gray-900 text-gray-300">
-      <div class="max-w-7xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <div class="md:flex md:flex-col md:items-center md:text-center">
-            <div class="flex items-center gap-3 mb-4 md:justify-center">
-              <img
-                src="./static/images/nav-logo.png"
-                class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain"
-                alt="Logo"
-              />
-              <span class="text-2xl font-bold text-white">Sir Kothay?</span>
-            </div>
-            <p class="text-gray-400">Simple notes. Strong bonds.</p>
+    <!-- ═══════════════ FOOTER ═══════════════ -->
+    <footer class="sk-public-footer">
+      <div class="sk-public-footer-grid">
+        <div>
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem">
+            <img src="./static/images/nav-logo.png" alt="Logo" style="height:36px;border-radius:var(--sk-radius-md);background:var(--sk-orange-500);padding:2px">
+            <span style="font-size:var(--sk-text-lg);font-weight:700;color:var(--sk-text-primary)">Sir Kothay?</span>
           </div>
-
-          <div class="md:flex md:flex-col md:items-center md:text-center">
-            <h4 class="font-semibold text-white mb-4">Quick Links</h4>
-            <ul class="space-y-2 text-gray-400">
-              <li>
-                <a
-                  href="index.html#features"
-                  class="hover:text-white transition"
-                  >Features</a
-                >
-              </li>
-              <li>
-                <a href="about.html" class="hover:text-white transition"
-                  >About Us</a
-                >
-              </li>
-              <li>
-                <a href="auth/register.html" class="hover:text-white transition"
-                  >Sign Up</a
-                >
-              </li>
-            </ul>
+          <p style="color:var(--sk-text-tertiary);font-size:var(--sk-text-sm)">Simple notes. Strong bonds.</p>
+        </div>
+        <div>
+          <div class="sk-public-footer-title">Quick Links</div>
+          <a href="index.html#features" class="sk-public-footer-link">Features</a>
+          <a href="about.html" class="sk-public-footer-link">About Us</a>
+          <a href="auth/register.html" class="sk-public-footer-link">Sign Up</a>
+        </div>
+        <div>
+          <div class="sk-public-footer-title">Connect</div>
+          <div style="display:flex;gap:1rem;margin-bottom:1rem">
+            <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" style="color:var(--sk-text-tertiary);font-size:1.5rem;transition:color 0.15s" onmouseover="this.style.color='var(--sk-text-primary)'" onmouseout="this.style.color=''">
+              <i class="bi bi-github"></i>
+            </a>
+            <a href="https://www.facebook.com/uiudevelopershub" target="_blank" style="color:var(--sk-text-tertiary);font-size:1.5rem;transition:color 0.15s" onmouseover="this.style.color='var(--sk-text-primary)'" onmouseout="this.style.color=''">
+              <i class="bi bi-facebook"></i>
+            </a>
           </div>
-
-          <div class="md:flex md:flex-col md:items-center md:text-center">
-            <h4 class="font-semibold text-white mb-4">Connect</h4>
-            <div class="flex gap-4 justify-start md:justify-center">
-              <a
-                href="https://github.com/UIU-Developers-Hub/Sir-Kothay"
-                class="text-2xl hover:text-white transition"
-              >
-                <i class="bi bi-github"></i>
-              </a>
-              <a
-                href="https://www.facebook.com/uiudevelopershub"
-                class="text-2xl hover:text-white transition"
-              >
-                <i class="bi bi-facebook"></i>
-              </a>
-            </div>
-            <div
-              class="flex items-center gap-2 mt-6 text-sm justify-start md:justify-center"
-            >
-              <img
-                src="https://github.com/UIU-Developers-Hub.png"
-                class="h-8 w-8 rounded-full"
-                alt="UIU Developers Hub"
-              />
-              <span
-                >© 2026 Sir Kothay. Made with ❤️ by
-                <a
-                  href="https://github.com/UIU-Developers-Hub"
-                  style="color: #f68b1f"
-                  class="hover:underline"
-                  >UIU Developers Hub</a
-                ></span
-              >
-            </div>
-            <div id="contributorAvatars" class="flex gap-2 mt-2">
-              <!-- Contributors will be loaded dynamically -->
-            </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;font-size:var(--sk-text-xs);color:var(--sk-text-placeholder)">
+            <img src="https://github.com/UIU-Developers-Hub.png" style="width:24px;height:24px;border-radius:50%" alt="UIU Dev Hub">
+            <span>© 2026 Made with ❤️ by <a href="https://github.com/UIU-Developers-Hub" style="color:var(--sk-primary)">UIU Developers Hub</a></span>
           </div>
+          <div id="footerContributors" style="display:flex;gap:0.375rem;margin-top:0.5rem;flex-wrap:wrap"></div>
         </div>
       </div>
     </footer>
 
-    <!-- API Config -->
+        </div>
+      </main>
+
+      <!-- Mobile Bottom Nav -->
+      <nav class="sk-bottom-nav">
+        <div class="sk-bottom-nav-items">
+          <!-- Injected by JS -->
+        </div>
+      </nav>
+    </div>
+
     <script src="./static/js/api-config.js"></script>
-
-    <!-- Navigation Authentication Check -->
+    <script src="./static/js/utils.js"></script>
+    <script src="./static/js/theme.js?v=ui-fix-30"></script>
+    <script src="./static/js/components.js"></script>
+    <script src="./static/js/layout.js?v=ui-fix-30"></script>
     <script>
-      // Check if user is logged in
-      const isAuthenticated = !!localStorage.getItem("access_token");
-
-      if (isAuthenticated) {
-        // Update navigation for authenticated users
-        const desktopNav = document.getElementById("desktopNav");
-        if (desktopNav) {
-          desktopNav.innerHTML = `
-          <a href="dashboard/home.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Dashboard</a>
-          <a href="dashboard/profile.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Profile</a>
-          <a href="#" onclick="logout()" class="text-red-600 hover:text-red-700">Logout</a>
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="text-gray-600 hover:text-black">
-            <i class="bi bi-github text-xl"></i>
-          </a>
-        `;
-        }
-      }
-
-      function logout() {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "index.html";
-      }
-
-      // Load contributors for footer
-      async function loadFooterContributors() {
-        try {
-          const response = await fetch(window.sirKothayContributorsApiUrl());
-          const contributors = await response.json();
-
-          const container = document.getElementById("contributorAvatars");
-          if (container) {
-            container.innerHTML = contributors
-              .slice(0, 6)
-              .map(
-                (c) =>
-                  `<a href="${c.html_url}" target="_blank">
-              <img src="${c.avatar_url}" class="h-8 w-8 rounded-full" alt="${c.login}">
-            </a>`,
-              )
-              .join("");
-          }
-        } catch (error) {
-          console.error("Error loading contributors:", error);
-        }
-      }
-
-      loadFooterContributors();
+      // Auth-aware nav
+      SKLayout.setupPublicNav && SKLayout.setupPublicNav();
+      // Load contributors
+      SKLayout.loadFooterContributors && SKLayout.loadFooterContributors();
     </script>
   </body>
 </html>

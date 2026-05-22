@@ -6,33 +6,32 @@ async function loadTemplates() {
     var data = await res.json();
     window._quickTemplates = Array.isArray(data) ? data : (data.results || []);
     var el = document.getElementById('templatesList');
-    if (!res.ok) { el.innerHTML = '<p class="text-red-500">Failed to load templates</p>'; return; }
+    if (!res.ok) { el.innerHTML = '<div class="sk-empty-state compact" style="grid-column:1/-1"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Failed to load templates</div></div>'; return; }
     var items = window._quickTemplates;
     if (items.length === 0) {
-      el.innerHTML = '<div class="col-span-full text-center py-10">' +
-        '<div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-lightning-fill text-2xl text-purple-500"></i></div>' +
-        '<h3 class="text-gray-700 font-semibold mb-1">Save time with Quick Templates</h3>' +
-        '<p class="text-gray-400 text-sm mb-2">Create reusable status messages you can activate with one click.<br>They also appear as suggestions when adding new broadcast statuses.</p>' +
-        '<button onclick="openNewTemplateModal()" class="bg-purple-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-purple-700 transition">Create Your First Template</button></div>';
+      el.innerHTML = '<div style="grid-column:1/-1">' +
+        (window.SKComponents ? SKComponents.emptyState('lightning-fill', 'Save time with Quick Templates', 'Create reusable status messages you can activate with one click.', '<button onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary">Create Your First Template</button>') :
+        '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-lightning-fill"></i></div><div class="sk-empty-title">Save time with Quick Templates</div><div class="sk-empty-subtitle">Create reusable status messages you can activate with one click.</div><button onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary">Create Your First Template</button></div>') +
+        '</div>';
       return;
     }
     el.innerHTML = items.map(function (t) {
-      return '<div class="border border-gray-100 rounded-xl p-4 hover:shadow-lg transition-all cursor-pointer bg-white flex flex-col justify-between group">' +
+      return '<div class="sk-template-card">' +
         '<div>' +
-        '<div class="flex items-center gap-2 mb-2"><div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center"><i class="bi ' + escapeHtml(t.icon || 'bi-lightning-fill') + ' text-orange-500"></i></div>' +
-        '<span class="font-semibold text-sm text-gray-800">' + escapeHtml(t.label) + '</span></div>' +
-        '<p class="text-xs text-gray-500 leading-relaxed mb-3">' + escapeHtml(t.message) + '</p>' +
+        '<div class="sk-template-head"><div class="sk-template-icon"><i class="bi ' + escapeHtml(t.icon || 'bi-lightning-fill') + '"></i></div>' +
+        '<span class="sk-template-label">' + escapeHtml(t.label) + '</span></div>' +
+        '<p class="sk-template-message">' + escapeHtml(t.message) + '</p>' +
         '</div>' +
-        '<div class="flex gap-1.5">' +
-        '<button onclick="activateTemplate(' + t.id + ')" class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs px-2 py-2 rounded-lg hover:from-orange-600 hover:to-orange-700 transition shadow-sm"><i class="bi bi-broadcast mr-1"></i>Go Live</button>' +
-        '<button onclick="openEditTemplateModal(' + t.id + ',\'' + escapeHtml(t.label).replace(/'/g, "\\'") + '\',\'' + escapeHtml(t.message).replace(/'/g, "\\'") + '\',\'' + (t.set_availability || '') + '\')" class="text-gray-400 hover:text-purple-500 px-2 transition opacity-0 group-hover:opacity-100"><i class="bi bi-pencil"></i></button>' +
-        '<button onclick="deleteTemplate(' + t.id + ')" class="text-gray-300 hover:text-red-500 px-2 transition opacity-0 group-hover:opacity-100"><i class="bi bi-trash"></i></button>' +
+        '<div class="sk-template-actions">' +
+        '<button onclick="activateTemplate(' + t.id + ')" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-broadcast"></i>Go Live</button>' +
+        '<button onclick="openEditTemplateModal(' + t.id + ',\'' + escapeHtml(t.label).replace(/'/g, "\\'") + '\',\'' + escapeHtml(t.message).replace(/'/g, "\\'") + '\',\'' + (t.set_availability || '') + '\')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Edit template"><i class="bi bi-pencil"></i></button>' +
+        '<button onclick="deleteTemplate(' + t.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" aria-label="Delete template"><i class="bi bi-trash"></i></button>' +
         '</div></div>';
     }).join('');
     // Also update the quick-picks in the Add Message modal
     renderTemplateQuickPicks();
   } catch (e) {
-    document.getElementById('templatesList').innerHTML = '<p class="text-red-500 col-span-3">Error loading templates</p>';
+    document.getElementById('templatesList').innerHTML = '<div class="sk-empty-state compact" style="grid-column:1/-1"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Error loading templates</div></div>';
   }
 }
 

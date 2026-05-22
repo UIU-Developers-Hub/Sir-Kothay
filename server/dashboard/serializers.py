@@ -7,6 +7,8 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(source='user.email', read_only=True)
     user_username = serializers.CharField(source='user.username', read_only=True)
     profile_image_url = serializers.SerializerMethodField()
+    active_message = serializers.SerializerMethodField()
+    qr_code_url = serializers.SerializerMethodField()
     slug = serializers.CharField(read_only=True)
     username = serializers.CharField(
         max_length=150, write_only=True, required=False, help_text='Display name (any characters).'
@@ -19,6 +21,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             'id', 'user', 'user_email', 'user_username', 'username', 'email',
             'profile_image', 'profile_image_url', 'phone_number', 'bio', 'designation',
             'organization', 'default_status', 'default_availability', 'is_available', 'slug',
+            'active_message', 'qr_code_url',
             'notify_new_chats', 'notify_chat_replies', 'notify_chat_closed', 'auto_close_hours',
         ]
         read_only_fields = ['id', 'user', 'slug']
@@ -40,6 +43,22 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 
     def get_profile_image_url(self, obj):
         return obj.get_image_url
+
+    def get_active_message(self, obj):
+        try:
+            from broadcast.models import BroadcastMessage
+            BroadcastMessage.activate_due_messages(user=obj.user)
+            active = BroadcastMessage.objects.filter(user=obj.user, active=True).order_by('-id').first()
+            return active.message if active else None
+        except Exception:
+            return None
+
+    def get_qr_code_url(self, obj):
+        try:
+            qr_code = getattr(obj.user, 'qr_code', None)
+            return qr_code.get_qr_url if qr_code else None
+        except Exception:
+            return None
 
 class StudentInterestSerializer(serializers.ModelSerializer):
     faculty_username = serializers.CharField(source='faculty.username', read_only=True)

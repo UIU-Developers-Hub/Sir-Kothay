@@ -6,26 +6,45 @@
 */
 (function () {
   var _counter = 0;
+  var WIDTHS = {
+    'max-w-sm': '24rem',
+    'max-w-md': '28rem',
+    'max-w-lg': '32rem',
+    'max-w-xl': '36rem',
+    'max-w-2xl': '42rem'
+  };
+
+  function escapeHtml(value) {
+    var d = document.createElement('div');
+    d.textContent = value == null ? '' : String(value);
+    return d.innerHTML;
+  }
+
+  function resolveWidth(value) {
+    if (!value) return '28rem';
+    return WIDTHS[value] || value;
+  }
 
   function open(html, opts) {
     opts = opts || {};
     var id = 'sk-modal-' + (++_counter);
-    var maxW = opts.maxWidth || 'max-w-md';
+    var maxW = resolveWidth(opts.maxWidth);
     var title = opts.title || '';
 
     var backdrop = document.createElement('div');
     backdrop.id = id;
-    backdrop.className = 'fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm z-[200] sk-modal-backdrop';
-    backdrop.style.animation = 'skModalFadeIn 0.2s ease-out';
+    backdrop.className = 'sk-modal-overlay sk-modal-backdrop';
+    backdrop.style.zIndex = opts.zIndex || 200;
 
-    var titleHtml = title ? '<h3 class="font-bold text-gray-900 text-lg mb-4">' + title + '</h3>' : '';
+    var headerClass = title ? 'sk-modal-header' : 'sk-modal-header compact';
+    var titleHtml = title ? '<h3 class="sk-modal-title">' + escapeHtml(title) + '</h3>' : '<span></span>';
 
     backdrop.innerHTML =
-      '<div class="bg-white rounded-3xl shadow-2xl ' + maxW + ' w-full p-6 border border-gray-100 relative transform transition-all max-h-[90vh] overflow-y-auto">' +
-        '<button class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors sk-modal-close-btn" aria-label="Close">' +
-          '<i class="bi bi-x-lg"></i>' +
-        '</button>' +
-        titleHtml +
+      '<div class="sk-modal-panel" style="max-width:' + maxW + '">' +
+        '<div class="' + headerClass + '">' +
+          titleHtml +
+          '<button class="sk-modal-close sk-modal-close-btn" aria-label="Close"><i class="bi bi-x-lg"></i></button>' +
+        '</div>' +
         '<div class="sk-modal-body">' + html + '</div>' +
       '</div>';
 
@@ -54,14 +73,6 @@
 
   function closeAll() {
     document.querySelectorAll('.sk-modal-backdrop').forEach(function (el) { el.remove(); });
-  }
-
-  // Inject keyframe animation
-  if (!document.getElementById('sk-modal-styles')) {
-    var style = document.createElement('style');
-    style.id = 'sk-modal-styles';
-    style.textContent = '@keyframes skModalFadeIn { from { opacity: 0; } to { opacity: 1; } }';
-    document.head.appendChild(style);
   }
 
   window.skModal = { open: open, close: close, closeAll: closeAll };

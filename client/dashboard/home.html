@@ -2,452 +2,482 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Dashboard - Sir Kothay</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Faculty Dashboard - Manage your broadcast status, schedules, and messages">
+  <link rel="stylesheet" href="../static/css/style.css?v=ui-premium-sidebar-14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <style>
-    body { font-family: 'Poppins', sans-serif; }
-    .tab-btn.active { color: #f68b1f; border-bottom: 2px solid #f68b1f; }
-    .cal-day:hover { background: #fff7ed; }
-    .cal-event { font-size: 0.65rem; padding: 1px 3px; border-radius: 4px; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  </style>
 </head>
-<body class="bg-gray-100">
-
-  <!-- Navbar -->
-  <nav class="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto z-50 bg-white/80 backdrop-blur-lg border-t md:border-b border-gray-200/50">
-    <div class="max-w-5xl mx-auto">
-      <div class="hidden md:flex items-center justify-between px-8 py-4">
-        <a href="../index.html" class="flex items-center gap-3">
-          <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo" />
-        </a>
-        <div id="desktopNavLinks" class="flex items-center gap-6 text-sm font-medium">
-          <a href="home.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Dashboard</a>
-          <a href="profile.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Profile</a>
-          <a href="#" onclick="logout()" class="text-red-600 hover:text-red-700">Logout</a>
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="text-gray-600 hover:text-black"><i class="bi bi-github text-xl"></i></a>
-        </div>
+<body>
+  <div class="sk-app">
+    <!-- Sidebar -->
+    <aside class="sk-sidebar">
+      <div class="sk-sidebar-logo">
+        <img src="../static/images/logo.png" alt="Sir Kothay">
+        <span class="sk-sidebar-logo-text">Sir <span>Kothay</span></span>
       </div>
-      <div class="md:hidden">
-        <div id="mobileNavLinks" class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
-          <a href="home.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50" style="color: #f68b1f;"><i class="bi bi-speedometer2 text-2xl"></i><span class="text-xs font-medium">Dashboard</span></a>
-          <a href="profile.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;"><i class="bi bi-person-circle text-2xl"></i><span class="text-xs font-medium">Profile</span></a>
-          <a href="#" onclick="logout()" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 transition"><i class="bi bi-box-arrow-right text-2xl"></i><span class="text-xs font-medium">Logout</span></a>
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-black transition"><i class="bi bi-github text-2xl"></i><span class="text-xs font-medium">GitHub</span></a>
+      <nav class="sk-sidebar-nav"></nav>
+      <div class="sk-sidebar-footer"></div>
+    </aside>
+    <div class="sk-sidebar-overlay"></div>
+
+    <!-- Main Content -->
+    <main class="sk-main">
+      <div class="sk-page" id="pageContent">
+        <!-- Loading Skeleton -->
+        <div id="loadingState">
+          <div class="sk-skeleton sk-skeleton-card" style="height:200px;margin-bottom:1.5rem"></div>
+          <div class="sk-skeleton" style="height:48px;border-radius:var(--sk-radius-lg);margin-bottom:1.5rem"></div>
+          <div class="sk-skeleton sk-skeleton-card" style="height:300px"></div>
         </div>
-      </div>
-    </div>
-  </nav>
 
-  <main class="pt-0 md:pt-24 pb-20 md:pb-0 min-h-screen">
-  <div class="bg-gray-100 relative pt-4 min-h-screen">
-    <div id="loadingState" class="flex justify-center items-center min-h-screen">
-      <div class="text-center"><div class="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-600 mx-auto"></div><p class="mt-4 text-gray-600">Loading dashboard...</p></div>
-    </div>
-
-    <div id="mainContent" class="hidden">
-      <!-- Profile Section -->
-      <section class="max-w-4xl mx-auto bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl shadow-lg border border-gray-200 mb-6">
-        <div class="flex flex-col lg:flex-row items-center lg:space-x-8 space-y-6 lg:space-y-0">
-          <div class="relative group">
-            <img id="userImage" src="../static/images/image.png" alt="User Image" class="w-28 h-28 lg:w-36 lg:h-36 rounded-xl object-cover border-4 border-white shadow-xl transition-transform group-hover:scale-105">
-          </div>
-          <div class="flex-1 text-center lg:text-left">
-            <h1 id="userName" class="text-2xl lg:text-3xl font-bold text-gray-800 mb-1">Loading...</h1>
-            <p id="userEmail" class="text-gray-600 text-sm lg:text-base mb-1"></p>
-            <p id="userPhone" class="text-gray-600 text-sm lg:text-base mb-1"></p>
-            <p id="userOrg" class="text-gray-600 text-sm lg:text-base mb-2"></p>
-            <!-- Availability Toggle -->
-            <div class="flex items-center gap-3 mt-2 flex-wrap justify-center lg:justify-start">
-              <button id="availabilityToggle" onclick="toggleAvailability()" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-sm">
-                <span id="availDot" class="w-3 h-3 rounded-full"></span>
-                <span id="availLabel">Unavailable</span>
-              </button>
-              <span class="text-[10px] text-gray-400">Subscribers get notified when you become available</span>
-            </div>
-            <!-- Default Status -->
-            <div class="flex items-center gap-2 mt-2 flex-wrap justify-center lg:justify-start">
-              <span class="text-xs text-gray-500">Fallback Status:</span>
-              <input id="defaultStatusInput" type="text" placeholder="e.g. Away from desk" class="border rounded px-2 py-1 text-xs w-48" />
-              <select id="defaultAvailInput" class="border rounded px-2 py-1 text-xs">
-                <option value="false">Unavailable</option>
-                <option value="true">Available</option>
-              </select>
-              <button onclick="saveDefaultSettings()" class="bg-orange-500 text-white text-xs px-3 py-1 rounded hover:bg-orange-600">Save</button>
-            </div>
-          </div>
-          <div class="flex flex-col items-center space-y-4">
-            <div class="w-24 h-24 lg:w-32 lg:h-32 bg-white flex items-center justify-center rounded-lg shadow-md border">
-              <img id="qrCode" src="../static/images/logo_placeholder.jpg" alt="QR Code" class="w-full h-full rounded-lg">
-            </div>
-            <div class="flex flex-wrap gap-2 justify-center">
-              <button id="qrActionBtn" onclick="handleQRAction()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 shadow-md transition-all">Generate</button>
-              <button id="qrRegenerateBtn" onclick="confirmRegenerateQR()" class="hidden bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 border border-gray-200 shadow-sm transition-all flex items-center gap-1.5" title="Regenerate QR Code"><i class="bi bi-arrow-clockwise"></i> Regenerate</button>
-              <button id="broadcastBtn" onclick="viewBroadcastPage()" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 shadow-md transition-all">Broadcast</button>
-              <button onclick="openModal('addMessageModal')" class="sm:hidden bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-purple-700 shadow-md transition-all">Add Message</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Dashboard Tabs -->
-      <section class="max-w-4xl mx-auto mb-6">
-        <div class="flex overflow-x-auto gap-1 bg-white rounded-xl shadow-sm p-1 border">
-          <button class="tab-btn active flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg" data-tab="messages"><i class="bi bi-broadcast mr-1"></i>Broadcast</button>
-          <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="templates"><i class="bi bi-lightning mr-1"></i>Quick Status</button>
-          <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="schedules"><i class="bi bi-arrow-repeat mr-1"></i>Auto-Schedule</button>
-          <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="calendar"><i class="bi bi-calendar3 mr-1"></i>Calendar</button>
-          <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="inbox"><i class="bi bi-chat-dots mr-1"></i>Messages <span id="unreadBadge" class="hidden ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">0</span></button>
-          <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="analytics"><i class="bi bi-graph-up mr-1"></i>Analytics</button>
-          <button class="tab-btn flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg text-gray-500" data-tab="fc-settings"><i class="bi bi-gear mr-1"></i>Settings</button>
-        </div>
-      </section>
-
-      <!-- Tab: Messages -->
-      <section id="tab-messages" class="tab-content max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-2 relative">
-        <div class="flex justify-between items-center mb-4">
-          <div><h2 class="text-lg font-bold text-gray-800">Live Broadcast Status</h2><p class="text-xs text-gray-400">Your current status is visible on your broadcast page and QR code.</p></div>
-          <button onclick="openNewMessageModal()" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-lg text-sm hover:from-orange-600 hover:to-orange-700 shadow-sm"><i class="bi bi-plus-lg mr-1"></i>New Status</button>
-        </div>
-        <div id="messagesList"><p class="text-gray-500 text-center py-8">Loading...</p></div>
-      </section>
-
-      <!-- Tab: Quick Status Templates -->
-      <section id="tab-templates" class="tab-content hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-2">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-gray-800">Quick Status Templates</h2>
-          <button onclick="openNewTemplateModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700">+ New Template</button>
-        </div>
-        <div id="templatesList" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-      </section>
-
-      <!-- Tab: Recurring Schedules -->
-      <section id="tab-schedules" class="tab-content hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-2">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-gray-800">Recurring Schedules</h2>
-          <button onclick="openNewScheduleModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">+ New Schedule</button>
-        </div>
-        <div id="schedulesList"></div>
-      </section>
-
-      <!-- Tab: Calendar -->
-      <section id="tab-calendar" class="tab-content hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-2">
-        <div class="flex justify-between items-center mb-4">
-          <div class="flex items-center gap-3">
-            <button onclick="calNavMonth(-1)" class="p-1 hover:bg-gray-100 rounded"><i class="bi bi-chevron-left"></i></button>
-            <h2 id="calMonthLabel" class="text-xl font-bold text-gray-800">May 2026</h2>
-            <button onclick="calNavMonth(1)" class="p-1 hover:bg-gray-100 rounded"><i class="bi bi-chevron-right"></i></button>
-          </div>
-          <button onclick="openNewEventModal()" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-700">+ New Event</button>
-        </div>
-        <div id="calendarGrid" class="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden"></div>
-        <div class="mt-3 flex items-center gap-4 text-xs text-gray-400">
-          <span><span class="inline-block w-2.5 h-2.5 rounded bg-orange-400 mr-1"></span>Events</span>
-          <span><span class="inline-block w-2.5 h-2.5 rounded bg-indigo-200 mr-1"></span>Recurring Schedules</span>
-          <span><i class="bi bi-broadcast mr-0.5" style="font-size:10px"></i>Auto-sets broadcast status</span>
-        </div>
-      </section>
-
-      <!-- Tab: Messages (Unified Inbox — threads + DMs) -->
-      <section id="tab-inbox" class="tab-content hidden max-w-5xl mx-auto mt-2">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" style="min-height:520px">
-          <div class="flex h-full" style="min-height:520px">
-
-            <!-- Left: Conversation List -->
-            <div id="chatListPanel" class="w-full md:w-[340px] lg:w-[380px] flex-shrink-0 border-r border-gray-100 flex flex-col">
-              <!-- Header -->
-              <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/70 flex items-center justify-between gap-2">
-                <h2 class="text-sm font-bold text-gray-800"><i class="bi bi-chat-dots text-blue-500 mr-1"></i>Messages</h2>
-                <div class="flex gap-1 items-center">
-                  <button onclick="_setChatFilter('all')" class="chat-filter-btn text-[10px] px-2 py-1 rounded-md font-bold border transition" data-filter="all">All</button>
-                  <button onclick="_setChatFilter('threads')" class="chat-filter-btn text-[10px] px-2 py-1 rounded-md font-bold border transition" data-filter="threads">Students</button>
-                  <button onclick="_setChatFilter('dms')" class="chat-filter-btn text-[10px] px-2 py-1 rounded-md font-bold border transition" data-filter="dms">Visitors</button>
-                  <button onclick="_closeAndDeleteAll()" class="text-[10px] px-2 py-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 border border-gray-200 transition"><i class="bi bi-trash3 mr-0.5"></i>Close & Delete All</button>
+        <!-- Main Content (hidden until loaded) -->
+        <div id="mainContent" class="hidden sk-dashboard-layout">
+          <aside class="sk-dashboard-sidebar">
+          <!-- Profile Section (Redesigned) -->
+          <section class="sk-card sk-fc-header-card" style="margin-bottom:1.5rem;position:relative;overflow:hidden">
+            <div class="sk-card-accent"></div>
+            
+            <div class="sk-fc-header-grid">
+              <!-- Left: Identity -->
+              <div class="sk-fc-header-identity">
+                <div class="sk-fc-header-avatar-wrap">
+                  <img id="userImage" src="../static/images/image.png" alt="User">
+                </div>
+                <div class="sk-fc-header-info">
+                  <h1 id="userName">Loading...</h1>
+                  <p id="userEmail" class="sk-text-muted"></p>
+                  <p class="sk-fc-header-meta"><span id="userPhone"></span> <span class="sk-dot-sep">•</span> <span id="userOrg"></span></p>
                 </div>
               </div>
-              <!-- Search -->
-              <div class="px-3 py-2 border-b border-gray-100">
-                <div class="relative">
-                  <i class="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300 text-xs"></i>
-                  <input type="text" id="chatSearchInput" placeholder="Search conversations..." class="w-full border border-gray-200 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300" oninput="_filterConversations()">
+
+              <style>
+                .sk-fc-force-uniform {
+                  height: 38px !important;
+                  min-height: 38px !important;
+                  font-size: 14px !important;
+                  padding-top: 0 !important;
+                  padding-bottom: 0 !important;
+                  display: inline-flex !important;
+                  align-items: center !important;
+                  box-sizing: border-box !important;
+                }
+                .sk-fc-force-uniform-btn {
+                  height: 36px !important;
+                  min-height: 36px !important;
+                  font-size: 13px !important;
+                  padding-top: 0 !important;
+                  padding-bottom: 0 !important;
+                  display: inline-flex !important;
+                  align-items: center !important;
+                  justify-content: center !important;
+                  box-sizing: border-box !important;
+                }
+              </style>
+              <!-- Middle: Management -->
+              <div class="sk-fc-header-management">
+                <div class="sk-fc-manage-live">
+                  <div class="sk-fc-manage-label">Live Status <span class="sk-fc-hint">(Subscribers notified)</span></div>
+                  <button id="availabilityToggle" onclick="toggleAvailability()" class="sk-status-toggle">
+                    <span id="availDot" class="sk-status-dot"></span>
+                    <span id="availLabel">Unavailable</span>
+                  </button>
+                </div>
+                
+                <div class="sk-fc-manage-fallback">
+                  <div class="sk-fc-manage-label">Default Fallback</div>
+                  <div class="sk-fc-fallback-form">
+                    <input id="defaultStatusInput" type="text" placeholder="e.g. Away from desk" class="sk-input sk-fc-force-uniform" style="padding-left: 0.875rem;">
+                    <div style="display: flex; gap: 0.5rem; width: 100%">
+                      <select id="defaultAvailInput" class="sk-select sk-fc-force-uniform" style="padding-left: 0.875rem;">
+                        <option value="false">Unavailable</option>
+                        <option value="true">Available</option>
+                      </select>
+                      <button onclick="saveDefaultSettings()" class="sk-btn sk-btn-primary sk-fc-force-uniform" style="justify-content: center;"><i class="bi bi-check2"></i> Save</button>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <!-- List -->
-              <div id="conversationList" class="flex-1 overflow-y-auto">
-                <div class="py-16 text-center text-gray-300"><div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400 mx-auto"></div></div>
+
+              <!-- Right: QR & Links -->
+              <div class="sk-fc-header-actions">
+                <div class="sk-fc-qr-container">
+                  <img id="qrCode" src="../static/images/logo_placeholder.jpg" alt="QR Code">
+                </div>
+                <div class="sk-fc-action-btns" style="flex-direction: column; max-width: 100%;">
+                  <div style="display: flex; gap: 0.5rem; width: 100%;">
+                    <button id="qrActionBtn" onclick="handleQRAction()" class="sk-btn sk-btn-success sk-fc-force-uniform-btn" style="flex: 1"><i class="bi bi-qr-code-scan"></i> Generate</button>
+                    <button id="broadcastBtn" onclick="viewBroadcastPage()" class="sk-btn sk-btn-primary sk-fc-force-uniform-btn" style="flex: 1"><i class="bi bi-broadcast"></i> View</button>
+                  </div>
+                  <button id="qrRegenerateBtn" onclick="confirmRegenerateQR()" class="sk-btn sk-btn-secondary sk-fc-force-uniform-btn" style="width: 100%; display:none;"><i class="bi bi-arrow-clockwise"></i> Regenerate QR</button>
+                </div>
+                <!-- Mobile only trigger -->
+                <button class="sk-fc-mobile-qr-trigger" onclick="document.getElementById('qrSheet').classList.add('open')">
+                  <i class="bi bi-qr-code"></i> View QR Code
+                </button>
               </div>
             </div>
-
-            <!-- Right: Conversation Detail -->
-            <div id="chatDetailPanel" class="flex-1 flex flex-col min-w-0 hidden md:flex">
-              <!-- Empty state -->
-              <div id="chatEmptyState" class="flex-1 flex flex-col items-center justify-center text-gray-300">
-                <i class="bi bi-chat-square-text text-5xl mb-3"></i>
-                <p class="text-sm font-medium">Select a conversation</p>
-                <p class="text-xs text-gray-300 mt-1">Choose from the list to view messages</p>
+          </section>
+          <!-- QR Bottom Sheet -->
+          <div id="qrSheet" class="sk-sheet">
+            <div class="sk-sheet-backdrop" onclick="document.getElementById('qrSheet').classList.remove('open')"></div>
+            <div class="sk-sheet-panel">
+              <div class="sk-sheet-handle"></div>
+              <h3 class="sk-sheet-title">Your QR Code</h3>
+              <p class="sk-sheet-subtitle">Scan to view your broadcast page</p>
+              <div class="sk-sheet-qr"><img id="qrCodeSheet" src="../static/images/logo_placeholder.jpg" alt="QR"></div>
+              <div class="sk-sheet-btns" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; width: 100%;">
+                  <button onclick="handleQRAction()" class="sk-btn sk-btn-success sk-sheet-btn" style="flex: 1; font-size: 14px !important; padding: 0.75rem !important;"><i class="bi bi-download"></i> Download</button>
+                  <button onclick="viewBroadcastPage()" class="sk-btn sk-btn-primary sk-sheet-btn" style="flex: 1; font-size: 14px !important; padding: 0.75rem !important;"><i class="bi bi-broadcast"></i> View</button>
+                </div>
+                <button onclick="confirmRegenerateQR()" class="sk-btn sk-btn-secondary sk-sheet-btn" style="width: 100%; font-size: 14px !important; padding: 0.75rem !important;"><i class="bi bi-arrow-clockwise"></i> Regenerate QR</button>
               </div>
-              <!-- Active conversation (hidden until selected) -->
-              <div id="chatActiveConvo" class="flex-1 flex flex-col hidden">
-                <!-- Header -->
-                <div id="chatConvoHeader" class="px-5 py-3 border-b border-gray-100 bg-gray-50/70 flex items-center gap-3"></div>
-                <!-- Messages -->
-                <div id="chatConvoMessages" class="flex-1 overflow-y-auto px-5 py-4 space-y-1" style="max-height:380px"></div>
-                <!-- Reply bar -->
-                <div id="chatReplyBar" class="px-4 py-3 border-t border-gray-100 bg-gray-50/50"></div>
+              <button class="sk-sheet-close" onclick="document.getElementById('qrSheet').classList.remove('open')">Close</button>
+            </div>
+          </div>
+
+          </aside>
+          <div class="sk-dashboard-main">
+          <!-- Dashboard section switcher, controlled by sidebar and mobile bottom nav -->
+          <div id="dashboardTabs" class="sk-nav-proxy" aria-hidden="true">
+              <button class="sk-tab tab-btn active" data-tab="messages"><i class="bi bi-broadcast"></i> Broadcast</button>
+              <button class="sk-tab tab-btn" data-tab="templates"><i class="bi bi-lightning"></i> Quick Status</button>
+              <button class="sk-tab tab-btn" data-tab="calendar"><i class="bi bi-calendar3"></i> Calendar</button>
+              <button class="sk-tab tab-btn" data-tab="inbox"><i class="bi bi-chat-dots"></i> Messages <span id="unreadBadge" class="sk-sidebar-badge" style="display:none">0</span></button>
+              <button class="sk-tab tab-btn" data-tab="fc-settings"><i class="bi bi-gear"></i> Settings</button>
+          </div>
+
+          <!-- Tab: Broadcast Messages -->
+          <section id="tab-messages" class="tab-content">
+            <div class="sk-card">
+              <div class="sk-card-header">
+                <div>
+                  <div class="sk-card-title">Live Broadcast Status</div>
+                  <div class="sk-card-subtitle">Your current status visible on your broadcast page and QR code</div>
+                </div>
+                <button onclick="openNewMessageModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Status</button>
+              </div>
+              <div id="messagesList">
+                <div style="padding:2rem">
+                  <div class="sk-skeleton-row">
+                    <div class="sk-skeleton sk-skeleton-avatar"></div>
+                    <div style="flex:1">
+                      <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
+                      <div class="sk-skeleton sk-skeleton-text w-1/2"></div>
+                    </div>
+                  </div>
+                  <div class="sk-skeleton-row">
+                    <div class="sk-skeleton sk-skeleton-avatar"></div>
+                    <div style="flex:1">
+                      <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
+                      <div class="sk-skeleton sk-skeleton-text w-1/2"></div>
+                    </div>
+                  </div>
+                  <div class="sk-skeleton-row">
+                    <div class="sk-skeleton sk-skeleton-avatar"></div>
+                    <div style="flex:1">
+                      <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
+                      <div class="sk-skeleton sk-skeleton-text w-1/2"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          </section>
 
-          </div>
-        </div>
-      </section>
+          <!-- Tab: Quick Status Templates -->
+          <section id="tab-templates" class="tab-content hidden">
+            <div class="sk-card">
+              <div class="sk-card-header">
+                <div class="sk-card-title">Quick Status Templates</div>
+                <button onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Template</button>
+              </div>
+              <div id="templatesList" class="sk-grid sk-grid-3"></div>
+            </div>
+          </section>
 
-      <!-- Tab: Analytics -->
-      <section id="tab-analytics" class="tab-content hidden max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-2">
-        <h2 class="text-lg font-bold mb-1 text-gray-800">Audience & Analytics</h2>
-        <p class="text-xs text-gray-400 mb-4">How visitors interact with your broadcast page and QR code.</p>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <div class="bg-blue-50 p-4 rounded-xl text-center border border-blue-100"><p class="text-2xl font-bold text-blue-700" id="totalViews">0</p><p class="text-xs text-gray-500">Page Views</p><p class="text-[10px] text-gray-400">Last 30 days</p></div>
-          <div class="bg-green-50 p-4 rounded-xl text-center border border-green-100"><p class="text-2xl font-bold text-green-700" id="totalScans">0</p><p class="text-xs text-gray-500">QR Scans</p><p class="text-[10px] text-gray-400">Last 30 days</p></div>
-          <div class="bg-purple-50 p-4 rounded-xl text-center border border-purple-100"><p class="text-2xl font-bold text-purple-700" id="subscriberCount">0</p><p class="text-xs text-gray-500">Subscribers</p><p class="text-[10px] text-gray-400">Email notifications</p></div>
-          <div class="bg-orange-50 p-4 rounded-xl text-center border border-orange-100 cursor-pointer hover:shadow-md transition" onclick="document.querySelector('[data-tab=inbox]').click()"><p class="text-2xl font-bold text-orange-700" id="unreadDmCount">0</p><p class="text-xs text-gray-500">Unread Messages</p><p class="text-[10px] text-gray-400">Click to view</p></div>
-        </div>
-        <canvas id="analyticsChart" height="180" class="w-full mb-5"></canvas>
-        <div id="subscriberListSection" class="border-t pt-4"></div>
-      </section>
+          <!-- Tab: Calendar -->
+          <section id="tab-calendar" class="tab-content hidden">
+            <div class="sk-dashboard-stack">
+              <div class="sk-card">
+                <div class="sk-card-header">
+                  <div style="display:flex;align-items:center;gap:0.75rem">
+                    <button onclick="calNavMonth(-1)" class="sk-btn sk-btn-ghost sk-btn-icon" title="Previous month"><i class="bi bi-chevron-left"></i></button>
+                    <h2 id="calMonthLabel" class="sk-card-title">May 2026</h2>
+                    <button onclick="calNavMonth(1)" class="sk-btn sk-btn-ghost sk-btn-icon" title="Next month"><i class="bi bi-chevron-right"></i></button>
+                  </div>
+                  <div class="sk-card-actions">
+                    <button onclick="openNewScheduleModal()" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-arrow-repeat"></i> New Schedule</button>
+                    <button onclick="openNewEventModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Event</button>
+                  </div>
+                </div>
+                <div id="calendarGrid" class="sk-calendar-grid"></div>
+                <div class="sk-calendar-legend">
+                  <span><span class="sk-calendar-legend-dot event"></span>Events</span>
+                  <span><span class="sk-calendar-legend-dot recurring"></span>Recurring</span>
+                </div>
+              </div>
+              <div class="sk-card">
+                <div class="sk-card-header">
+                  <div>
+                    <div class="sk-card-title">Recurring Schedules</div>
+                    <div class="sk-card-subtitle">Weekly broadcast rules shown on the calendar</div>
+                  </div>
+                  <button onclick="openNewScheduleModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Schedule</button>
+                </div>
+                <div id="schedulesList"></div>
+              </div>
+            </div>
+          </section>
 
-      <!-- Tab: Faculty Settings -->
-      <section id="tab-fc-settings" class="tab-content hidden max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-2">
-        <h2 class="text-lg font-bold mb-1 text-gray-800"><i class="bi bi-gear text-gray-500 mr-2"></i>Chat & Notification Settings</h2>
-        <p class="text-xs text-gray-400 mb-5">Configure how you receive notifications and manage chat behavior.</p>
-        <div class="space-y-5">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="font-semibold text-sm text-gray-800">New chat notifications</p>
-              <p class="text-xs text-gray-400">Email me when a student starts a new chat thread.</p>
+          <!-- Tab: Messages (Unified Inbox) -->
+          <section id="tab-inbox" class="tab-content hidden">
+            <div class="sk-split sk-chat-shell">
+              <!-- Left: Conversation List -->
+              <div id="chatListPanel" class="sk-split-left sk-chat-rail">
+                <div class="sk-split-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap">
+                  <h2 style="font-size:var(--sk-text-sm);font-weight:700;color:var(--sk-text-primary)"><i class="bi bi-chat-dots" style="color:var(--sk-primary);margin-right:0.25rem"></i>Messages</h2>
+                  <div style="display:flex;gap:0.25rem;align-items:center;flex-wrap:wrap">
+                    <button onclick="_setChatFilter('all')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm" data-filter="all" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs)">All</button>
+                    <button onclick="_setChatFilter('threads')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm" data-filter="threads" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs)">Students</button>
+                    <button onclick="_setChatFilter('dms')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm" data-filter="dms" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs)">Visitors</button>
+                    <button onclick="_closeAndDeleteAll()" class="sk-btn sk-btn-ghost sk-btn-sm" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs);color:var(--sk-text-placeholder)"><i class="bi bi-trash3"></i></button>
+                  </div>
+                </div>
+                <div style="padding:0.5rem 0.75rem;border-bottom:1px solid var(--sk-border)">
+                  <div class="sk-search">
+                    <i class="bi bi-search sk-search-icon" style="font-size:0.75rem"></i>
+                    <input type="text" id="chatSearchInput" placeholder="Search conversations..." class="sk-input" style="padding-left:2rem;padding-top:0.375rem;padding-bottom:0.375rem;font-size:var(--sk-text-xs)" oninput="_filterConversations()">
+                  </div>
+                </div>
+                <div id="conversationList" class="sk-split-body" style="padding:0"></div>
+              </div>
+              <!-- Right: Conversation Detail -->
+              <div id="chatDetailPanel" class="sk-split-right sk-chat-stage hidden-mobile">
+                <div id="chatEmptyState" class="sk-split-body sk-chat-empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--sk-text-placeholder)">
+                  <i class="bi bi-chat-square-text" style="font-size:3rem;margin-bottom:0.75rem"></i>
+                  <p style="font-size:var(--sk-text-sm);font-weight:500">Select a conversation</p>
+                  <p style="font-size:var(--sk-text-xs);margin-top:0.25rem">Choose from the list to view messages</p>
+                </div>
+                <div id="chatActiveConvo" class="sk-chat-active" style="display:none">
+                  <div id="chatConvoHeader" class="sk-split-header sk-chat-thread-header" style="display:flex;align-items:center;gap:0.75rem"></div>
+                  <div id="chatConvoMessages" class="sk-split-body sk-chat-messages" style="display:flex;flex-direction:column;gap:0.375rem"></div>
+                  <div id="chatReplyBar" class="sk-split-footer sk-chat-composer"></div>
+                </div>
+              </div>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="fcSettingNotifyNew" class="sr-only peer" onchange="saveFacultySettings()">
-              <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-            </label>
-          </div>
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="font-semibold text-sm text-gray-800">Reply notifications</p>
-              <p class="text-xs text-gray-400">Email me when a student sends a reply in active threads.</p>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="fcSettingNotifyReplies" class="sr-only peer" onchange="saveFacultySettings()">
-              <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-            </label>
-          </div>
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="font-semibold text-sm text-gray-800">Chat closed notifications</p>
-              <p class="text-xs text-gray-400">Email me when a chat thread is closed.</p>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="fcSettingNotifyClosed" class="sr-only peer" onchange="saveFacultySettings()">
-              <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-            </label>
-          </div>
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="font-semibold text-sm text-gray-800">Auto-close inactive chats</p>
-              <p class="text-xs text-gray-400">Automatically close threads after a period of inactivity.</p>
-            </div>
-            <select id="fcSettingAutoClose" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" onchange="saveFacultySettings()">
-              <option value="24">24 hours</option>
-              <option value="48">48 hours</option>
-              <option value="72">72 hours</option>
-              <option value="168">1 week</option>
-              <option value="">Never</option>
-            </select>
-          </div>
-        </div>
-      </section>
-    </div>
+          </section>
 
-    <!-- MODALS -->
-    <!-- Message Modal (Create & Edit) -->
-    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-      <div class="bg-white p-6 rounded-2xl shadow-xl w-11/12 sm:w-[420px]">
-        <h2 id="messageModalTitle" class="text-lg font-bold mb-1">Set Broadcast Status</h2>
-        <input type="hidden" id="messageId" value="">
-        <p class="text-xs text-gray-400 mb-3">This is what visitors see on your page and QR code.</p>
-        <!-- Template Quick Picks (interconnection!) -->
-        <div id="templateQuickPicks" class="mb-3"></div>
-        <textarea id="newMessageText" placeholder="e.g. In Room 405 — available until 3pm" class="w-full border border-gray-200 p-3 rounded-xl mb-3 text-sm focus:ring-2 focus:ring-orange-300 focus:outline-none" rows="3"></textarea>
-        <div class="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1"><i class="bi bi-clock mr-0.5"></i>Schedule for later</label>
-            <input id="newMessageSchedule" type="datetime-local" class="w-full border border-gray-200 p-2 rounded-lg text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1"><i class="bi bi-hourglass-split mr-0.5"></i>Auto-expire after</label>
-            <div class="flex gap-2">
-              <input type="number" id="newMessageDuration" placeholder="Time (blank = never)" class="w-2/3 border border-gray-200 p-2 rounded-lg text-sm" min="1" />
-              <select id="newMessageDurationUnit" class="w-1/3 border border-gray-200 p-2 rounded-lg text-sm">
-                <option value="1">Secs</option>
-                <option value="60" selected>Min</option>
-                <option value="3600">Hrs</option>
-                <option value="86400">Days</option>
-              </select>
+          <!-- Tab: Settings -->
+          <section id="tab-fc-settings" class="tab-content hidden">
+            <div class="sk-card">
+              <div class="sk-card-header" style="margin-bottom:1.5rem">
+                <div>
+                  <div class="sk-card-title"><i class="bi bi-gear" style="color:var(--sk-text-tertiary);margin-right:0.5rem"></i>Chat & Notification Settings</div>
+                  <div class="sk-card-subtitle">Configure how you receive notifications and manage chat behavior</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:1.5rem">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">New chat notifications</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Email me when a student starts a new chat thread.</p></div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyNew" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Reply notifications</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Email me when a student sends a reply in active threads.</p></div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyReplies" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Chat closed notifications</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Email me when a chat thread is closed.</p></div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyClosed" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Auto-close inactive chats</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Automatically close threads after a period of inactivity.</p></div>
+                  <select id="fcSettingAutoClose" class="sk-select" style="width:auto" onchange="saveFacultySettings()">
+                    <option value="24">24 hours</option><option value="48">48 hours</option><option value="72">72 hours</option><option value="168">1 week</option><option value="">Never</option>
+                  </select>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <p class="text-[10px] text-gray-400 mb-3"><i class="bi bi-info-circle mr-0.5"></i>When a timed status expires, your <strong>default status</strong> will be restored automatically.</p>
-        <div class="mb-3">
-          <label class="block text-xs font-medium text-gray-500 mb-1"><i class="bi bi-circle-fill mr-0.5" style="font-size:8px"></i>Also set availability to:</label>
-          <select id="newMessageAvail" class="w-full border border-gray-200 p-2 rounded-lg text-sm">
-            <option value="">Don't change</option>
-            <option value="true">Available</option>
-            <option value="false">Unavailable</option>
-          </select>
-        </div>
-        <div class="flex gap-2 justify-end">
-          <button type="button" onclick="closeModal('messageModal')" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm">Cancel</button>
-          <button type="button" id="btnSaveOnly" onclick="submitMessage(false)" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 text-sm shadow-sm border border-gray-200"><i class="bi bi-save mr-1"></i>Save</button>
-          <button type="button" id="btnSaveAndGoLive" onclick="submitMessage(true)" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-2 rounded-lg hover:from-orange-600 hover:to-orange-700 text-sm shadow-sm"><i class="bi bi-broadcast mr-1"></i>Save & Go Live</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Download Modal -->
-    <div id="downloadModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-        <h2 class="text-xl font-semibold mb-4">Download Options</h2>
-        <div class="flex flex-col space-y-2">
-          <button onclick="downloadQROnly()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Download QR Code Only</button>
-          <button onclick="downloadQRWithInfo()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">Download QR with User Info</button>
-        </div>
-        <div class="flex justify-end mt-4"><button type="button" onclick="closeModal('downloadModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button></div>
-      </div>
-    </div>
-    <!-- Add/Edit Template Modal -->
-    <div id="addTemplateModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-        <h2 id="templateModalTitle" class="text-xl font-semibold mb-4">New Quick Status</h2>
-        <input type="hidden" id="tplId">
-        <input id="tplLabel" type="text" placeholder="Label (e.g. In a Meeting)" class="w-full border p-2 rounded mb-3" />
-        <textarea id="tplMessage" placeholder="Broadcast message text..." class="w-full border p-2 rounded mb-3"></textarea>
-        <label class="block text-xs text-gray-500 mb-1"><i class="bi bi-circle-fill mr-0.5" style="font-size:8px"></i>When activated, set availability to:</label>
-        <select id="tplAvail" class="w-full border p-2 rounded mb-3">
-          <option value="">Don't change</option>
-          <option value="true">Available</option>
-          <option value="false">Unavailable</option>
-        </select>
-        <div class="flex justify-end gap-2">
-          <button onclick="closeModal('addTemplateModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-          <button id="templateModalSubmit" onclick="submitTemplate()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Save</button>
-        </div>
-      </div>
-    </div>
-    <!-- Add/Edit Schedule Modal -->
-    <div id="addScheduleModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-        <h2 id="scheduleModalTitle" class="text-xl font-semibold mb-4">New Recurring Schedule</h2>
-        <input type="hidden" id="schedId">
-        <select id="schedDay" class="w-full border p-2 rounded mb-3">
-          <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
-          <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
-        </select>
-        <input id="schedTime" type="time" class="w-full border p-2 rounded mb-3" />
-        <textarea id="schedMessage" placeholder="Broadcast message..." class="w-full border p-2 rounded mb-3"></textarea>
-        <div class="flex gap-2 mb-3">
-          <input type="number" id="schedDuration" placeholder="Duration (blank = never)" class="w-2/3 border p-2 rounded" min="1" />
-          <select id="schedDurationUnit" class="w-1/3 border p-2 rounded">
-            <option value="1">Secs</option>
-            <option value="60" selected>Min</option>
-            <option value="3600">Hrs</option>
-            <option value="86400">Days</option>
-          </select>
-        </div>
-        <label class="block text-xs text-gray-500 mb-1"><i class="bi bi-circle-fill mr-0.5" style="font-size:8px"></i>When triggered, set availability to:</label>
-        <select id="schedAvail" class="w-full border p-2 rounded mb-3">
-          <option value="">Don't change</option>
-          <option value="true">Available</option>
-          <option value="false">Unavailable</option>
-        </select>
-        <div class="flex justify-end gap-2">
-          <button onclick="closeModal('addScheduleModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-          <button id="scheduleModalSubmit" onclick="submitSchedule()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Save</button>
-        </div>
-      </div>
-    </div>
-    <!-- Add/Edit Event Modal -->
-    <div id="addEventModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-        <h2 id="eventModalTitle" class="text-xl font-semibold mb-4">New Scheduled Broadcast</h2>
-        <input type="hidden" id="evtId">
-        <input id="evtTitle" type="text" placeholder="Broadcast message (e.g. In a meeting)" class="w-full border p-2 rounded mb-3" />
-        <label class="block text-sm text-gray-600 mb-1">Start</label>
-        <input id="evtStart" type="datetime-local" class="w-full border p-2 rounded mb-3" />
-        <label class="block text-sm text-gray-600 mb-1">End</label>
-        <input id="evtEnd" type="datetime-local" class="w-full border p-2 rounded mb-3" />
-        <input id="evtColor" type="color" value="#f68b1f" class="w-full h-10 border rounded mb-3" />
-        <label class="block text-xs text-gray-500 mb-1"><i class="bi bi-circle-fill mr-0.5" style="font-size:8px"></i>During event, set availability to:</label>
-        <select id="evtAvail" class="w-full border p-2 rounded mb-3">
-          <option value="">Don't change</option>
-          <option value="true">Available</option>
-          <option value="false">Unavailable</option>
-        </select>
-        <div class="flex justify-between items-center mt-2">
-          <button id="eventModalDelete" type="button" onclick="deleteEvent()" class="text-red-500 hover:text-red-700 text-sm hidden"><i class="bi bi-trash mr-1"></i>Delete</button>
-          <div class="flex gap-2 justify-end flex-1">
-            <button onclick="closeModal('addEventModal')" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-            <button id="eventModalSubmit" onclick="submitEvent()" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">Save</button>
+          </section>
           </div>
         </div>
       </div>
-    </div>
-    <!-- Reply DM Modal removed — replies now happen inline in the chat panel -->
+    </main>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="sk-bottom-nav">
+      <div class="sk-bottom-nav-items"></div>
+    </nav>
   </div>
-  </main>
 
-  <footer class="py-12 px-6 mt-4 mb-20 md:mb-0 bg-gray-900 text-gray-300">
-    <div class="max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <div class="flex items-center gap-3 mb-4 md:justify-center">
-            <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo">
-            <span class="text-2xl font-bold text-white">Sir Kothay?</span>
-          </div>
-          <p class="text-gray-400">Simple notes. Strong bonds.</p>
+  <!-- ═══════════════ MODALS ═══════════════ -->
+  <!-- Message Modal -->
+  <div id="messageModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('messageModal')">
+    <div class="sk-modal-panel" style="max-width:480px">
+      <div class="sk-modal-header">
+        <h3 id="messageModalTitle" class="sk-modal-title">Set Broadcast Status</h3>
+        <button class="sk-modal-close" onclick="closeModal('messageModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <input type="hidden" id="messageId" value="">
+        <p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary);margin-bottom:0.75rem">This is what visitors see on your page and QR code.</p>
+        <div id="templateQuickPicks" style="margin-bottom:0.75rem"></div>
+        <div class="sk-form-group">
+          <textarea id="newMessageText" placeholder="e.g. In Room 405 — available until 3pm" class="sk-textarea" rows="3"></textarea>
         </div>
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <h4 class="font-semibold text-white mb-4">Quick Links</h4>
-          <ul class="space-y-2 text-gray-400">
-            <li><a href="home.html" class="hover:text-white transition">Dashboard</a></li>
-            <li><a href="profile.html" class="hover:text-white transition">Profile</a></li>
-            <li><a href="../about.html" class="hover:text-white transition">About Us</a></li>
-          </ul>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem" class="sk-form-group">
+          <div>
+            <label class="sk-label"><i class="bi bi-clock"></i> Schedule for later</label>
+            <input id="newMessageSchedule" type="datetime-local" class="sk-input">
+          </div>
+          <div>
+            <label class="sk-label"><i class="bi bi-hourglass-split"></i> Auto-expire after</label>
+            <div style="display:flex;gap:0.5rem">
+              <input type="number" id="newMessageDuration" placeholder="Time" class="sk-input" style="width:60%" min="1">
+              <select id="newMessageDurationUnit" class="sk-select" style="width:40%">
+                <option value="1">Sec</option><option value="60" selected>Min</option><option value="3600">Hrs</option><option value="86400">Days</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <h4 class="font-semibold text-white mb-4">Connect</h4>
-          <div class="flex gap-4 justify-left md:justify-center">
-            <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" class="text-2xl hover:text-white transition"><i class="bi bi-github"></i></a>
-            <a href="https://www.facebook.com/uiudevelopershub" class="text-2xl hover:text-white transition"><i class="bi bi-facebook"></i></a>
+        <p style="font-size:var(--sk-text-xs);color:var(--sk-text-placeholder);margin-bottom:0.75rem"><i class="bi bi-info-circle"></i> When a timed status expires, your <strong>default status</strong> will be restored.</p>
+        <div class="sk-form-group">
+          <label class="sk-label">Also set availability to:</label>
+          <select id="newMessageAvail" class="sk-select">
+            <option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option>
+          </select>
+        </div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeModal('messageModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button id="btnSaveOnly" onclick="submitMessage(false)" class="sk-btn sk-btn-secondary"><i class="bi bi-save"></i> Save</button>
+        <button id="btnSaveAndGoLive" onclick="submitMessage(true)" class="sk-btn sk-btn-gradient"><i class="bi bi-broadcast"></i> Save & Go Live</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Download Modal -->
+  <div id="downloadModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('downloadModal')">
+    <div class="sk-modal-panel" style="max-width:360px">
+      <div class="sk-modal-header">
+        <h3 class="sk-modal-title">Download Options</h3>
+        <button class="sk-modal-close" onclick="closeModal('downloadModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body" style="display:flex;flex-direction:column;gap:0.75rem">
+        <button onclick="downloadQROnly()" class="sk-btn sk-btn-primary" style="width:100%"><i class="bi bi-qr-code"></i> Download QR Code Only</button>
+        <button onclick="downloadQRWithInfo()" class="sk-btn sk-btn-success" style="width:100%"><i class="bi bi-image"></i> Download QR with User Info</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template Modal -->
+  <div id="addTemplateModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('addTemplateModal')">
+    <div class="sk-modal-panel" style="max-width:420px">
+      <div class="sk-modal-header">
+        <h3 id="templateModalTitle" class="sk-modal-title">New Quick Status</h3>
+        <button class="sk-modal-close" onclick="closeModal('addTemplateModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <input type="hidden" id="tplId">
+        <div class="sk-form-group"><label class="sk-label">Label</label><input id="tplLabel" type="text" placeholder="e.g. In a Meeting" class="sk-input"></div>
+        <div class="sk-form-group"><label class="sk-label">Message</label><textarea id="tplMessage" placeholder="Broadcast message text..." class="sk-textarea"></textarea></div>
+        <div class="sk-form-group">
+          <label class="sk-label">When activated, set availability to:</label>
+          <select id="tplAvail" class="sk-select"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
+        </div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeModal('addTemplateModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button id="templateModalSubmit" onclick="submitTemplate()" class="sk-btn sk-btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Modal -->
+  <div id="addScheduleModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('addScheduleModal')">
+    <div class="sk-modal-panel" style="max-width:420px">
+      <div class="sk-modal-header">
+        <h3 id="scheduleModalTitle" class="sk-modal-title">New Recurring Schedule</h3>
+        <button class="sk-modal-close" onclick="closeModal('addScheduleModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <input type="hidden" id="schedId">
+        <div class="sk-form-group"><label class="sk-label">Day</label><select id="schedDay" class="sk-select"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></div>
+        <div class="sk-form-group"><label class="sk-label">Time</label><input id="schedTime" type="time" class="sk-input"></div>
+        <div class="sk-form-group"><label class="sk-label">Broadcast Message</label><textarea id="schedMessage" placeholder="Broadcast message..." class="sk-textarea"></textarea></div>
+        <div class="sk-form-group">
+          <label class="sk-label">Duration</label>
+          <div style="display:flex;gap:0.5rem">
+            <input type="number" id="schedDuration" placeholder="Blank = never" class="sk-input" style="width:65%" min="1">
+            <select id="schedDurationUnit" class="sk-select" style="width:35%"><option value="1">Sec</option><option value="60" selected>Min</option><option value="3600">Hrs</option><option value="86400">Days</option></select>
           </div>
-          <div class="flex items-center gap-2 mt-6 text-sm justify-left md:justify-center">
-            <img src="https://github.com/UIU-Developers-Hub.png" class="h-8 w-8 rounded-full" alt="UIU Developers Hub">
-            <span>&copy; 2026 Sir Kothay. Made with ❤️ by <a href="https://github.com/UIU-Developers-Hub" style="color: #f68b1f;" class="hover:underline">UIU Developers Hub</a></span>
-          </div>
-          <div id="contributorAvatars" class="flex gap-2 mt-2"></div>
+        </div>
+        <div class="sk-form-group">
+          <label class="sk-label">When triggered, set availability to:</label>
+          <select id="schedAvail" class="sk-select"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
+        </div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeModal('addScheduleModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button id="scheduleModalSubmit" onclick="submitSchedule()" class="sk-btn sk-btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Modal -->
+  <div id="addEventModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('addEventModal')">
+    <div class="sk-modal-panel" style="max-width:420px">
+      <div class="sk-modal-header">
+        <h3 id="eventModalTitle" class="sk-modal-title">New Scheduled Broadcast</h3>
+        <button class="sk-modal-close" onclick="closeModal('addEventModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <input type="hidden" id="evtId">
+        <div class="sk-form-group"><label class="sk-label">Message</label><input id="evtTitle" type="text" placeholder="e.g. In a meeting" class="sk-input"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+          <div class="sk-form-group"><label class="sk-label">Start</label><input id="evtStart" type="datetime-local" class="sk-input"></div>
+          <div class="sk-form-group"><label class="sk-label">End</label><input id="evtEnd" type="datetime-local" class="sk-input"></div>
+        </div>
+        <div class="sk-form-group"><label class="sk-label">Color</label><input id="evtColor" type="color" value="#f68b1f" class="sk-input" style="height:40px;padding:4px"></div>
+        <div class="sk-form-group">
+          <label class="sk-label">During event, set availability to:</label>
+          <select id="evtAvail" class="sk-select"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
+        </div>
+      </div>
+      <div class="sk-modal-footer" style="justify-content:space-between">
+        <button id="eventModalDelete" type="button" onclick="deleteEvent()" class="sk-btn sk-btn-ghost" style="color:var(--sk-error);display:none"><i class="bi bi-trash"></i> Delete</button>
+        <div style="display:flex;gap:0.5rem">
+          <button onclick="closeModal('addEventModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+          <button id="eventModalSubmit" onclick="submitEvent()" class="sk-btn sk-btn-primary">Save</button>
         </div>
       </div>
     </div>
-  </footer>
+  </div>
 
-<script src="../static/js/api-config.js?v=3"></script>
-<script src="../static/js/notify-modal.js"></script>
-<script src="../static/js/sk-modal.js"></script>
-<script src="../static/js/dashboard-core.js?v=10"></script>
-<script src="../static/js/dashboard-templates.js?v=4"></script>
-<script src="../static/js/dashboard-schedules.js?v=4"></script>
-<script src="../static/js/dashboard-calendar.js?v=4"></script>
-<script src="../static/js/dashboard-chat.js?v=2"></script>
-<script src="../static/js/dashboard-analytics.js"></script>
+  <!-- Scripts -->
+  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/utils.js?v=ui-fix-3"></script>
+  <script src="../static/js/theme.js?v=ui-fix-30"></script>
+  <script src="../static/js/components.js"></script>
+  <script src="../static/js/layout.js?v=ui-fix-30"></script>
+  <script src="../static/js/notify-modal.js?v=ui-fix-5"></script>
+  <script src="../static/js/sk-modal.js?v=ui-fix-5"></script>
+  <script src="../static/js/dashboard-core.js?v=ui-premium-sidebar-4"></script>
+  <script src="../static/js/dashboard-templates.js?v=ui-fix-5"></script>
+  <script src="../static/js/dashboard-schedules.js"></script>
+  <script src="../static/js/dashboard-calendar.js"></script>
+  <script src="../static/js/dashboard-chat.js?v=ui-fix-11"></script>
+  <script>
+    // Initialize layout with sidebar
+    SKLayout.init({
+      page: 'dashboard',
+      requireAuth: true,
+      type: 'dashboard',
+      onReady: function() {
+        // Dashboard-core handles loading via DOMContentLoaded
+      }
+    });
+  </script>
 </body>
 </html>

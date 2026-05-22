@@ -33,16 +33,17 @@ async function loadCalendarEvents() {
 
 function renderCalendar() {
   var grid = document.getElementById('calendarGrid');
+  if (!grid) return;
   var html = '';
   var dayHeaders = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  for (var i = 0; i < 7; i++) html += '<div class="bg-gray-50 text-center text-xs font-bold py-2.5 text-gray-500 uppercase tracking-wider">' + dayHeaders[i] + '</div>';
+  for (var i = 0; i < 7; i++) html += '<div class="sk-calendar-head">' + dayHeaders[i] + '</div>';
 
   var firstDay = new Date(calYear, calMonth, 1).getDay();
   firstDay = firstDay === 0 ? 6 : firstDay - 1;
   var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
   var today = new Date();
 
-  for (var b = 0; b < firstDay; b++) html += '<div class="bg-white p-1.5 min-h-[80px] opacity-30"></div>';
+  for (var b = 0; b < firstDay; b++) html += '<div class="sk-calendar-day muted"></div>';
 
   for (var d = 1; d <= daysInMonth; d++) {
     var isToday = (d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear());
@@ -60,22 +61,22 @@ function renderCalendar() {
       return s.is_active && s.day_of_week === thisDow;
     });
 
-    html += '<div class="bg-white p-1.5 min-h-[80px] hover:bg-orange-50/50 transition-colors cursor-default' + (isToday ? ' ring-2 ring-orange-400 ring-inset bg-orange-50/30' : '') + '">';
-    html += '<div class="text-xs font-semibold mb-0.5 ' + (isToday ? 'text-orange-600' : 'text-gray-600') + '">' + d + '</div>';
+    html += '<div class="sk-calendar-day' + (isToday ? ' today' : '') + '">';
+    html += '<div class="sk-calendar-number">' + d + '</div>';
 
     // Show events (max 2)
     for (var ei = 0; ei < Math.min(dayEvents.length, 2); ei++) {
       var ev = dayEvents[ei];
-      html += '<div onclick="openEditEventModal(' + ev.id + '); event.stopPropagation();" class="text-[10px] px-1.5 py-0.5 rounded mt-0.5 text-white truncate cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-teal-400 transition" title="Auto-sets status: ' + escapeHtml(ev.title) + '" style="background:' + (ev.color || '#f68b1f') + '">' +
-        '<i class="bi bi-broadcast" style="font-size:8px"></i> ' + escapeHtml(ev.title) + '</div>';
+      html += '<button type="button" onclick="event.stopPropagation(); openEditEventModal(' + ev.id + ');" class="sk-calendar-chip" title="' + escapeHtml(ev.title) + '" style="background:' + (ev.color || '#f68b1f') + '">' +
+        '<i class="bi bi-broadcast"></i><span class="truncate">' + escapeHtml(ev.title) + '</span></button>';
     }
     // Show recurring schedules (max 1 if space)
     if (dayScheds.length > 0 && dayEvents.length < 2) {
       var sc = dayScheds[0];
-      html += '<div class="text-[10px] px-1.5 py-0.5 rounded mt-0.5 bg-indigo-100 text-indigo-700 truncate" title="Recurring: ' + escapeHtml(sc.message) + '"><i class="bi bi-arrow-repeat" style="font-size:8px"></i> ' + sc.time_of_day.slice(0, 5) + '</div>';
+      html += '<div class="sk-calendar-chip recurring" title="Recurring: ' + escapeHtml(sc.message) + '"><i class="bi bi-arrow-repeat"></i><span class="truncate">' + sc.time_of_day.slice(0, 5) + '</span></div>';
     }
     var totalItems = dayEvents.length + dayScheds.length;
-    if (totalItems > 2) html += '<div class="text-[10px] text-gray-400 mt-0.5">+' + (totalItems - 2) + ' more</div>';
+    if (totalItems > 2) html += '<div class="sk-calendar-more">+' + (totalItems - 2) + ' more</div>';
     html += '</div>';
   }
   grid.innerHTML = html;

@@ -1,508 +1,237 @@
 <!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>About | Sir Kothay</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
-    <style>
-      :root {
-        --brand: #f68b1f;
-        --brand-dark: #e67a0f;
-      }
-
-      body {
-        font-family: "Poppins", sans-serif;
-      }
-
-      .brand-color {
-        color: var(--brand);
-      }
-
-      .brand-bg {
-        background-color: var(--brand);
-      }
-
-      .page-noise {
-        background-image:
-          radial-gradient(circle at 18% 12%, rgba(246, 139, 31, 0.14), transparent 24%),
-          radial-gradient(circle at 82% 8%, rgba(230, 122, 15, 0.12), transparent 20%),
-          radial-gradient(circle at 50% 66%, rgba(17, 24, 39, 0.05), transparent 28%);
-      }
-
-      .glass-card {
-        border: 1px solid rgba(255, 255, 255, 0.72);
-        background: rgba(255, 255, 255, 0.74);
-        backdrop-filter: blur(14px);
-        box-shadow: 0 22px 60px -30px rgba(17, 24, 39, 0.35);
-      }
-
-      .soft-card {
-        border: 1px solid rgba(246, 139, 31, 0.14);
-        background: rgba(255, 255, 255, 0.92);
-        transition:
-          transform 180ms ease,
-          box-shadow 180ms ease,
-          border-color 180ms ease;
-      }
-
-      .soft-card:hover {
-        transform: translateY(-4px);
-        border-color: rgba(246, 139, 31, 0.26);
-        box-shadow: 0 22px 40px -28px rgba(17, 24, 39, 0.35);
-      }
-
-      .section-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        border-radius: 9999px;
-        border: 1px solid rgba(246, 139, 31, 0.22);
-        background: rgba(255, 255, 255, 0.85);
-        padding: 0.45rem 0.95rem;
-        font-size: 0.825rem;
-        font-weight: 600;
-        color: #374151;
-      }
-    </style>
+    <meta name="description" content="Learn about Sir Kothay - a lightweight web app for sharing messages with QR codes">
+    <link rel="stylesheet" href="./static/css/style.css?v=ui-fix-30">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   </head>
-  <body class="bg-[#f8f4ee] text-gray-900 antialiased">
-    <div aria-hidden="true" class="pointer-events-none fixed inset-0 page-noise"></div>
-    <!-- Fixed Bottom Navbar on Mobile, Top on Desktop -->
-    <nav
-      class="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto z-50 bg-white/80 backdrop-blur-lg border-t md:border-b border-gray-200/50"
-    >
-      <div class="max-w-5xl mx-auto">
-        <!-- Desktop Navbar (Top) -->
-        <div class="hidden md:flex items-center justify-between px-8 py-4">
-          <!-- Logo -->
-          <a href="index.html" class="flex items-center gap-3">
-            <img
-              src="./static/images/nav-logo.png"
-              class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain"
-              alt="Logo"
-            />
-          </a>
+  <body>
+    <!-- Background noise layer -->
+    <div class="sk-hero-gradient" style="position:fixed;inset:0;pointer-events:none;z-index:0" aria-hidden="true"></div>
 
-          <!-- Desktop Links -->
-          <div
-            id="desktopNav"
-            class="flex items-center gap-6 text-sm font-medium"
-          >
-            <a
-              href="index.html"
-              class="text-gray-700"
-              style="transition: color 0.2s"
-              onmouseover="this.style.color = '#f68b1f'"
-              onmouseout="this.style.color = ''"
-              >Home</a
-            >
-            <a
-              href="about.html"
-              class="text-gray-700"
-              style="transition: color 0.2s"
-              onmouseover="this.style.color = '#f68b1f'"
-              onmouseout="this.style.color = ''"
-              >About</a
-            >
-            <a
-              href="auth/login.html"
-              class="text-gray-700"
-              style="transition: color 0.2s"
-              onmouseover="this.style.color = '#f68b1f'"
-              onmouseout="this.style.color = ''"
-              >Login</a
-            >
-            <a
-              href="auth/register.html"
-              class="px-5 py-2 text-white rounded-lg"
-              style="background-color: #f68b1f"
-              onmouseover="this.style.backgroundColor = '#e67a0f'"
-              onmouseout="this.style.backgroundColor = '#f68b1f'"
-              >Sign Up</a
-            >
-            <a
-              href="https://github.com/UIU-Developers-Hub/Sir-Kothay"
-              target="_blank"
-              class="text-gray-600 hover:text-black"
-            >
-              <i class="bi bi-github text-xl"></i>
-            </a>
-          </div>
-        </div>
+    <div class="sk-app">
+      <!-- Sidebar is injected by JS (layout.js) unconditionally -->
 
-        <!-- Mobile Bottom Navbar -->
-        <div class="md:hidden">
-          <div
-            class="flex items-center justify-around py-3 bg-white border-t border-gray-200"
-          >
-            <!-- Home -->
-            <a
-              href="index.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50"
-              style="color: #4b5563"
-            >
-              <i class="bi bi-house-fill text-2xl"></i>
-              <span class="text-xs font-medium">Home</span>
-            </a>
+      <!-- Main Content -->
+      <main class="sk-main">
+        <div class="sk-page" style="padding-top: 0">
 
-            <!-- About -->
-            <a
-              href="about.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50"
-              style="color: #f68b1f"
-            >
-              <i class="bi bi-info-circle-fill text-2xl"></i>
-              <span class="text-xs font-medium">About</span>
-            </a>
+    <div class="sk-public-main" style="position:relative;z-index:1">
+      <div style="max-width:var(--sk-content-max-width);margin:0 auto;padding:2rem 1.5rem;display:flex;flex-direction:column;gap:2.5rem">
 
-            <!-- Login -->
-            <a
-              href="auth/login.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:bg-orange-50 transition"
-              style="color: #4b5563"
-            >
-              <i class="bi bi-box-arrow-in-right text-2xl"></i>
-              <span class="text-xs font-medium">Login</span>
-            </a>
-
-            <!-- Sign Up -->
-            <a
-              href="auth/register.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:bg-orange-50 transition"
-            >
-              <i class="bi bi-person-plus-fill text-2xl"></i>
-              <span class="text-xs font-medium">Sign Up</span>
-            </a>
-
-            <!-- GitHub -->
-            <a
-              href="https://github.com/UIU-Developers-Hub/Sir-Kothay"
-              target="_blank"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-black transition"
-            >
-              <i class="bi bi-github text-2xl"></i>
-              <span class="text-xs font-medium">GitHub</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="relative z-10 pt-0 md:pt-24 pb-20 md:pb-0 min-h-screen">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-10">
-        <section class="glass-card rounded-[2rem] p-6 sm:p-10 lg:p-12 overflow-hidden relative">
-          <div class="absolute -right-12 -top-10 h-44 w-44 rounded-full bg-[#f68b1f]/16 blur-3xl"></div>
-          <div class="absolute -left-8 bottom-0 h-36 w-36 rounded-full bg-[#e67a0f]/14 blur-3xl"></div>
-          <div class="relative">
-            <span class="section-pill">
-              <span class="h-2 w-2 rounded-full bg-[#f68b1f]"></span>
+        <!-- About Hero -->
+        <section class="sk-card sk-card-glass" style="padding:2.5rem;position:relative;overflow:hidden">
+          <div style="position:absolute;right:-60px;top:-50px;width:200px;height:200px;border-radius:50%;background:var(--sk-orange-500);opacity:0.08;filter:blur(60px)"></div>
+          <div style="position:relative">
+            <div style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.45rem 0.95rem;border-radius:var(--sk-radius-full);border:1px solid var(--sk-border);background:var(--sk-glass-bg);font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-secondary);margin-bottom:1.25rem">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--sk-primary)"></span>
               Built with care
-            </span>
-            <h1 class="mt-5 text-4xl sm:text-5xl font-bold leading-tight text-gray-950">
-              <span class="text-black">About</span>
-              <span class="brand-color"> Sir Kothay</span>
+            </div>
+            <h1 style="font-size:clamp(2rem,4vw,3rem);font-weight:800;line-height:1.1;color:var(--sk-text-primary);margin-bottom:1.25rem">
+              About <span style="color:var(--sk-primary)">Sir Kothay</span>
             </h1>
-            <p class="mt-5 text-base sm:text-lg text-gray-700 max-w-3xl">
-              <span class="font-bold brand-color">"Sir Kothay Achen"</span>
-              is a lightweight web application designed to make sharing messages
-              simple and efficient. Whether you want to leave a quick note,
-              share a thought, or send a message to someone,
-              <span class="font-bold brand-color">Sir Kothay</span> gives you
+            <p style="font-size:var(--sk-text-base);color:var(--sk-text-secondary);max-width:700px;line-height:1.7">
+              <span style="font-weight:700;color:var(--sk-primary)">"Sir Kothay Achen"</span>
+              is a lightweight web application designed to make sharing messages simple and efficient.
+              Whether you want to leave a quick note, share a thought, or send a message to someone,
+              <span style="font-weight:700;color:var(--sk-primary)">Sir Kothay</span> gives you
               a unique, shareable URL and QR code for easy access.
             </p>
-            <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div class="soft-card rounded-2xl p-4">
-                <p class="text-2xl font-bold text-gray-950">Fast</p>
-                <p class="text-sm text-gray-600 mt-1">Create and share in seconds</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-top:2rem;max-width:500px">
+              <div class="sk-card sk-card-hover" style="padding:1rem;text-align:center">
+                <div style="font-size:var(--sk-text-2xl);font-weight:800;color:var(--sk-text-primary)">Fast</div>
+                <div style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary);margin-top:0.25rem">Create and share in seconds</div>
               </div>
-              <div class="soft-card rounded-2xl p-4">
-                <p class="text-2xl font-bold text-gray-950">Private</p>
-                <p class="text-sm text-gray-600 mt-1">You choose who sees your note</p>
+              <div class="sk-card sk-card-hover" style="padding:1rem;text-align:center">
+                <div style="font-size:var(--sk-text-2xl);font-weight:800;color:var(--sk-text-primary)">Private</div>
+                <div style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary);margin-top:0.25rem">You choose who sees</div>
               </div>
-              <div class="soft-card rounded-2xl p-4">
-                <p class="text-2xl font-bold text-gray-950">Simple</p>
-                <p class="text-sm text-gray-600 mt-1">No friction, clean flow</p>
+              <div class="sk-card sk-card-hover" style="padding:1rem;text-align:center">
+                <div style="font-size:var(--sk-text-2xl);font-weight:800;color:var(--sk-text-primary)">Simple</div>
+                <div style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary);margin-top:0.25rem">No friction, clean flow</div>
               </div>
             </div>
           </div>
         </section>
 
-        <section class="space-y-6">
-          <div class="text-center">
-            <span class="section-pill">How it works</span>
-            <h2 class="mt-4 text-3xl sm:text-4xl font-bold text-gray-950">From note to delivery in 4 steps</h2>
+        <!-- How it Works -->
+        <section>
+          <div style="text-align:center;margin-bottom:2rem">
+            <div style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.45rem 0.95rem;border-radius:var(--sk-radius-full);border:1px solid var(--sk-border);background:var(--sk-glass-bg);font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-secondary);margin-bottom:0.75rem">How it works</div>
+            <h2 style="font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;color:var(--sk-text-primary)">From note to delivery in 4 steps</h2>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div class="soft-card rounded-2xl p-6">
-              <p class="text-sm font-semibold brand-color">Step 1</p>
-              <h3 class="mt-2 text-xl font-bold text-gray-950">Create a Message</h3>
-              <p class="mt-2 text-gray-700">Write your message on the home page and save it.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem">
+            <div class="sk-card sk-card-hover sk-fade-up sk-stagger-1" style="padding:1.5rem">
+              <div style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-primary);margin-bottom:0.5rem">Step 1</div>
+              <h3 style="font-size:var(--sk-text-lg);font-weight:700;color:var(--sk-text-primary);margin-bottom:0.5rem">Create a Message</h3>
+              <p style="color:var(--sk-text-secondary);font-size:var(--sk-text-sm)">Write your message on the home page and save it.</p>
             </div>
-            <div class="soft-card rounded-2xl p-6">
-              <p class="text-sm font-semibold brand-color">Step 2</p>
-              <h3 class="mt-2 text-xl font-bold text-gray-950">Generate a URL</h3>
-              <p class="mt-2 text-gray-700">Each message gets a dedicated page with a unique URL.</p>
+            <div class="sk-card sk-card-hover sk-fade-up sk-stagger-2" style="padding:1.5rem">
+              <div style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-primary);margin-bottom:0.5rem">Step 2</div>
+              <h3 style="font-size:var(--sk-text-lg);font-weight:700;color:var(--sk-text-primary);margin-bottom:0.5rem">Generate a URL</h3>
+              <p style="color:var(--sk-text-secondary);font-size:var(--sk-text-sm)">Each message gets a dedicated page with a unique URL.</p>
             </div>
-            <div class="soft-card rounded-2xl p-6">
-              <p class="text-sm font-semibold brand-color">Step 3</p>
-              <h3 class="mt-2 text-xl font-bold text-gray-950">Share via QR</h3>
-              <p class="mt-2 text-gray-700">A QR code is automatically generated for quick sharing.</p>
+            <div class="sk-card sk-card-hover sk-fade-up sk-stagger-3" style="padding:1.5rem">
+              <div style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-primary);margin-bottom:0.5rem">Step 3</div>
+              <h3 style="font-size:var(--sk-text-lg);font-weight:700;color:var(--sk-text-primary);margin-bottom:0.5rem">Share via QR</h3>
+              <p style="color:var(--sk-text-secondary);font-size:var(--sk-text-sm)">A QR code is automatically generated for quick sharing.</p>
             </div>
-            <div class="soft-card rounded-2xl p-6">
-              <p class="text-sm font-semibold brand-color">Step 4</p>
-              <h3 class="mt-2 text-xl font-bold text-gray-950">View Instantly</h3>
-              <p class="mt-2 text-gray-700">Anyone with the link or QR code can open your message.</p>
+            <div class="sk-card sk-card-hover sk-fade-up sk-stagger-4" style="padding:1.5rem">
+              <div style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-primary);margin-bottom:0.5rem">Step 4</div>
+              <h3 style="font-size:var(--sk-text-lg);font-weight:700;color:var(--sk-text-primary);margin-bottom:0.5rem">View Instantly</h3>
+              <p style="color:var(--sk-text-secondary);font-size:var(--sk-text-sm)">Anyone with the link or QR code can open your message.</p>
             </div>
           </div>
         </section>
 
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="glass-card rounded-3xl p-6 sm:p-8">
-            <h3 class="text-2xl font-bold brand-color">Tech Stack</h3>
-            <div class="mt-5 space-y-3 text-gray-700">
-              <p><span class="font-bold">Backend:</span> Django (Python)</p>
-              <p><span class="font-bold">Frontend:</span> Tailwind CSS</p>
-              <p><span class="font-bold">Database:</span> SQLite (initially, can be upgraded)</p>
-              <p><span class="font-bold">Hosting:</span> PythonAnywhere</p>
-              <p><span class="font-bold">Additional Feature:</span> QR Code Generation</p>
+        <!-- Tech Stack & Features -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.5rem">
+          <section class="sk-card sk-card-glass" style="padding:2rem">
+            <h3 style="font-size:var(--sk-text-xl);font-weight:700;color:var(--sk-primary);margin-bottom:1.25rem">Tech Stack</h3>
+            <div style="display:flex;flex-direction:column;gap:0.75rem;color:var(--sk-text-secondary)">
+              <p><span style="font-weight:700;color:var(--sk-text-primary)">Backend:</span> Django (Python)</p>
+              <p><span style="font-weight:700;color:var(--sk-text-primary)">Frontend:</span> Custom CSS Design System</p>
+              <p><span style="font-weight:700;color:var(--sk-text-primary)">Database:</span> SQLite (upgradeable)</p>
+              <p><span style="font-weight:700;color:var(--sk-text-primary)">Hosting:</span> PythonAnywhere</p>
+              <p><span style="font-weight:700;color:var(--sk-text-primary)">Additional:</span> QR Code Generation</p>
             </div>
-          </div>
-
-          <div class="glass-card rounded-3xl p-6 sm:p-8">
-            <h3 class="text-2xl font-bold brand-color">Core Features (Phase 1)</h3>
-            <ul class="mt-5 space-y-3 text-gray-700">
-              <li><span class="font-bold">Message Creation:</span> Write and save your message.</li>
-              <li><span class="font-bold">Unique URL Generation:</span> Each message gets a unique link.</li>
-              <li><span class="font-bold">QR Code Support:</span> Share messages easily with a QR code.</li>
-              <li><span class="font-bold">Message Viewing:</span> Anyone with the link can view the message.</li>
-              <li><span class="font-bold">User Profiles:</span> Register and manage your messages.</li>
+          </section>
+          <section class="sk-card sk-card-glass" style="padding:2rem">
+            <h3 style="font-size:var(--sk-text-xl);font-weight:700;color:var(--sk-primary);margin-bottom:1.25rem">Core Features</h3>
+            <ul style="display:flex;flex-direction:column;gap:0.75rem;color:var(--sk-text-secondary);list-style:none;padding:0">
+              <li><span style="font-weight:700;color:var(--sk-text-primary)">Message Creation:</span> Write and save your message.</li>
+              <li><span style="font-weight:700;color:var(--sk-text-primary)">Unique URL:</span> Each message gets a unique link.</li>
+              <li><span style="font-weight:700;color:var(--sk-text-primary)">QR Code:</span> Share messages easily with a QR code.</li>
+              <li><span style="font-weight:700;color:var(--sk-text-primary)">Message Viewing:</span> Anyone with the link can view it.</li>
+              <li><span style="font-weight:700;color:var(--sk-text-primary)">User Profiles:</span> Register and manage your messages.</li>
             </ul>
+          </section>
+        </div>
+
+        <!-- Future -->
+        <section class="sk-card sk-card-glass" style="padding:2rem">
+          <h3 style="font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:700;color:var(--sk-primary);text-align:center;margin-bottom:1.5rem">Future Enhancements</h3>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem">
+            <div class="sk-card sk-card-hover" style="padding:1.25rem"><span style="font-weight:700;color:var(--sk-text-primary)">Scheduling Messages:</span> <span style="color:var(--sk-text-secondary)">Set messages to appear at specific times.</span></div>
+            <div class="sk-card sk-card-hover" style="padding:1.25rem"><span style="font-weight:700;color:var(--sk-text-primary)">Messaging System:</span> <span style="color:var(--sk-text-secondary)">Send direct messages to other users.</span></div>
+            <div class="sk-card sk-card-hover" style="padding:1.25rem"><span style="font-weight:700;color:var(--sk-text-primary)">Dashboard:</span> <span style="color:var(--sk-text-secondary)">Manage all your messages in one place.</span></div>
           </div>
         </section>
 
-        <section class="glass-card rounded-3xl p-6 sm:p-8">
-          <h3 class="text-2xl sm:text-3xl font-bold brand-color text-center">Future Enhancements (Phase 2 & Beyond)</h3>
-          <ul class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-gray-700">
-            <li class="soft-card rounded-2xl p-5"><span class="font-bold">Scheduling Messages:</span> Set messages to appear at specific times.</li>
-            <li class="soft-card rounded-2xl p-5"><span class="font-bold">Messaging System:</span> Send direct messages to other users.</li>
-            <li class="soft-card rounded-2xl p-5"><span class="font-bold">Dashboard:</span> Manage all your messages in one place.</li>
-          </ul>
-        </section>
-
-        <section class="glass-card rounded-3xl p-6 sm:p-8">
-          <h3 class="text-2xl sm:text-3xl font-bold brand-color text-center">Our Contributors</h3>
-          <p class="mt-3 text-center text-gray-600">People who made this project better, one commit at a time.</p>
-          <div
-            id="contributorsGrid"
-            class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            <p class="text-center text-gray-500 col-span-full">
-              Loading contributors...
-            </p>
+        <!-- Contributors -->
+        <section class="sk-card sk-card-glass" style="padding:2rem">
+          <h3 style="font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:700;color:var(--sk-primary);text-align:center;margin-bottom:0.5rem">Our Contributors</h3>
+          <p style="text-align:center;color:var(--sk-text-tertiary);font-size:var(--sk-text-sm);margin-bottom:1.5rem">People who made this project better, one commit at a time.</p>
+          <div id="contributorsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem">
+            <p style="text-align:center;color:var(--sk-text-placeholder);grid-column:1/-1;padding:2rem">Loading contributors...</p>
           </div>
         </section>
 
-        <section class="rounded-3xl bg-gradient-to-r from-[#f68b1f] to-[#e67a0f] p-7 sm:p-10 text-center shadow-[0_26px_70px_-30px_rgba(246,139,31,0.45)]">
-          <h3 class="text-3xl sm:text-4xl font-bold text-white">Conclusion</h3>
-          <p class="mt-4 text-white/90 text-base sm:text-lg max-w-3xl mx-auto">
-            <span class="font-semibold text-white">Sir Kothay</span> is your
-            go-to platform for sharing messages quickly and efficiently. With
-            unique URLs, QR codes, and a user-friendly design, it fits both
-            personal and professional use.
+        <!-- CTA -->
+        <section style="border-radius:var(--sk-radius-2xl);background:linear-gradient(135deg,var(--sk-orange-500),var(--sk-orange-600));padding:2.5rem;text-align:center;box-shadow:0 26px 70px -30px rgba(249,115,22,0.35)">
+          <h3 style="font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;color:white;margin-bottom:1rem">Conclusion</h3>
+          <p style="color:rgba(255,255,255,0.9);font-size:var(--sk-text-base);max-width:640px;margin:0 auto 2rem;line-height:1.7">
+            <span style="font-weight:700;color:white">Sir Kothay</span> is your go-to platform for sharing messages quickly and efficiently. With unique URLs, QR codes, and a user-friendly design, it fits both personal and professional use.
           </p>
-          <a
-            href="index.html"
-            class="inline-block mt-7 px-7 py-3 bg-white text-[#f68b1f] font-bold rounded-xl hover:bg-gray-50 transition"
-          >
+          <a href="index.html" style="display:inline-block;padding:0.75rem 2rem;background:white;color:var(--sk-orange-600);font-weight:700;border-radius:var(--sk-radius-xl);text-decoration:none;box-shadow:var(--sk-shadow-md);transition:all 200ms">
             Back to Home
           </a>
         </section>
       </div>
-    </main>
+    </div>
 
-    <footer class="py-12 px-6 mt-4 mb-20 md:mb-0 bg-gray-900 text-gray-300">
-      <div class="max-w-7xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <div class="md:flex md:flex-col md:items-center md:text-center">
-            <div class="flex items-center gap-3 mb-4 md:justify-center">
-              <img
-                src="./static/images/nav-logo.png"
-                class="h-10 rounded-lg bg-[#f68b1f] p-0.5 object-contain"
-                alt="Logo"
-              />
-              <span class="text-2xl font-bold text-white">Sir Kothay?</span>
-            </div>
-            <p class="text-gray-400">Simple notes. Strong bonds.</p>
+    <!-- Footer -->
+    <footer class="sk-public-footer">
+      <div class="sk-public-footer-grid">
+        <div>
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem">
+            <img src="./static/images/nav-logo.png" alt="Logo" style="height:36px;border-radius:var(--sk-radius-md);background:var(--sk-orange-500);padding:2px">
+            <span style="font-size:var(--sk-text-lg);font-weight:700;color:var(--sk-text-primary)">Sir Kothay?</span>
           </div>
-
-          <div class="md:flex md:flex-col md:items-center md:text-center">
-            <h4 class="font-semibold text-white mb-4">Quick Links</h4>
-            <ul class="space-y-2 text-gray-400">
-              <li>
-                <a
-                  href="index.html#features"
-                  class="hover:text-white transition"
-                  >Features</a
-                >
-              </li>
-              <li>
-                <a href="about.html" class="hover:text-white transition"
-                  >About Us</a
-                >
-              </li>
-              <li>
-                <a href="auth/register.html" class="hover:text-white transition"
-                  >Sign Up</a
-                >
-              </li>
-            </ul>
+          <p style="color:var(--sk-text-tertiary);font-size:var(--sk-text-sm)">Simple notes. Strong bonds.</p>
+        </div>
+        <div>
+          <div class="sk-public-footer-title">Quick Links</div>
+          <a href="index.html#features" class="sk-public-footer-link">Features</a>
+          <a href="about.html" class="sk-public-footer-link">About Us</a>
+          <a href="auth/register.html" class="sk-public-footer-link">Sign Up</a>
+        </div>
+        <div>
+          <div class="sk-public-footer-title">Connect</div>
+          <div style="display:flex;gap:1rem;margin-bottom:1rem">
+            <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" style="color:var(--sk-text-tertiary);font-size:1.5rem"><i class="bi bi-github"></i></a>
+            <a href="https://www.facebook.com/uiudevelopershub" target="_blank" style="color:var(--sk-text-tertiary);font-size:1.5rem"><i class="bi bi-facebook"></i></a>
           </div>
-
-          <div class="md:flex md:flex-col md:items-center md:text-center">
-            <h4 class="font-semibold text-white mb-4">Connect</h4>
-            <div class="flex gap-4 justify-start md:justify-center">
-              <a
-                href="https://github.com/UIU-Developers-Hub/Sir-Kothay"
-                class="text-2xl hover:text-white transition"
-              >
-                <i class="bi bi-github"></i>
-              </a>
-              <a
-                href="https://www.facebook.com/uiudevelopershub"
-                class="text-2xl hover:text-white transition"
-              >
-                <i class="bi bi-facebook"></i>
-              </a>
-            </div>
-            <div
-              class="flex items-center gap-2 mt-6 text-sm justify-start md:justify-center"
-            >
-              <img
-                src="https://github.com/UIU-Developers-Hub.png"
-                class="h-8 w-8 rounded-full"
-                alt="UIU Developers Hub"
-              />
-              <span
-                >© 2026 Sir Kothay. Made with ❤️ by
-                <a
-                  href="https://github.com/UIU-Developers-Hub"
-                  style="color: #f68b1f"
-                  class="hover:underline"
-                  >UIU Developers Hub</a
-                ></span
-              >
-            </div>
-            <div id="contributorAvatarsFooter" class="flex gap-2 mt-2">
-              <!-- Contributors will be loaded dynamically -->
-            </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;font-size:var(--sk-text-xs);color:var(--sk-text-placeholder)">
+            <img src="https://github.com/UIU-Developers-Hub.png" style="width:24px;height:24px;border-radius:50%" alt="UIU Dev Hub">
+            <span>© 2026 Made with ❤️ by <a href="https://github.com/UIU-Developers-Hub" style="color:var(--sk-primary)">UIU Developers Hub</a></span>
           </div>
+          <div id="footerContributors" style="display:flex;gap:0.375rem;margin-top:0.5rem;flex-wrap:wrap"></div>
         </div>
       </div>
     </footer>
 
-    <!-- API Config -->
-    <script src="./static/js/api-config.js"></script>
+        </div>
+      </main>
 
-    <!-- Navigation Authentication Check -->
+      <!-- Mobile Bottom Nav -->
+      <nav class="sk-bottom-nav">
+        <div class="sk-bottom-nav-items">
+          <!-- Injected by JS -->
+        </div>
+      </nav>
+    </div>
+
+    <script src="./static/js/api-config.js"></script>
+    <script src="./static/js/utils.js"></script>
+    <script src="./static/js/theme.js?v=ui-fix-30"></script>
+    <script src="./static/js/components.js"></script>
+    <script src="./static/js/layout.js?v=ui-fix-30"></script>
     <script>
+      // Auth-aware nav
+      SKLayout.setupPublicNav && SKLayout.setupPublicNav();
+      SKLayout.loadFooterContributors && SKLayout.loadFooterContributors();
+
+      // Load contributors
       async function loadContributors() {
         try {
-          const response = await fetch(window.sirKothayContributorsApiUrl());
+          const url = window.sirKothayContributorsApiUrl ? window.sirKothayContributorsApiUrl() :
+            'https://api.github.com/repos/UIU-Developers-Hub/Sir-Kothay/contributors';
+          const response = await fetch(url);
           const contributors = await response.json();
-          const grid = document.getElementById("contributorsGrid");
+          const grid = document.getElementById('contributorsGrid');
           if (!grid) return;
-          grid.innerHTML = "";
+          grid.innerHTML = '';
+          
+          if (!Array.isArray(contributors)) {
+            throw new Error('Failed to load contributors (rate limited)');
+          }
+
           for (const contributor of contributors) {
-            const userResponse = await fetch(
-              `https://api.github.com/users/${contributor.login}`,
-            );
-            const userDetails = await userResponse.json();
-            const div = document.createElement("div");
-            div.className =
-              "bg-gray-100 p-6 rounded-lg hover-scale text-center";
+            const div = document.createElement('div');
+            div.className = 'sk-card sk-card-hover';
+            div.style.cssText = 'padding:1.5rem;text-align:center';
             div.innerHTML = `
-                <img src="${userDetails.avatar_url}" alt="${userDetails.name || contributor.login}" class="w-20 h-20 rounded-full mx-auto mb-4">
-                <h4 class="text-xl font-bold mb-2 brand-color">${userDetails.name || contributor.login}</h4>
-                <p class="text-gray-700 mb-2">${userDetails.bio || "No bio available"}</p>
-                ${userDetails.location ? `<p class="text-gray-600 text-sm"><i class="bi bi-geo-alt"></i> ${userDetails.location}</p>` : ""}
-                ${userDetails.company ? `<p class="text-gray-600 text-sm"><i class="bi bi-building"></i> ${userDetails.company}</p>` : ""}
-                <div class="flex justify-center gap-4 mt-4 text-sm text-gray-600">
-                    <span><i class="bi bi-people"></i> ${userDetails.followers} followers</span>
-                    <span><i class="bi bi-folder"></i> ${userDetails.public_repos} repos</span>
-                </div>
-                <a href="${userDetails.html_url}" target="_blank" class="inline-block mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">View Profile</a>
+              <img src="${contributor.avatar_url}" alt="${SKUtils.escapeHtml(contributor.login)}" style="width:72px;height:72px;border-radius:50%;margin:0 auto 1rem;border:3px solid var(--sk-border)">
+              <h4 style="font-size:var(--sk-text-base);font-weight:700;color:var(--sk-primary);margin-bottom:0.5rem">${SKUtils.escapeHtml(contributor.login)}</h4>
+              <div style="display:flex;justify-content:center;gap:1rem;margin-top:0.75rem;font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">
+                <span><i class="bi bi-star"></i> ${contributor.contributions} contributions</span>
+              </div>
+              <a href="${contributor.html_url}" target="_blank" class="sk-btn sk-btn-primary sk-btn-sm" style="margin-top:1rem;text-decoration:none;display:inline-block">View Profile</a>
             `;
             grid.appendChild(div);
           }
         } catch (error) {
-          console.error("Error loading contributors:", error);
-          const grid = document.getElementById("contributorsGrid");
-          if (grid) {
-            grid.innerHTML =
-              '<p class="text-center text-red-500 col-span-full">Failed to load contributors</p>';
-          }
+          console.error('Error loading contributors:', error);
+          const grid = document.getElementById('contributorsGrid');
+          if (grid) grid.innerHTML = '<p style="text-align:center;color:var(--sk-error);grid-column:1/-1;padding:2rem">Failed to load contributors. Rate limited by GitHub API.</p>';
         }
       }
-
-      // Check if user is logged in
-      const isAuthenticated = !!localStorage.getItem("access_token");
-
-      if (isAuthenticated) {
-        // Update navigation for authenticated users
-        const desktopNav = document.getElementById("desktopNav");
-        if (desktopNav) {
-          desktopNav.innerHTML = `
-          <a href="dashboard/home.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Dashboard</a>
-          <a href="dashboard/profile.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Profile</a>
-          <a href="#" onclick="logoutUser()" class="text-red-600 hover:text-red-700">Logout</a>
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="text-gray-600 hover:text-black">
-            <i class="bi bi-github text-xl"></i>
-          </a>
-        `;
-        }
-      }
-
-      function logoutUser() {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "index.html";
-      }
-
-      // Load contributors for footer
-      async function loadFooterContributors() {
-        try {
-          const response = await fetch(window.sirKothayContributorsApiUrl());
-          const contributors = await response.json();
-
-          const container = document.getElementById("contributorAvatarsFooter");
-          if (container) {
-            container.innerHTML = contributors
-              .slice(0, 6)
-              .map(
-                (c) =>
-                  `<a href="${c.html_url}" target="_blank">
-              <img src="${c.avatar_url}" class="h-8 w-8 rounded-full" alt="${c.login}">
-            </a>`,
-              )
-              .join("");
-          }
-        } catch (error) {
-          console.error("Error loading contributors:", error);
-        }
-      }
-
       loadContributors();
-      loadFooterContributors();
     </script>
   </body>
 </html>

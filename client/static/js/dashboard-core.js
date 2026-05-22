@@ -27,6 +27,27 @@ function timeAgo(dateStr) {
 // --- Global templates cache for interconnection ---
 window._quickTemplates = [];
 
+function updateFacultyShellActive(tab) {
+  var map = {
+    messages: { page: 'broadcast', title: 'Broadcast' },
+    broadcast: { page: 'broadcast', title: 'Broadcast' },
+    templates: { page: 'templates', title: 'Quick Status' },
+    schedules: { page: 'calendar', title: 'Calendar' },
+    calendar: { page: 'calendar', title: 'Calendar' },
+    inbox: { page: 'inbox', title: 'Messages' },
+    'fc-settings': { page: 'settings', title: 'Settings' }
+  };
+  var meta = map[tab] || { page: 'dashboard', title: 'Dashboard' };
+  document.querySelectorAll('.sk-sidebar-link.active, .sk-bottom-nav-item.active').forEach(function (el) {
+    el.classList.remove('active');
+  });
+  document.querySelectorAll('[data-page="' + meta.page + '"]').forEach(function (el) {
+    el.classList.add('active');
+  });
+  var title = document.querySelector('.sk-topbar-title');
+  if (title) title.textContent = meta.title;
+}
+
 // Tabs
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.tab-btn').forEach(function (btn) {
@@ -37,15 +58,17 @@ document.addEventListener('DOMContentLoaded', function () {
       var target = document.getElementById('tab-' + btn.dataset.tab);
       if (target) target.classList.remove('hidden');
       var tab = btn.dataset.tab;
+      updateFacultyShellActive(tab);
       // Update URL to reflect active tab
       var url = new URL(window.location);
       url.searchParams.set('tab', tab);
       history.replaceState(null, '', url);
       if (tab === 'templates') loadTemplates();
-      else if (tab === 'schedules') loadSchedules();
-      else if (tab === 'calendar') { loadCalendarEvents(); }
+      else if (tab === 'calendar') {
+        loadCalendarEvents();
+        loadSchedules();
+      }
       else if (tab === 'inbox') loadUnifiedInbox();
-      else if (tab === 'analytics') loadAnalytics();
       else if (tab === 'fc-settings') loadFacultySettings();
     });
   });
@@ -55,15 +78,21 @@ document.addEventListener('DOMContentLoaded', function () {
   var tabParam = params.get('tab');
   var threadParam = params.get('thread');
   if (tabParam) {
+    // Use a microtask to ensure all scripts have initialized
     setTimeout(function () {
-      // Map old 'chats' param to new unified 'inbox' tab
-      var mappedTab = tabParam === 'chats' ? 'inbox' : tabParam;
+      // Map old URL params to the internal section ids.
+      var mappedTab = tabParam === 'chats' ? 'inbox' :
+        (tabParam === 'broadcast' ? 'messages' :
+          (tabParam === 'schedules' ? 'calendar' :
+            (tabParam === 'analytics' ? 'messages' : tabParam)));
       var tabBtn = document.querySelector('[data-tab="' + mappedTab + '"]');
       if (tabBtn) tabBtn.click();
       if (threadParam && (tabParam === 'chats' || tabParam === 'inbox')) {
-        setTimeout(function () { openConversation('thread', parseInt(threadParam)); }, 800);
+        setTimeout(function () { openConversation('thread', parseInt(threadParam)); }, 200);
       }
-    }, 1000);
+    }, 0);
+  } else {
+    updateFacultyShellActive('messages');
   }
 });
 
@@ -149,13 +178,14 @@ function updateAvailabilityUI(available) {
   var btn = document.getElementById('availabilityToggle');
   var dot = document.getElementById('availDot');
   var label = document.getElementById('availLabel');
+  if (!btn || !dot || !label) return;
   if (_isAvailable) {
-    btn.className = 'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-sm bg-green-100 text-green-800 border border-green-300 hover:bg-green-200';
-    dot.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
+    btn.className = 'sk-btn sk-btn-sm sk-availability-btn available';
+    dot.className = 'sk-availability-dot sk-pulse-dot';
     label.textContent = 'Available';
   } else {
-    btn.className = 'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-sm bg-red-50 text-red-700 border border-red-200 hover:bg-red-100';
-    dot.className = 'w-3 h-3 rounded-full bg-red-400';
+    btn.className = 'sk-btn sk-btn-sm sk-availability-btn unavailable';
+    dot.className = 'sk-availability-dot';
     label.textContent = 'Unavailable';
   }
 }
@@ -199,15 +229,15 @@ async function prefetchTemplates() {
 function renderTemplateQuickPicks() {
   var el = document.getElementById('templateQuickPicks');
   if (!el || window._quickTemplates.length === 0) {
-    if (el) el.innerHTML = '<p class="text-xs text-gray-400 italic">No quick templates yet. <a onclick="document.querySelector(\'[data-tab=templates]\').click()" class="text-orange-500 cursor-pointer underline">Create one →</a></p>';
+    if (el) el.innerHTML = '<p class="sk-inline-note">No quick templates yet. <a onclick="document.querySelector(\'[data-tab=templates]\').click()">Create one</a></p>';
     return;
   }
-  el.innerHTML = '<p class="text-xs text-gray-500 mb-1.5">Or quick-fill from a template:</p>' +
+  el.innerHTML = '<div class="sk-template-picks"><p class="sk-template-picks-title">Quick-fill from a template:</p><div class="sk-template-pick-list">' +
     window._quickTemplates.map(function (t) {
       return '<button onclick="fillFromTemplate(\'' + escapeHtml(t.message).replace(/'/g, "\\'") + '\')" ' +
-        'class="text-xs bg-orange-50 border border-orange-200 text-orange-700 px-2.5 py-1 rounded-full hover:bg-orange-100 transition mr-1 mb-1">' +
-        '<i class="bi ' + escapeHtml(t.icon || 'bi-lightning-fill') + ' mr-0.5"></i>' + escapeHtml(t.label) + '</button>';
-    }).join('');
+        'class="sk-btn sk-btn-secondary sk-btn-sm">' +
+        '<i class="bi ' + escapeHtml(t.icon || 'bi-lightning-fill') + '"></i>' + escapeHtml(t.label) + '</button>';
+    }).join('') + '</div></div>';
 }
 
 function fillFromTemplate(msg) {
@@ -223,15 +253,20 @@ async function loadQRCode() {
     if (res.ok && data.image) {
       qrCodeUrl = API_BASE_URL + data.image;
       document.getElementById('qrCode').src = qrCodeUrl;
-      document.getElementById('qrActionBtn').textContent = 'Download';
+      var sheetEl = document.getElementById('qrCodeSheet');
+      if (sheetEl) sheetEl.src = qrCodeUrl;
+      document.getElementById('qrActionBtn').innerHTML = '<i class="bi bi-download"></i> Download';
       document.getElementById('qrActionBtn').onclick = function () { openModal('downloadModal'); };
       var regenBtn = document.getElementById('qrRegenerateBtn');
-      if (regenBtn) regenBtn.classList.remove('hidden');
+      if (regenBtn) {
+        regenBtn.classList.remove('hidden');
+        regenBtn.style.display = '';
+      }
     }
   } catch (e) { console.log('No QR code found'); }
 }
 async function handleQRAction() {
-  if (document.getElementById('qrActionBtn').textContent === 'Download') openModal('downloadModal');
+  if (qrCodeUrl) openModal('downloadModal');
   else await generateQRCode();
 }
 async function confirmRegenerateQR() {
@@ -240,10 +275,14 @@ async function confirmRegenerateQR() {
 }
 async function generateQRCode() {
   var btn = document.getElementById('qrActionBtn');
-  btn.disabled = true; btn.textContent = 'Generating...';
+  btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
   try {
     var res = await apiRequest(API_BASE_URL + '/api/qrcode/qrcodes/generate/', { method: 'POST' });
-    if (res.ok) { await skNotify('QR Code generated!', { variant: 'success', title: 'QR code' }); btn.disabled = false; await loadQRCode(); }
+    if (res.ok) {
+      btn.disabled = false;
+      await loadQRCode();
+      await skNotify('QR Code generated!', { variant: 'success', title: 'QR code' });
+    }
     else { var d = await res.json(); await skNotify(d.message || 'Failed', { variant: 'error', title: 'QR code' }); btn.disabled = false; btn.textContent = 'Generate'; }
   } catch (e) { await skNotify('Failed to generate QR code', { variant: 'error', title: 'QR code' }); btn.disabled = false; btn.textContent = 'Generate'; }
 }
@@ -289,12 +328,12 @@ function viewBroadcastPage() {
 function renderStatusBadge(msg) {
   if (msg.active) {
     var untilText = msg.active_until ? ' · expires ' + timeAgo(msg.active_until) : '';
-    return '<span class="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>Live' + untilText + '</span>';
+    return '<span class="sk-status-badge live"><span class="sk-availability-dot sk-pulse-dot"></span>Live' + untilText + '</span>';
   }
   if (msg.scheduled_for) {
-    return '<span class="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full"><i class="bi bi-clock"></i>Scheduled · ' + new Date(msg.scheduled_for).toLocaleString() + '</span>';
+    return '<span class="sk-status-badge scheduled"><i class="bi bi-clock"></i>Scheduled · ' + new Date(msg.scheduled_for).toLocaleString() + '</span>';
   }
-  return '<span class="text-xs text-gray-400">Inactive</span>';
+  return '<span class="sk-status-badge inactive">Inactive</span>';
 }
 
 async function loadMessages() {
@@ -302,25 +341,25 @@ async function loadMessages() {
     var res = await apiRequest(API_ENDPOINTS.MESSAGES); var data = await res.json();
     var el = document.getElementById('messagesList');
     if (data && data.length > 0) {
-      el.innerHTML = data.map(function (msg) {
+      el.innerHTML = '<div class="sk-broadcast-list">' + data.map(function (msg) {
         var durLabel = msg.duration_seconds ? (msg.duration_seconds < 60 ? msg.duration_seconds + ' s' : (msg.duration_seconds < 3600 ? (msg.duration_seconds / 60) + ' min' : (msg.duration_seconds / 3600) + ' h')) : '∞';
-        return '<div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-2 hover:shadow-md transition-shadow">' +
-          '<div class="flex-1 min-w-0"><p class="text-gray-800 font-medium text-sm leading-relaxed">' + escapeHtml(msg.message) + '</p>' +
-          '<div class="flex flex-wrap items-center gap-2 mt-2">' + renderStatusBadge(msg) +
-          '<span class="text-xs text-gray-400"><i class="bi bi-hourglass-split mr-0.5"></i>' + durLabel + '</span></div></div>' +
-          '<div class="flex gap-1.5 flex-shrink-0">' +
-          '<button onclick="toggleMsg(' + msg.id + ',' + msg.active + ')" class="text-xs px-3 py-1.5 rounded-lg border transition ' + (msg.active ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50') + '">' + (msg.active ? '<i class="bi bi-pause-fill"></i> Stop' : '<i class="bi bi-play-fill"></i> Go Live') + '</button>' +
-          '<button onclick="openEditModal(' + msg.id + ',\'' + escapeHtml(msg.message).replace(/'/g, "\\'") + '\',' + (msg.scheduled_for ? "'" + msg.scheduled_for + "'" : 'null') + ',' + (msg.duration_seconds || 'null') + ',\'' + (msg.set_availability || '') + '\')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"><i class="bi bi-pencil"></i></button>' +
-          '<button onclick="confirmDeleteMsg(' + msg.id + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500"><i class="bi bi-trash"></i></button>' +
+        return '<div class="sk-broadcast-item">' +
+          '<div class="sk-broadcast-main"><p class="sk-broadcast-message">' + escapeHtml(msg.message) + '</p>' +
+          '<div class="sk-broadcast-meta">' + renderStatusBadge(msg) +
+          '<span class="sk-inline-note"><i class="bi bi-hourglass-split"></i> ' + durLabel + '</span></div></div>' +
+          '<div class="sk-broadcast-actions">' +
+          '<button onclick="toggleMsg(' + msg.id + ',' + msg.active + ')" class="sk-btn ' + (msg.active ? 'sk-btn-danger' : 'sk-btn-success') + ' sk-btn-sm">' + (msg.active ? '<i class="bi bi-pause-fill"></i> Stop' : '<i class="bi bi-play-fill"></i> Go Live') + '</button>' +
+          '<button onclick="openEditModal(' + msg.id + ',\'' + escapeHtml(msg.message).replace(/'/g, "\\'") + '\',' + (msg.scheduled_for ? "'" + msg.scheduled_for + "'" : 'null') + ',' + (msg.duration_seconds || 'null') + ',\'' + (msg.set_availability || '') + '\')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Edit status"><i class="bi bi-pencil"></i></button>' +
+          '<button onclick="confirmDeleteMsg(' + msg.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" aria-label="Delete status"><i class="bi bi-trash"></i></button>' +
           '</div></div>';
-      }).join('');
+      }).join('') + '</div>';
     } else {
-      el.innerHTML = '<div class="text-center py-12"><div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-broadcast text-2xl text-orange-500"></i></div>' +
-        '<h3 class="text-gray-700 font-semibold mb-1">No broadcast status yet</h3>' +
-        '<p class="text-gray-400 text-sm mb-4">Create your first status to let people know where you are.</p>' +
-        '<button onclick="openNewMessageModal()" class="bg-orange-500 text-white px-5 py-2 rounded-lg text-sm hover:bg-orange-600 transition">Create Your First Status</button></div>';
+      el.innerHTML = (window.SKComponents ? SKComponents.emptyState('broadcast', 'No broadcast status yet', 'Create your first status to let people know where you are.', '<button onclick="openNewMessageModal()" class="sk-btn sk-btn-primary">Create Your First Status</button>') :
+        '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-broadcast"></i></div><div class="sk-empty-title">No broadcast status yet</div><div class="sk-empty-subtitle">Create your first status to let people know where you are.</div><button onclick="openNewMessageModal()" class="sk-btn sk-btn-primary">Create Your First Status</button></div>');
     }
-  } catch (e) { document.getElementById('messagesList').innerHTML = '<p class="text-red-500 text-center py-8">Failed to load messages</p>'; }
+  } catch (e) {
+    document.getElementById('messagesList').innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Failed to load messages</div><div class="sk-empty-subtitle">Please refresh or try again in a moment.</div></div>';
+  }
 }
 
 function openNewMessageModal() {
@@ -469,8 +508,9 @@ async function saveFacultySettings() {
 // Footer contributors
 async function loadFooterContributors() {
   try {
-    var res = await fetch(window.sirKothayContributorsApiUrl()); var data = await res.json();
     var el = document.getElementById('contributorAvatars');
+    if (!el) return;
+    var res = await fetch(window.sirKothayContributorsApiUrl()); var data = await res.json();
     if (el) el.innerHTML = data.slice(0, 6).map(function (c) { return '<a href="' + c.html_url + '" target="_blank"><img src="' + c.avatar_url + '" class="h-8 w-8 rounded-full" alt="' + c.login + '"></a>'; }).join('');
   } catch (e) {}
 }

@@ -1,0 +1,10 @@
+/* ============================================================
+   SIR KOTHAY — Master Stylesheet
+   Import order matters: tokens → animations → components → layout
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('design-tokens.css?v=ui-premium-sidebar-2');
+@import url('animations.css?v=ui-final-dashboard-1');
+@import url('components.css?v=ui-premium-sidebar-14');
+@import url('layout.css?v=ui-final-dashboard-1');
