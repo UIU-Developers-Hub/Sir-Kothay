@@ -221,7 +221,16 @@ function renderBellMenu(interest, scope) {
 }
 
 function clearFeed() {
-    feedHidden = true;
+    const dismissed = JSON.parse(localStorage.getItem('sk_dismissed_feed_items') || '[]');
+    if (typeof currentFeedActivities !== 'undefined') {
+        currentFeedActivities.forEach(act => {
+            if (!dismissed.includes(act.id)) {
+                dismissed.push(act.id);
+            }
+        });
+        localStorage.setItem('sk_dismissed_feed_items', JSON.stringify(dismissed));
+    }
+    
     document.getElementById('feedList').innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-check-circle"></i></div><h3>All caught up</h3></div>';
     document.getElementById('updateCounter').textContent = '0';
     document.getElementById('updateCounter').classList.replace('bg-orange-100', 'bg-gray-100');
@@ -463,7 +472,7 @@ function renderFeed(activities) {
     document.getElementById('updateCounter').classList.replace('bg-gray-100', 'bg-orange-100');
     document.getElementById('updateCounter').classList.replace('text-gray-500', 'text-orange-600');
     
-    list.innerHTML = activities.map(act => {
+    list.innerHTML = visibleActivities.map(act => {
         const rawName = act.faculty_username || 'Faculty';
         const inlineName = inlineJsString(rawName);
         const inlineSlug = inlineJsString(act.slug || '');
