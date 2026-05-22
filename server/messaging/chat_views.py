@@ -160,7 +160,8 @@ def accept_thread(request, pk):
 
     thread.status = 'ACTIVE'
     thread.accepted_at = timezone.now()
-    thread.save(update_fields=['status', 'accepted_at'])
+    thread.last_activity_at = timezone.now()
+    thread.save(update_fields=['status', 'accepted_at', 'last_activity_at'])
 
     # Email student if setting enabled
     if _should_notify(thread.student, 'notify_new_chats'):
