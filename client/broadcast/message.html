@@ -240,20 +240,12 @@
     </style>
   </head>
   <body>
-    <div class="bc-page">
-      <!-- Navigation (hidden for non-auth guests by JS) -->
-      <nav id="broadcastNav" class="sk-public-nav" style="position:fixed;top:0;left:0;right:0;z-index:var(--sk-z-sticky)">
-        <a href="../index.html" class="sk-public-nav-logo">
-          <img src="../static/images/nav-logo.png" alt="Logo" style="background:var(--sk-orange-500);padding:2px">
-          <span>Sir <span>Kothay?</span></span>
-        </a>
-        <div id="desktopNav" class="sk-public-nav-links">
-          <a href="../index.html" class="sk-public-nav-link">Home</a>
-          <a href="../about.html" class="sk-public-nav-link">About</a>
-          <a href="../auth/login.html" class="sk-btn sk-btn-secondary sk-btn-sm">Login</a>
-          <a href="../auth/register.html" class="sk-btn sk-btn-primary sk-btn-sm">Sign Up</a>
-        </div>
-      </nav>
+    <div class="sk-app">
+      <!-- Sidebar injected by layout.js -->
+      <main class="sk-main">
+        <div class="sk-page" style="padding-top: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+          <div class="bc-page" style="min-height: auto; width: 100%;">
+      
 
       <!-- Main Content -->
       <main id="broadcastMain" class="bc-container">
@@ -377,52 +369,19 @@
         </div>
       </main>
 
-      <!-- Footer -->
-      <footer class="sk-public-footer" style="position:relative;z-index:1">
-        <div class="sk-public-footer-grid">
-          <div>
-            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem">
-              <img src="../static/images/nav-logo.png" alt="Logo" style="height:36px;border-radius:var(--sk-radius-md);background:var(--sk-orange-500);padding:2px">
-              <span style="font-size:var(--sk-text-lg);font-weight:700;color:var(--sk-text-primary)">Sir Kothay?</span>
-            </div>
-            <p style="color:var(--sk-text-tertiary);font-size:var(--sk-text-sm)">Simple notes. Strong bonds.</p>
-          </div>
-          <div>
-            <div class="sk-public-footer-title">Quick Links</div>
-            <a href="../index.html#features" class="sk-public-footer-link">Features</a>
-            <a href="../about.html" class="sk-public-footer-link">About Us</a>
-            <a href="../auth/register.html" class="sk-public-footer-link">Sign Up</a>
-          </div>
-          <div>
-            <div class="sk-public-footer-title">Connect</div>
-            <div style="display:flex;gap:1rem;margin-bottom:1rem">
-              <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" style="color:var(--sk-text-tertiary);font-size:1.5rem"><i class="bi bi-github"></i></a>
-              <a href="https://www.facebook.com/uiudevelopershub" target="_blank" style="color:var(--sk-text-tertiary);font-size:1.5rem"><i class="bi bi-facebook"></i></a>
-            </div>
-            <div style="display:flex;align-items:center;gap:0.5rem;font-size:var(--sk-text-xs);color:var(--sk-text-placeholder)">
-              <img src="https://github.com/UIU-Developers-Hub.png" style="width:24px;height:24px;border-radius:50%" alt="UIU Dev Hub">
-              <span>© 2026 Made with ❤️ by <a href="https://github.com/UIU-Developers-Hub" style="color:var(--sk-primary)">UIU Developers Hub</a></span>
-            </div>
-            <div id="contributorAvatarsFooter" style="display:flex;gap:0.375rem;margin-top:0.5rem;flex-wrap:wrap"></div>
-          </div>
-        </div>
-      </footer>
+      
 
-      <!-- Mobile Bottom Nav -->
-      <nav class="sk-bottom-nav" id="mobileNavRoot">
-        <div class="sk-bottom-nav-items">
-          <a href="../index.html" class="sk-bottom-nav-item"><i class="bi bi-house"></i><span>Home</span></a>
-          <a href="../about.html" class="sk-bottom-nav-item"><i class="bi bi-info-circle"></i><span>About</span></a>
-          <a href="../auth/login.html" class="sk-bottom-nav-item"><i class="bi bi-box-arrow-in-right"></i><span>Login</span></a>
-          <a href="../auth/register.html" class="sk-bottom-nav-item"><i class="bi bi-person-plus"></i><span>Sign Up</span></a>
+      
+    </div>
         </div>
-      </nav>
+      </main>
     </div>
 
     <!-- API Config -->
     <script src="../static/js/api-config.js?v=3"></script>
     <script src="../static/js/utils.js"></script>
     <script src="../static/js/theme.js?v=ui-fix-14"></script>
+    <script src="../static/js/layout.js?v=ui-fix-30"></script>
 
     <script>
       // Get user slug from URL parameter
