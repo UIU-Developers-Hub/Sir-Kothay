@@ -222,6 +222,28 @@ class AdminUserManagementViewSet(viewsets.ModelViewSet):
             'student_id': user.student_id, 'old_role': old_role
         })
 
+    @action(detail=True, methods=['post'], url_path='reset_password')
+    def reset_password(self, request, pk=None):
+        """
+        Admin resets a user's password. Generates a random password,
+        sets it, and emails the user.
+        """
+        if not self._is_admin(request):
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        user = self.get_object()
+        import secrets
+        new_password = secrets.token_urlsafe(8)[:8]
+        user.set_password(new_password)
+        user.save()
+        
+        from notifications.services import send_email_async
+        from django.conf import settings
+        subject = "Your Sir Kothay Password has been Reset"
+        body = f"Hello {user.username},\n\nAn administrator has reset your password.\n\nYour new password is: {new_password}\n\nPlease log in and change this password from your profile settings as soon as possible.\n\nThanks,\nSir Kothay Team"
+        send_email_async(subject, body, getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@sirkothay.com'), [user.email])
+        
+        return Response({'status': 'success', 'message': 'Password has been reset and emailed to the user.'})
+
 
 class SetStudentIdView(viewsets.ViewSet):
     """

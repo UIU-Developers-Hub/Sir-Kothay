@@ -294,6 +294,21 @@ async function deleteUser(userId) {
   } catch (e) { _notify('Error: ' + e.message, 'error'); }
 }
 
+async function resetUserPassword(userId) {
+  var user = adminUsers.find(function(u) { return u.id === userId; });
+  if (!user) return;
+  var confirmed = await _confirm('Generate a new random password for "' + user.username + '" and email it to them?');
+  if (!confirmed) return;
+  try {
+    var res = await fetch(API_BASE_URL + '/api/dashboard/admin-users/' + userId + '/reset_password/', {
+      method: 'POST', headers: _headers()
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    _notify(data.message || 'Password reset successfully.', 'success');
+  } catch (e) { _notify('Error: ' + e.message, 'error'); }
+}
+
 async function toggleAdmin(userId) {
   var user = adminUsers.find(function(u) { return u.id === userId; });
   if (!user) return;
@@ -446,6 +461,7 @@ function showUserDetail(userId) {
     html += '<button onclick="banUser(' + user.id + ')" class="sk-btn sk-btn-danger"><i class="bi bi-slash-circle"></i>Ban User</button>';
   }
 
+  html += '<button onclick="resetUserPassword(' + user.id + ')" class="sk-btn sk-btn-warning"><i class="bi bi-key"></i>Reset Password</button>';
   html += '<button onclick="deleteUser(' + user.id + ')" class="sk-btn sk-btn-ghost danger"><i class="bi bi-trash"></i>Delete User Permanently</button>';
 
   html += '</div>';

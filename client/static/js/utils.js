@@ -191,6 +191,21 @@ window.SKUtils = (() => {
   const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  /**
+   * Resolve a profile image URL
+   * @param {string} url
+   * @returns {string}
+   */
+  function resolveProfileImage(url) {
+    if (!url) return '../static/images/image.png';
+    if (url.startsWith('http')) return url;
+    // Assume API_BASE_URL is globally available via api-config.js
+    if (typeof API_BASE_URL !== 'undefined') {
+      return API_BASE_URL + (url.startsWith('/') ? '' : '/') + url;
+    }
+    return url;
+  }
+
   return {
     escapeHtml,
     timeAgo,
@@ -205,6 +220,7 @@ window.SKUtils = (() => {
     truncate,
     getParams,
     uid,
+    resolveProfileImage,
     DAY_NAMES,
     DAY_SHORT
   };

@@ -37,7 +37,10 @@
         </div>
 
         <div class="sk-form-group">
-          <label class="sk-label" for="password">Password</label>
+          <div style="display:flex; justify-content:space-between; align-items:baseline">
+            <label class="sk-label" for="password">Password</label>
+            <a href="forgot-password.html" style="font-size:var(--sk-text-sm); color:var(--sk-primary); font-weight:500;">Forgot Password?</a>
+          </div>
           <div style="position:relative">
             <input type="password" id="password" class="sk-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right:2.75rem">
             <button type="button" onclick="togglePassword()" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sk-text-placeholder);cursor:pointer;padding:4px;font-size:1.125rem">
