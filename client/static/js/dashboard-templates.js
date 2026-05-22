@@ -91,6 +91,7 @@ async function activateTemplate(id) {
         await setAvailability(tpl.set_availability === 'true');
       }
       await skNotify(d.message || 'Status is now live!', { variant: 'success', title: 'Broadcast' });
+      refreshSidebarInfo();
       // Switch to Messages tab to show the newly active status
       document.querySelector('[data-tab=messages]').click();
     } else { await skNotify('Failed to activate', { variant: 'error', title: 'Templates' }); }

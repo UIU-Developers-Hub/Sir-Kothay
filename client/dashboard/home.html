@@ -293,10 +293,58 @@
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
                   <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Auto-close inactive chats</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Automatically close threads after a period of inactivity.</p></div>
-                  <select id="fcSettingAutoClose" class="sk-select" style="width:auto" onchange="saveFacultySettings()">
-                    <option value="24">24 hours</option><option value="48">48 hours</option><option value="72">72 hours</option><option value="168">1 week</option><option value="">Never</option>
-                  </select>
+                  <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <input type="number" id="fcSettingAutoCloseValue" class="sk-input" style="width: 70px; padding: 0.35rem 0.5rem; text-align: right;" min="1" onchange="saveFacultySettings()">
+                    <select id="fcSettingAutoCloseUnit" class="sk-select" style="width: 105px; padding: 0.35rem 0.5rem;" onchange="saveFacultySettings()">
+                      <option value="1">Seconds</option>
+                      <option value="60">Minutes</option>
+                      <option value="3600">Hours</option>
+                      <option value="86400">Days</option>
+                      <option value="2592000">Months</option>
+                      <option value="31536000">Years</option>
+                    </select>
+                    <label class="sk-toggle" title="Enable Auto-close" style="margin-left: 0.5rem;">
+                      <input type="checkbox" id="fcSettingAutoCloseEnabled" onchange="toggleAutoDeleteVisibility(); saveFacultySettings();">
+                      <div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div>
+                    </label>
+                  </div>
                 </div>
+                <div id="fcSettingAutoDeleteWrapper" style="display:flex;align-items:center;justify-content:space-between;gap:1rem; padding-left: 1.5rem;">
+                  <div style="display:flex; gap:0.5rem;">
+                    <i class="bi bi-arrow-return-right" style="color: var(--sk-text-tertiary); font-size: 1.1rem; margin-top: -2px;"></i>
+                    <div>
+                      <p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Delete auto-closed chats</p>
+                      <p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Permanently delete threads instead of just closing them.</p>
+                    </div>
+                  </div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingAutoDelete" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                </div>
+                
+                <script>
+                  function toggleAutoDeleteVisibility() {
+                    const enabled = document.getElementById('fcSettingAutoCloseEnabled').checked;
+                    const wrapper = document.getElementById('fcSettingAutoDeleteWrapper');
+                    const inputVal = document.getElementById('fcSettingAutoCloseValue');
+                    const inputUnit = document.getElementById('fcSettingAutoCloseUnit');
+                    
+                    if (!enabled) {
+                      wrapper.style.opacity = '0.5';
+                      wrapper.style.pointerEvents = 'none';
+                      document.getElementById('fcSettingAutoDelete').checked = false;
+                      inputVal.disabled = true;
+                      inputUnit.disabled = true;
+                      inputVal.style.opacity = '0.5';
+                      inputUnit.style.opacity = '0.5';
+                    } else {
+                      wrapper.style.opacity = '1';
+                      wrapper.style.pointerEvents = 'auto';
+                      inputVal.disabled = false;
+                      inputUnit.disabled = false;
+                      inputVal.style.opacity = '1';
+                      inputUnit.style.opacity = '1';
+                    }
+                  }
+                </script>
               </div>
             </div>
           </section>

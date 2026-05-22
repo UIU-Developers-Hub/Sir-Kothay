@@ -166,7 +166,10 @@ async function saveDefaultSettings() {
     var res = await apiRequest(API_ENDPOINTS.UPDATE_USER_DETAILS, {
       method: 'PATCH', body: JSON.stringify({ default_status: statusVal, default_availability: availVal })
     });
-    if (res.ok) await skNotify('Fallback settings saved! These take effect when a timed status expires.', { variant: 'success', title: 'Settings' });
+    if (res.ok) {
+      await skNotify('Fallback settings saved! These take effect when a timed status expires.', { variant: 'success', title: 'Settings' });
+      if (typeof loadMessages === 'function') loadMessages();
+    }
     else await skNotify('Failed to save settings', { variant: 'error', title: 'Settings' });
   } catch (e) { await skNotify('Error saving settings', { variant: 'error', title: 'Settings' }); }
 }
@@ -214,6 +217,21 @@ async function setAvailability(isAvail) {
     });
     if (res.ok) updateAvailabilityUI(isAvail);
   } catch (e) { /* silent */ }
+}
+
+// Lightweight sidebar refresh — fetches latest user state and updates the info bar
+// without re-rendering the entire dashboard
+async function refreshSidebarInfo() {
+  try {
+    var res = await apiRequest(API_ENDPOINTS.USER_DETAILS);
+    if (!res.ok) return;
+    var data = await res.json();
+    updateAvailabilityUI(data.is_available);
+    var statusEl = document.getElementById('defaultStatusInput');
+    if (statusEl && data.default_status !== undefined) statusEl.value = data.default_status;
+    var availEl = document.getElementById('defaultAvailInput');
+    if (availEl && data.default_availability !== undefined && data.default_availability !== null) availEl.value = data.default_availability.toString();
+  } catch (e) { /* silent — sidebar refresh is non-critical */ }
 }
 
 // --- Pre-fetch templates for interconnection ---
@@ -341,7 +359,14 @@ async function loadMessages() {
     var res = await apiRequest(API_ENDPOINTS.MESSAGES); var data = await res.json();
     var el = document.getElementById('messagesList');
     if (data && data.length > 0) {
-      el.innerHTML = '<div class="sk-broadcast-list">' + data.map(function (msg) {
+      var hasActive = data.some(function(m) { return m.active; });
+      var fallbackText = document.getElementById('defaultStatusInput') ? document.getElementById('defaultStatusInput').value.trim() : '';
+      var fallbackHtml = '';
+      if (!hasActive && fallbackText) {
+        fallbackHtml = '<div class="sk-card" style="margin-bottom: 1rem; border-color: var(--sk-primary); background: rgba(109, 40, 217, 0.05);"><div style="padding: 1rem; display: flex; align-items: center; gap: 1rem;"><div style="background: var(--sk-primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-arrow-return-right"></i></div><div style="flex: 1"><h4 style="margin: 0; font-size: 0.875rem; color: var(--sk-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Fallback Status Live</h4><p style="margin: 0; font-size: 1rem; color: var(--sk-text-primary); font-weight: 500;">' + escapeHtml(fallbackText) + '</p></div></div></div>';
+      }
+      
+      el.innerHTML = fallbackHtml + '<div class="sk-broadcast-list">' + data.map(function (msg) {
         var durLabel = msg.duration_seconds ? (msg.duration_seconds < 60 ? msg.duration_seconds + ' s' : (msg.duration_seconds < 3600 ? (msg.duration_seconds / 60) + ' min' : (msg.duration_seconds / 3600) + ' h')) : '∞';
         return '<div class="sk-broadcast-item">' +
           '<div class="sk-broadcast-main"><p class="sk-broadcast-message">' + escapeHtml(msg.message) + '</p>' +
@@ -354,13 +379,76 @@ async function loadMessages() {
           '</div></div>';
       }).join('') + '</div>';
     } else {
-      el.innerHTML = (window.SKComponents ? SKComponents.emptyState('broadcast', 'No broadcast status yet', 'Create your first status to let people know where you are.', '<button onclick="openNewMessageModal()" class="sk-btn sk-btn-primary">Create Your First Status</button>') :
+      var fallbackText = document.getElementById('defaultStatusInput') ? document.getElementById('defaultStatusInput').value.trim() : '';
+      var fallbackHtml = '';
+      if (fallbackText) {
+        fallbackHtml = '<div class="sk-card" style="margin-bottom: 1rem; border-color: var(--sk-primary); background: rgba(109, 40, 217, 0.05);"><div style="padding: 1rem; display: flex; align-items: center; gap: 1rem;"><div style="background: var(--sk-primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-arrow-return-right"></i></div><div style="flex: 1"><h4 style="margin: 0; font-size: 0.875rem; color: var(--sk-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Fallback Status Live</h4><p style="margin: 0; font-size: 1rem; color: var(--sk-text-primary); font-weight: 500;">' + escapeHtml(fallbackText) + '</p></div></div></div>';
+      }
+      
+      el.innerHTML = fallbackHtml + (window.SKComponents ? SKComponents.emptyState('broadcast', 'No broadcast status yet', 'Create your first status to let people know where you are.', '<button onclick="openNewMessageModal()" class="sk-btn sk-btn-primary">Create Your First Status</button>') :
         '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-broadcast"></i></div><div class="sk-empty-title">No broadcast status yet</div><div class="sk-empty-subtitle">Create your first status to let people know where you are.</div><button onclick="openNewMessageModal()" class="sk-btn sk-btn-primary">Create Your First Status</button></div>');
     }
+    // Schedule auto-refresh when any active timed status expires
+    _scheduleExpiryRefresh(data || []);
   } catch (e) {
     document.getElementById('messagesList').innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Failed to load messages</div><div class="sk-empty-subtitle">Please refresh or try again in a moment.</div></div>';
   }
 }
+
+// --- Smart expiry watcher ---
+// When a timed status is active, set a precise timer to auto-refresh when it expires
+// so the fallback status kicks in and the UI updates automatically.
+var _expiryTimer = null;
+function _scheduleExpiryRefresh(messages) {
+  // Clear any existing timer
+  if (_expiryTimer) { clearTimeout(_expiryTimer); _expiryTimer = null; }
+  
+  // Find the soonest-expiring active message
+  var now = Date.now();
+  var soonest = null;
+  for (var i = 0; i < messages.length; i++) {
+    var msg = messages[i];
+    if (msg.active && msg.active_until) {
+      var expiresAt = new Date(msg.active_until).getTime();
+      var remaining = expiresAt - now;
+      if (remaining > 0 && (soonest === null || remaining < soonest)) {
+        soonest = remaining;
+      }
+    }
+  }
+  
+  if (soonest !== null) {
+    // Add a 2-second buffer to let the backend process the expiry
+    _expiryTimer = setTimeout(async function () {
+      console.log('[Sir Kothay] Timed status expired — triggering fallback...');
+      // 1. loadMessages hits the backend which runs activate_due_messages()
+      //    → expires the message → calls _revert_to_default() → restores fallback
+      await loadMessages();
+      // 2. Now fetch the updated sidebar state (availability reverted to fallback)
+      await refreshSidebarInfo();
+    }, soonest + 2000);
+  }
+}
+
+// --- Periodic background poll (safety net) ---
+// Catches any state changes the smart timer might miss (e.g. scheduled statuses going live)
+var _bgPollTimer = null;
+function _startBackgroundPoll() {
+  if (_bgPollTimer) return; // Already running
+  _bgPollTimer = setInterval(function () {
+    // Only poll if page is visible (don't waste battery/bandwidth in background tabs)
+    if (document.hidden) return;
+    loadMessages();
+    refreshSidebarInfo();
+  }, 30000); // Every 30 seconds
+}
+document.addEventListener('visibilitychange', function () {
+  // When user switches back to this tab, do an immediate refresh
+  if (!document.hidden) {
+    loadMessages();
+    refreshSidebarInfo();
+  }
+});
 
 function openNewMessageModal() {
   document.getElementById('messageModalTitle').textContent = 'Set Broadcast Status';
@@ -428,7 +516,7 @@ async function submitMessage(forceGoLive) {
       closeModal('messageModal'); 
       await skNotify(id ? 'Status saved!' : (sched ? 'Status scheduled!' : 'Status is now live!'), { variant: 'success', title: 'Broadcast' }); 
       loadMessages();
-      if (forceGoLive) loadDashboard(); // Refresh the availability toggle button in sidebar just in case it activated immediately
+      refreshSidebarInfo(); // Lightweight refresh of availability toggle & sidebar info
     }
     else { var d = await res.json(); await skNotify(Object.values(d).flat().join(', ') || 'Failed', { variant: 'error', title: 'Broadcast' }); }
   } catch (e) { await skNotify('Failed to save status', { variant: 'error', title: 'Broadcast' }); }
@@ -453,6 +541,7 @@ async function toggleMsg(id, isCurrentlyActive) {
       var msg = isCurrentlyActive ? 'Broadcast stopped' : 'Broadcast is now live!';
       await skNotify(msg, { variant: 'success', title: 'Broadcast' });
       loadMessages();
+      refreshSidebarInfo();
     } else {
       await skNotify(d.message || 'Failed', { variant: 'error', title: 'Broadcast' });
     }
@@ -465,7 +554,7 @@ function confirmDeleteMsg(id) {
 async function deleteMsg(id) {
   try {
     var res = await apiRequest(API_BASE_URL + '/api/broadcast/messages/' + id + '/', { method: 'DELETE' });
-    if (res.ok) { await skNotify('Deleted!', { variant: 'success', title: 'Broadcast' }); loadMessages(); }
+    if (res.ok) { await skNotify('Deleted!', { variant: 'success', title: 'Broadcast' }); loadMessages(); refreshSidebarInfo(); }
   } catch (e) { await skNotify('Failed to delete', { variant: 'error', title: 'Broadcast' }); }
 }
 
@@ -478,22 +567,52 @@ async function loadFacultySettings() {
     var el1 = document.getElementById('fcSettingNotifyNew');
     var el2 = document.getElementById('fcSettingNotifyReplies');
     var el3 = document.getElementById('fcSettingNotifyClosed');
-    var el4 = document.getElementById('fcSettingAutoClose');
+    var elCloseEnabled = document.getElementById('fcSettingAutoCloseEnabled');
+    var elCloseValue = document.getElementById('fcSettingAutoCloseValue');
+    var elCloseUnit = document.getElementById('fcSettingAutoCloseUnit');
+    var el5 = document.getElementById('fcSettingAutoDelete');
     if (el1) el1.checked = !!data.notify_new_chats;
     if (el2) el2.checked = !!data.notify_chat_replies;
     if (el3) el3.checked = !!data.notify_chat_closed;
-    if (el4) el4.value = data.auto_close_hours != null ? String(data.auto_close_hours) : '';
+    
+    if (data.auto_close_seconds != null) {
+      if (elCloseEnabled) elCloseEnabled.checked = true;
+      var sec = data.auto_close_seconds;
+      if (elCloseValue && elCloseUnit) {
+        if (sec % 31536000 === 0) { elCloseValue.value = sec / 31536000; elCloseUnit.value = "31536000"; }
+        else if (sec % 2592000 === 0) { elCloseValue.value = sec / 2592000; elCloseUnit.value = "2592000"; }
+        else if (sec % 86400 === 0) { elCloseValue.value = sec / 86400; elCloseUnit.value = "86400"; }
+        else if (sec % 3600 === 0) { elCloseValue.value = sec / 3600; elCloseUnit.value = "3600"; }
+        else if (sec % 60 === 0) { elCloseValue.value = sec / 60; elCloseUnit.value = "60"; }
+        else { elCloseValue.value = sec; elCloseUnit.value = "1"; }
+      }
+    } else {
+      if (elCloseEnabled) elCloseEnabled.checked = false;
+      if (elCloseValue) elCloseValue.value = 48;
+      if (elCloseUnit) elCloseUnit.value = "3600";
+    }
+    
+    if (el5) el5.checked = !!data.auto_delete_closed_chats;
+    if (typeof toggleAutoDeleteVisibility === 'function') toggleAutoDeleteVisibility();
   } catch (e) { console.error(e); }
 }
 
 async function saveFacultySettings() {
   try {
-    var autoClose = document.getElementById('fcSettingAutoClose').value;
+    var enabled = document.getElementById('fcSettingAutoCloseEnabled') ? document.getElementById('fcSettingAutoCloseEnabled').checked : false;
+    var val = document.getElementById('fcSettingAutoCloseValue') ? parseInt(document.getElementById('fcSettingAutoCloseValue').value) : null;
+    var unit = document.getElementById('fcSettingAutoCloseUnit') ? parseInt(document.getElementById('fcSettingAutoCloseUnit').value) : null;
+    var autoCloseSecs = null;
+    if (enabled && val && unit) {
+      autoCloseSecs = val * unit;
+    }
+
     var payload = {
       notify_new_chats: document.getElementById('fcSettingNotifyNew').checked,
       notify_chat_replies: document.getElementById('fcSettingNotifyReplies').checked,
       notify_chat_closed: document.getElementById('fcSettingNotifyClosed').checked,
-      auto_close_hours: autoClose === '' ? null : parseInt(autoClose),
+      auto_close_seconds: autoCloseSecs,
+      auto_delete_closed_chats: document.getElementById('fcSettingAutoDelete').checked,
     };
     var res = await apiRequest(API_ENDPOINTS.UPDATE_USER_DETAILS, {
       method: 'PATCH', body: JSON.stringify(payload)
@@ -517,4 +636,5 @@ async function loadFooterContributors() {
 document.addEventListener('DOMContentLoaded', function () {
   loadFooterContributors();
   loadDashboard();
+  _startBackgroundPoll(); // Start periodic state sync
 });

@@ -63,32 +63,18 @@ class BroadcastMessage(models.Model):
 
     @classmethod
     def _revert_to_default(cls, user_id):
-        """When a timed message expires, activate the user's default status if set."""
+        """When a timed message expires, revert availability to the user's default.
+        The default_status text is served directly from UserDetails by the API —
+        we do NOT create a new BroadcastMessage for it."""
         try:
             from dashboard.models import UserDetails
             from authApp.models import CustomUser
             u = CustomUser.objects.get(pk=user_id)
             details = u.details
-            # 1. Revert the availability status to the default fallback availability
+            # Revert the availability status to the default fallback availability
             if details.is_available != details.default_availability:
                 details.is_available = details.default_availability
                 details.save(update_fields=['is_available'])
-
-            # 2. Revert the broadcast message to the default fallback status
-            default_text = (details.default_status or '').strip()
-            if not default_text:
-                return
-
-            already_active = cls.objects.filter(user_id=user_id, active=True).exists()
-            if already_active:
-                return
-            
-            cls.objects.create(
-                user=u,
-                message=default_text,
-                active=True,
-                duration_seconds=None,
-            )
         except Exception:
             pass
 
@@ -105,6 +91,20 @@ class BroadcastMessage(models.Model):
         self.save(update_fields=['active', 'active_until'])
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        became_active = False
+        if self.active:
+            if is_new:
+                became_active = True
+            else:
+                try:
+                    old_active = BroadcastMessage.objects.get(pk=self.pk).active
+                    if not old_active:
+                        became_active = True
+                except BroadcastMessage.DoesNotExist:
+                    pass
+
+        _was_deactivated = False
         if self.active:
             BroadcastMessage.objects.filter(user=self.user, active=True).update(active=False)
             self._set_active_window()
@@ -117,9 +117,34 @@ class BroadcastMessage(models.Model):
                     details.save()
                 except Exception:
                     pass
-        elif self.active_until is not None:
-            self.active_until = None
+            
+            if became_active:
+                try:
+                    from dashboard.models import FacultyActivity, UserDetails
+                    details = UserDetails.objects.get(user=self.user)
+                    FacultyActivity.objects.create(
+                        faculty=self.user,
+                        title="New Status",
+                        details=self.message,
+                        is_available=details.is_available
+                    )
+                except Exception:
+                    pass
+
+        else:
+            _was_deactivated = True
+            if self.active_until is not None:
+                self.active_until = None
         super().save(*args, **kwargs)
+
+        # After ANY deactivation (manual stop, expiry, etc.):
+        # if no active messages remain, revert to fallback defaults
+        if _was_deactivated and self.pk:
+            has_active = BroadcastMessage.objects.filter(
+                user=self.user, active=True
+            ).exclude(pk=self.pk).exists()
+            if not has_active:
+                BroadcastMessage._revert_to_default(self.user_id)
 
     def __str__(self):
         return f'{self.user.username}: {self.message[:20]}'

@@ -51,9 +51,13 @@ class UserDetails(models.Model):
         default=True,
         help_text='Email me when a chat thread is closed.',
     )
-    auto_close_hours = models.PositiveIntegerField(
-        default=48, null=True, blank=True,
-        help_text='Hours of inactivity before auto-closing chat threads. Null = never. Faculty only.',
+    auto_close_seconds = models.PositiveIntegerField(
+        default=172800, null=True, blank=True,
+        help_text='Seconds of inactivity before auto-closing chat threads. Null = never. Faculty only.',
+    )
+    auto_delete_closed_chats = models.BooleanField(
+        default=False,
+        help_text='If True, chat threads will be deleted instead of just closed when auto-closed.',
     )
 
     @property
@@ -67,7 +71,25 @@ class UserDetails(models.Model):
         return None
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        old_is_available = None
+        if not is_new:
+            try:
+                old_is_available = UserDetails.objects.get(pk=self.pk).is_available
+            except UserDetails.DoesNotExist:
+                pass
+                
         super().save(*args, **kwargs)
+        
+        if not is_new and old_is_available is not None and old_is_available != self.is_available:
+            title = "Now Available" if self.is_available else "Now Unavailable"
+            FacultyActivity.objects.create(
+                faculty=self.user,
+                title=title,
+                details="",
+                is_available=self.is_available
+            )
+            
         desired = build_public_slug(self.user.username, self.pk)
         if self._slug != desired:
             type(self).objects.filter(pk=self.pk).update(_slug=desired)
@@ -98,3 +120,17 @@ class StudentInterest(models.Model):
 
     def __str__(self):
         return f"{self.student.username} -> {self.faculty.username}"
+
+
+class FacultyActivity(models.Model):
+    faculty = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activities', on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    details = models.TextField(blank=True, null=True)
+    is_available = models.BooleanField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.faculty.username} - {self.title} at {self.created_at}"

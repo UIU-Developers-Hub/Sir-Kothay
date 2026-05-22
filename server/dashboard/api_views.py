@@ -58,11 +58,30 @@ class StudentInterestViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def feed(self, request):
-        """Get recent status updates of interested faculties"""
-        # We can just return the interested faculties, their current status is in faculty_details
-        interests = self.get_queryset()
-        serializer = self.get_serializer(interests, many=True)
-        return Response(serializer.data)
+        """Get chronological status updates of interested faculties"""
+        from .models import FacultyActivity
+        faculty_ids = self.get_queryset().values_list('faculty_id', flat=True)
+        activities = FacultyActivity.objects.filter(faculty_id__in=faculty_ids).order_by('-created_at')[:50]
+        
+        results = []
+        for act in activities:
+            try:
+                details = UserDetails.objects.get(user=act.faculty)
+                results.append({
+                    'id': act.id,
+                    'faculty_id': act.faculty.id,
+                    'faculty_username': act.faculty.username,
+                    'profile_image_url': details.get_image_url,
+                    'slug': details.slug,
+                    'title': act.title,
+                    'details': act.details,
+                    'is_available': act.is_available,
+                    'created_at': act.created_at.isoformat(),
+                })
+            except UserDetails.DoesNotExist:
+                continue
+                
+        return Response(results)
 
     @action(detail=False, methods=['get'])
     def search_faculties(self, request):

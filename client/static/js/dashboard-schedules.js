@@ -135,6 +135,7 @@ async function submitSchedule() {
       await skNotify(id ? 'Schedule updated!' : 'Schedule created! It will also appear on your Calendar.', { variant: 'success', title: 'Schedules' });
       loadSchedules();
       if (typeof loadCalendarEvents === 'function') loadCalendarEvents();
+      if (typeof refreshSidebarInfo === 'function') refreshSidebarInfo();
     } else { var d = await res.json(); await skNotify(JSON.stringify(d), { variant: 'error', title: 'Schedules' }); }
   } catch (e) { await skNotify('Failed to save schedule', { variant: 'error', title: 'Schedules' }); }
 }
@@ -147,6 +148,7 @@ async function toggleSchedule(id, currentActive) {
     if (res.ok) {
       loadSchedules();
       if (typeof loadCalendarEvents === 'function') loadCalendarEvents();
+      if (typeof refreshSidebarInfo === 'function') refreshSidebarInfo();
     }
   } catch (e) { await skNotify('Failed to update', { variant: 'error', title: 'Schedules' }); }
 }
@@ -160,6 +162,7 @@ async function deleteSchedule(id) {
       await skNotify('Deleted!', { variant: 'success', title: 'Schedules' });
       loadSchedules();
       if (typeof loadCalendarEvents === 'function') loadCalendarEvents();
+      if (typeof refreshSidebarInfo === 'function') refreshSidebarInfo();
     }
   } catch (e) { await skNotify('Failed to delete', { variant: 'error', title: 'Schedules' }); }
 }

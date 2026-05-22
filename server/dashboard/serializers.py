@@ -22,7 +22,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             'profile_image', 'profile_image_url', 'phone_number', 'bio', 'designation',
             'organization', 'default_status', 'default_availability', 'is_available', 'slug',
             'active_message', 'qr_code_url',
-            'notify_new_chats', 'notify_chat_replies', 'notify_chat_closed', 'auto_close_hours',
+            'notify_new_chats', 'notify_chat_replies', 'notify_chat_closed', 'auto_close_seconds', 'auto_delete_closed_chats',
         ]
         read_only_fields = ['id', 'user', 'slug']
 

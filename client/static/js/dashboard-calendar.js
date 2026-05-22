@@ -139,6 +139,7 @@ async function submitEvent() {
       var msg = id ? 'Event updated!' : 'Scheduled broadcast created!';
       await skNotify(msg, { variant: 'success', title: 'Calendar' });
       loadCalendarEvents();
+      if (typeof refreshSidebarInfo === 'function') refreshSidebarInfo();
     } else { var d = await res.json(); await skNotify(JSON.stringify(d), { variant: 'error', title: 'Calendar' }); }
   } catch (e) { await skNotify('Failed to save event', { variant: 'error', title: 'Calendar' }); }
 }
@@ -154,6 +155,7 @@ async function deleteEvent() {
       closeModal('addEventModal');
       await skNotify('Event deleted!', { variant: 'success', title: 'Calendar' });
       loadCalendarEvents();
+      if (typeof refreshSidebarInfo === 'function') refreshSidebarInfo();
     }
   } catch (e) { await skNotify('Failed to delete event', { variant: 'error', title: 'Calendar' }); }
 }

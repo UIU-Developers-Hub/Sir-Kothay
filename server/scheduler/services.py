@@ -134,3 +134,6 @@ def run_all(user=None):
     process_expiring_messages(user=user)
     process_recurring_schedules(user=user)
     process_calendar_events(user=user)
+    
+    from messaging.services import process_stale_chats
+    process_stale_chats()

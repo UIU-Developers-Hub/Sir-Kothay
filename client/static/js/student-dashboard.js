@@ -244,7 +244,7 @@ async function loadInterests() {
         document.getElementById('statAvailableFaculties').textContent = interests.filter(i => i.faculty_details && i.faculty_details.is_available).length;
         
         filterFaculties();
-        renderFeed(interests);
+        loadFeed();
     } catch (error) {
         console.error(error);
         document.getElementById('facultiesList').innerHTML = '<div class="sk-empty-state compact" style="grid-column:1/-1"><div class="sk-empty-icon"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Failed to load faculties</div><div class="sk-empty-subtitle">Please refresh or try again in a moment.</div></div>';
@@ -407,15 +407,53 @@ function shareProfile(slug, name) {
     skModal.open(content, { title: 'Share Profile', maxWidth: 'max-w-sm' });
 }
 
-function renderFeed(interests) {
+function formatRelativeTime(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + 'm ago';
+    if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + 'h ago';
+    return Math.floor(diffInSeconds / 86400) + 'd ago';
+}
+
+let currentFeedActivities = [];
+
+function dismissFeedItem(id) {
+    const dismissed = JSON.parse(localStorage.getItem('sk_dismissed_feed_items') || '[]');
+    if (!dismissed.includes(id)) {
+        dismissed.push(id);
+        localStorage.setItem('sk_dismissed_feed_items', JSON.stringify(dismissed));
+    }
+    renderFeed(currentFeedActivities);
+}
+
+async function loadFeed() {
+    if (feedHidden) return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/dashboard/student-interests/feed/`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+        });
+        if (!response.ok) throw new Error('Failed to load feed');
+        currentFeedActivities = await response.json();
+        renderFeed(currentFeedActivities);
+    } catch (error) {
+        console.error('Error loading feed:', error);
+    }
+}
+
+function renderFeed(activities) {
     if (feedHidden) return;
     const list = document.getElementById('feedList');
     
-    const feedItems = interests.filter(i => i.faculty_details && (i.faculty_details.is_available || i.faculty_details.active_message));
+    const dismissed = JSON.parse(localStorage.getItem('sk_dismissed_feed_items') || '[]');
+    const visibleActivities = activities.filter(act => !dismissed.includes(act.id));
     
-    document.getElementById('updateCounter').textContent = feedItems.length;
+    document.getElementById('updateCounter').textContent = visibleActivities.length;
     
-    if (!feedItems.length) {
+    if (!visibleActivities.length) {
         list.innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-inbox"></i></div><h3>No recent updates</h3></div>';
         document.getElementById('updateCounter').classList.replace('bg-orange-100', 'bg-gray-100');
         document.getElementById('updateCounter').classList.replace('text-orange-600', 'text-gray-500');
@@ -425,24 +463,36 @@ function renderFeed(interests) {
     document.getElementById('updateCounter').classList.replace('bg-gray-100', 'bg-orange-100');
     document.getElementById('updateCounter').classList.replace('text-gray-500', 'text-orange-600');
     
-    list.innerHTML = feedItems.map(interest => {
-        const fac = interest.faculty_details;
-        const rawName = fac.username || interest.faculty_username || 'Faculty';
+    list.innerHTML = activities.map(act => {
+        const rawName = act.faculty_username || 'Faculty';
         const inlineName = inlineJsString(rawName);
-        const inlineSlug = inlineJsString(fac.slug || '');
-        const statusMsg = fac.is_available ? '<span class="sk-feed-state available">is now Available</span>' : '<span class="sk-feed-state unavailable">is Unavailable</span>';
+        const inlineSlug = inlineJsString(act.slug || '');
+        
+        // title logic: "Now Available", "Now Unavailable", "New Status"
+        let statusMsg = '';
+        if (act.title === 'Now Available') {
+            statusMsg = '<span class="sk-feed-state available">is now Available</span>';
+        } else if (act.title === 'Now Unavailable') {
+            statusMsg = '<span class="sk-feed-state unavailable">is Unavailable</span>';
+        } else {
+            statusMsg = '<span class="sk-feed-state status-update">posted a status update</span>';
+        }
+        
         return `
             <div class="sk-feed-item">
                 <div class="sk-feed-avatar">
-                    <img src="${resolveProfileImage(fac.profile_image_url)}" alt="${escapeHtml(rawName)}">
-                    <span class="sk-presence-dot ${fac.is_available ? 'available' : ''}"></span>
+                    <img src="${resolveProfileImage(act.profile_image_url)}" alt="${escapeHtml(rawName)}">
+                    <span class="sk-presence-dot ${act.is_available ? 'available' : ''}"></span>
                 </div>
                 <div class="sk-feed-body">
                     <p class="sk-feed-title"><strong>${escapeHtml(rawName)}</strong> ${statusMsg}</p>
-                    ${fac.active_message ? `<p class="sk-feed-status">"${escapeHtml(fac.active_message)}"</p>` : ''}
-                    <p class="sk-feed-time"><i class="bi bi-clock"></i> Just updated</p>
+                    ${act.details ? `<p class="sk-feed-status">"${escapeHtml(act.details)}"</p>` : ''}
+                    <p class="sk-feed-time"><i class="bi bi-clock"></i> ${formatRelativeTime(act.created_at)}</p>
                 </div>
-                <button onclick="initiateNewChat(${interest.faculty}, '${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Start chat"><i class="bi bi-chat-text"></i></button>
+                <div style="display:flex; gap:0.25rem;">
+                    <button onclick="initiateNewChat(${act.faculty_id}, '${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Start chat" title="Message"><i class="bi bi-chat-text"></i></button>
+                    <button onclick="dismissFeedItem(${act.id})" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Dismiss" title="Dismiss update"><i class="bi bi-x-lg"></i></button>
+                </div>
             </div>
         `;
     }).join('');
