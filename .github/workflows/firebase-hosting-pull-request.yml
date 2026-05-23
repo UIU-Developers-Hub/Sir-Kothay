@@ -18,3 +18,4 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SIR_KOTHAY_TAHSINFAIYAZ30 }}
           projectId: sir-kothay-tahsinfaiyaz30
+          entryPoint: client
