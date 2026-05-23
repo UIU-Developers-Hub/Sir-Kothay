@@ -41,9 +41,15 @@ function _roleBadge(role) {
 }
 
 function _statusBadge(u) {
-  if (u.is_banned) return '<span class="sk-admin-badge status-banned"><i class="bi bi-slash-circle-fill"></i>Banned</span>';
-  if (!u.is_active) return '<span class="sk-admin-badge status-deactivated"><i class="bi bi-pause-circle-fill"></i>Deactivated</span>';
-  return '<span class="sk-admin-badge status-active"><i class="bi bi-check-circle-fill"></i>Active</span>';
+  var bHtml = '';
+  if (u.is_banned) bHtml += '<span class="sk-admin-badge status-banned"><i class="bi bi-slash-circle-fill"></i>Banned</span>';
+  else if (!u.is_active) bHtml += '<span class="sk-admin-badge status-deactivated"><i class="bi bi-pause-circle-fill"></i>Deactivated</span>';
+  else bHtml += '<span class="sk-admin-badge status-active"><i class="bi bi-check-circle-fill"></i>Active</span>';
+  
+  if (u.is_email_verified) bHtml += '<span class="sk-admin-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b; margin-left:6px;"><i class="bi bi-envelope-check-fill"></i>Verified</span>';
+  else bHtml += '<span class="sk-admin-badge" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; margin-left:6px;"><i class="bi bi-envelope-x-fill"></i>Unverified</span>';
+  
+  return bHtml;
 }
 
 function _adminBadge(u) {
@@ -189,21 +195,7 @@ function renderAdminUsers() {
 
   tbody.innerHTML = filtered.map(function(u) {
     var isSelf = currentAdminUser && u.id === currentAdminUser.id;
-    var actions = '';
-
-    actions += '<button onclick="event.stopPropagation(); showUserDetail(' + u.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon" title="View details" aria-label="View details"><i class="bi bi-eye"></i></button>';
-
-    if (u.is_banned) {
-      actions += '<button onclick="event.stopPropagation(); unbanUser(' + u.id + ')" class="sk-btn sk-btn-success sk-btn-sm" title="Unban"><i class="bi bi-unlock"></i>Unban</button>';
-    } else if (!u.is_active) {
-      actions += '<button onclick="event.stopPropagation(); toggleUserActive(' + u.id + ')" class="sk-btn sk-btn-success sk-btn-sm" title="Activate"><i class="bi bi-check-circle"></i>Activate</button>';
-      actions += '<button onclick="event.stopPropagation(); banUser(' + u.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Ban" aria-label="Ban"><i class="bi bi-slash-circle"></i></button>';
-    } else {
-      actions += '<button onclick="event.stopPropagation(); toggleUserActive(' + u.id + ')" class="sk-btn sk-btn-secondary sk-btn-sm" title="Deactivate"><i class="bi bi-pause-circle"></i>Deactivate</button>';
-      actions += '<button onclick="event.stopPropagation(); banUser(' + u.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Ban" aria-label="Ban"><i class="bi bi-slash-circle"></i></button>';
-    }
-
-    actions += '<button onclick="event.stopPropagation(); deleteUser(' + u.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></button>';
+    var actions = '<button onclick="event.stopPropagation(); showUserDetail(' + u.id + ')" class="sk-btn sk-btn-secondary sk-btn-sm" title="Manage User"><i class="bi bi-sliders" style="margin-right:4px;"></i> Manage</button>';
 
     return '<tr ondblclick="showUserDetail(' + u.id + ')">' +
       '<td>' + u.id + '</td>' +
@@ -294,14 +286,37 @@ async function deleteUser(userId) {
   } catch (e) { _notify('Error: ' + e.message, 'error'); }
 }
 
-async function resetUserPassword(userId) {
+function resetUserPassword(userId) {
   var user = adminUsers.find(function(u) { return u.id === userId; });
   if (!user) return;
-  var confirmed = await _confirm('Generate a new random password for "' + user.username + '" and email it to them?');
-  if (!confirmed) return;
+
+  document.getElementById('rpUserId').value = userId;
+  document.getElementById('rpUserName').textContent = user.username;
+  document.getElementById('rpPassword').value = '';
+  document.getElementById('resetPasswordModal').classList.remove('hidden');
+}
+
+function closeResetPasswordModal() {
+  document.getElementById('resetPasswordModal').classList.add('hidden');
+}
+
+async function confirmResetPassword() {
+  var userId = parseInt(document.getElementById('rpUserId').value, 10);
+  var user = adminUsers.find(function(u) { return u.id === userId; });
+  if (!user) return;
+
+  var customPassword = document.getElementById('rpPassword').value.trim();
+
+  closeResetPasswordModal();
+
   try {
+    var body = {};
+    if (customPassword) {
+      body.password = customPassword;
+    }
+    
     var res = await fetch(API_BASE_URL + '/api/dashboard/admin-users/' + userId + '/reset_password/', {
-      method: 'POST', headers: _headers()
+      method: 'POST', headers: _headers(), body: JSON.stringify(body)
     });
     var data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed');
@@ -325,6 +340,26 @@ async function toggleAdmin(userId) {
     updateCounts(); renderAdminUsers();
     _notify('"' + user.username + '" is ' + (data.is_staff ? 'now an admin' : 'no longer an admin') + '.', 'success');
     // Re-render detail panel if open
+    if (!document.getElementById('userDetailOverlay').classList.contains('hidden')) showUserDetail(userId);
+  } catch (e) { _notify('Error: ' + e.message, 'error'); }
+}
+
+async function toggleVerify(userId) {
+  var user = adminUsers.find(function(u) { return u.id === userId; });
+  if (!user) return;
+  var action = user.is_email_verified ? 'mark as UNVERIFIED' : 'mark as VERIFIED';
+  var confirmed = await _confirm('Are you sure you want to ' + action + ' "' + user.username + '"?');
+  if (!confirmed) return;
+  
+  try {
+    var res = await fetch(API_BASE_URL + '/api/dashboard/admin-users/' + userId + '/toggle_verify/', {
+      method: 'POST', headers: _headers()
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    user.is_email_verified = data.is_email_verified;
+    renderAdminUsers();
+    _notify(data.message || 'Verification status changed.', 'success');
     if (!document.getElementById('userDetailOverlay').classList.contains('hidden')) showUserDetail(userId);
   } catch (e) { _notify('Error: ' + e.message, 'error'); }
 }
@@ -443,26 +478,27 @@ function showUserDetail(userId) {
   });
   html += '</div>';
 
-  html += '<div class="sk-admin-detail-actions">' +
-    '<h4 class="sk-admin-action-title">Actions</h4>';
+  html += '<div class="sk-admin-detail-actions" style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-top:1.5rem; border-top:1px solid var(--sk-border); padding-top:1.5rem;">' +
+    '<h4 class="sk-admin-action-title" style="grid-column:span 2; margin-bottom:0.5rem;">Actions</h4>';
 
   html += '<button onclick="changeRole(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-arrow-left-right"></i>Change Role</button>';
+  html += '<button onclick="toggleAdmin(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-shield-lock"></i>' + (user.is_staff ? 'Remove Admin' : 'Grant Admin') + '</button>';
 
-  html += '<button onclick="toggleAdmin(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-shield-lock"></i>' + (user.is_staff ? 'Remove Admin Privilege' : 'Grant Admin Privilege') + '</button>';
+  html += '<button onclick="toggleVerify(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-envelope"></i>' + (user.is_email_verified ? 'Mark Unverified' : 'Mark Verified') + '</button>';
+  html += '<button onclick="resetUserPassword(' + user.id + ')" class="sk-btn sk-btn-warning"><i class="bi bi-key"></i>Reset Password</button>';
 
   if (user.is_banned) {
-    html += '<button onclick="unbanUser(' + user.id + ')" class="sk-btn sk-btn-success"><i class="bi bi-unlock"></i>Unban User</button>';
+    html += '<button onclick="unbanUser(' + user.id + ')" class="sk-btn sk-btn-success" style="grid-column:span 2;"><i class="bi bi-unlock"></i>Unban User</button>';
   } else {
     if (user.is_active) {
-      html += '<button onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-pause-circle"></i>Deactivate User</button>';
+      html += '<button onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-pause-circle"></i>Deactivate</button>';
     } else {
-      html += '<button onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-success"><i class="bi bi-check-circle"></i>Activate User</button>';
+      html += '<button onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-success"><i class="bi bi-check-circle"></i>Activate</button>';
     }
     html += '<button onclick="banUser(' + user.id + ')" class="sk-btn sk-btn-danger"><i class="bi bi-slash-circle"></i>Ban User</button>';
   }
 
-  html += '<button onclick="resetUserPassword(' + user.id + ')" class="sk-btn sk-btn-warning"><i class="bi bi-key"></i>Reset Password</button>';
-  html += '<button onclick="deleteUser(' + user.id + ')" class="sk-btn sk-btn-ghost danger"><i class="bi bi-trash"></i>Delete User Permanently</button>';
+  html += '<button onclick="deleteUser(' + user.id + ')" class="sk-btn sk-btn-ghost danger" style="grid-column:span 2; margin-top:0.5rem;"><i class="bi bi-trash"></i>Delete Permanently</button>';
 
   html += '</div>';
 

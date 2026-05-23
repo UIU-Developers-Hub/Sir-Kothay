@@ -123,6 +123,15 @@
         if (res.ok) {
           localStorage.setItem('access_token', data.tokens.access);
           localStorage.setItem('refresh_token', data.tokens.refresh);
+          if (data.user) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+          }
+          localStorage.removeItem('sk_otp_expires_at');
+
+          if (data.user && data.user.is_email_verified === false) {
+            window.location.href = 'verify-email.html';
+            return;
+          }
 
           // Role-based redirect
           const role = data.user?.role || data.role || '';

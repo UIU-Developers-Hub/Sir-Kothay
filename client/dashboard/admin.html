@@ -136,6 +136,30 @@
     </div>
   </div>
 
+  <!-- Reset Password Modal -->
+  <div id="resetPasswordModal" class="sk-modal-overlay hidden" style="z-index:200">
+    <div class="sk-modal-panel" style="max-width:380px">
+      <div class="sk-modal-header">
+        <h3 class="sk-modal-title"><i class="bi bi-key" style="color:var(--sk-warning);margin-right:0.5rem"></i>Reset Password</h3>
+        <button class="sk-modal-close" onclick="closeResetPasswordModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <p style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary);margin-bottom:1rem">Reset password for <strong id="rpUserName"></strong></p>
+        <input type="hidden" id="rpUserId">
+        
+        <div class="sk-form-group">
+          <label class="sk-label">New Password <span style="color:var(--sk-text-placeholder)">(optional)</span></label>
+          <input type="text" id="rpPassword" placeholder="Enter custom password..." class="sk-input">
+          <p style="font-size:var(--sk-text-xs);color:var(--sk-text-placeholder);margin-top:0.25rem">If left blank, a random 8-character password will be generated automatically. The new password will be emailed to the user.</p>
+        </div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeResetPasswordModal()" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button onclick="confirmResetPassword()" class="sk-btn sk-btn-warning">Reset & Email User</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="../static/js/api-config.js"></script>
   <script src="../static/js/utils.js"></script>

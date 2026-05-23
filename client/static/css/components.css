@@ -130,6 +130,20 @@ img { max-width: 100%; height: auto; display: block; }
   border-color: #B91C1C;
 }
 
+/* Frosty Danger */
+.sk-btn-frosty-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.sk-btn-frosty-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
 /* Success */
 .sk-btn-success {
   background: var(--sk-success);

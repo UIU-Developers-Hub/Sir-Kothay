@@ -225,14 +225,22 @@ class AdminUserManagementViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='reset_password')
     def reset_password(self, request, pk=None):
         """
-        Admin resets a user's password. Generates a random password,
+        Admin resets a user's password. Accepts optional 'password' in request data.
+        If provided, sets that password. Otherwise, generates a random password,
         sets it, and emails the user.
         """
         if not self._is_admin(request):
             return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
         user = self.get_object()
-        import secrets
-        new_password = secrets.token_urlsafe(8)[:8]
+        
+        custom_password = request.data.get('password', '').strip()
+        
+        if custom_password:
+            new_password = custom_password
+        else:
+            import secrets
+            new_password = secrets.token_urlsafe(8)[:8]
+            
         user.set_password(new_password)
         user.save()
         
@@ -242,7 +250,27 @@ class AdminUserManagementViewSet(viewsets.ModelViewSet):
         body = f"Hello {user.username},\n\nAn administrator has reset your password.\n\nYour new password is: {new_password}\n\nPlease log in and change this password from your profile settings as soon as possible.\n\nThanks,\nSir Kothay Team"
         send_email_async(subject, body, getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@sirkothay.com'), [user.email])
         
-        return Response({'status': 'success', 'message': 'Password has been reset and emailed to the user.'})
+        msg = 'Custom password set' if custom_password else 'Random password generated'
+        return Response({'status': 'success', 'message': f'{msg} and emailed to the user.'})
+
+    @action(detail=True, methods=['post'], url_path='toggle_verify')
+    def toggle_verify(self, request, pk=None):
+        """
+        Admin toggles a user's email verification status.
+        """
+        if not self._is_admin(request):
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        
+        user = self.get_object()
+        user.is_email_verified = not user.is_email_verified
+        user.save()
+        
+        if user.is_email_verified:
+            from authApp.models import EmailVerificationToken
+            EmailVerificationToken.objects.filter(user=user).delete()
+        
+        status_text = 'verified' if user.is_email_verified else 'unverified'
+        return Response({'status': 'success', 'message': f'User marked as {status_text}.', 'is_email_verified': user.is_email_verified})
 
 
 class SetStudentIdView(viewsets.ViewSet):

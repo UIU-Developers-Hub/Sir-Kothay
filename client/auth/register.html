@@ -225,6 +225,25 @@
       }
 
       try {
+        // First, check if email/student_id already exists
+        const checkBody = { email: body.email };
+        if (body.student_id) checkBody.student_id = body.student_id;
+        
+        const checkRes = await fetch(API_BASE_URL + '/api/auth/users/check_existence/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(checkBody)
+        });
+        
+        if (!checkRes.ok) {
+          const checkData = await checkRes.json();
+          let errorMsg = Object.values(checkData)[0];
+          showMessage(errorMsg || 'A conflict occurred. This account might already exist.');
+          btn.disabled = false;
+          btnText.textContent = 'Create Account';
+          return;
+        }
+
         const res = await fetch(API_ENDPOINTS.REGISTER, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -234,8 +253,17 @@
         const data = await res.json();
 
         if (res.ok || res.status === 201) {
-          showMessage('Account created successfully! Redirecting to login...', false);
-          setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+          showMessage('Account created successfully! Redirecting...', false);
+          
+          // Auto-login to handle the verification gate
+          if (data.tokens) {
+            localStorage.setItem('access_token', data.tokens.access);
+            localStorage.setItem('refresh_token', data.tokens.refresh);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.removeItem('sk_otp_expires_at');
+          }
+          
+          setTimeout(() => { window.location.href = 'verify-email.html'; }, 2000);
         } else {
           let errorMsg = '';
           if (typeof data === 'object') {

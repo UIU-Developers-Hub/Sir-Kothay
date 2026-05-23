@@ -26,6 +26,8 @@ window.SKLayout = (() => {
   function logout() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('sk_otp_expires_at');
     window.location.href = getRelativePath('auth/login.html');
   }
 
@@ -291,6 +293,8 @@ window.SKLayout = (() => {
     // For dashboard layouts, build the shell
     if (type === 'dashboard') {
       await initDashboardLayout(page, onReady);
+    } else if (type === 'verify') {
+      await initVerifyLayout(onReady);
     } else if (onReady) {
       onReady();
     }
@@ -301,6 +305,14 @@ window.SKLayout = (() => {
     const user = await loadUser();
     if (!user) {
       logout();
+      return;
+    }
+
+    // --- VERIFICATION GATE ---
+    if (user.is_email_verified === false) {
+      if (!window.location.href.includes('verify-email.html')) {
+        window.location.href = getRelativePath('auth/verify-email.html');
+      }
       return;
     }
 
@@ -372,6 +384,98 @@ window.SKLayout = (() => {
     }
 
     // Callback
+    if (onReady) onReady(user, details);
+  }
+
+  async function initVerifyLayout(onReady) {
+    const user = await loadUser();
+    if (!user) {
+      logout();
+      return;
+    }
+
+    const details = await loadUserDetails();
+
+    // 1. Inject Sidebar HTML if not present
+    if (!document.querySelector('.sk-sidebar')) {
+      const logoPath = getRelativePath('static/images/nav-logo.png');
+      const sidebarHtml = `
+        <aside class="sk-sidebar">
+          <div class="sk-sidebar-logo">
+            <img src="${logoPath}" alt="Sir Kothay">
+          </div>
+          <nav class="sk-sidebar-nav"></nav>
+          <div class="sk-sidebar-footer"></div>
+        </aside>
+        <div class="sk-sidebar-overlay"></div>
+      `;
+      const appContainer = document.querySelector('.sk-app') || document.body;
+      appContainer.insertAdjacentHTML('afterbegin', sidebarHtml);
+
+      const overlay = document.querySelector('.sk-sidebar-overlay');
+      if (overlay) overlay.addEventListener('click', closeSidebar);
+    }
+    
+    // Inject Bottom Nav HTML if not present
+    if (!document.querySelector('.sk-bottom-nav')) {
+      const bnavHtml = `
+        <nav class="sk-bottom-nav">
+          <div class="sk-bottom-nav-items"></div>
+        </nav>
+      `;
+      const appContainer = document.querySelector('.sk-app') || document.body;
+      appContainer.insertAdjacentHTML('beforeend', bnavHtml);
+    }
+
+    const sidebarNav = document.querySelector('.sk-sidebar-nav');
+    const sidebarFooter = document.querySelector('.sk-sidebar-footer');
+    const mobileNav = document.querySelector('.sk-bottom-nav-items');
+
+    if (sidebarNav) {
+      sidebarNav.innerHTML = ''; // Empty nav for restricted access
+    }
+
+    if (sidebarFooter) {
+      const avatarSrc = details?.profile_image ? resolveProfileImage(details.profile_image) : null;
+      const displayName = user.username || user.email;
+      sidebarFooter.innerHTML = `
+        <div class="sk-sidebar-theme-group" aria-label="Theme">
+          <button type="button" data-theme-choice="system" onclick="SKTheme.set('system')">System</button>
+          <button type="button" data-theme-choice="light" onclick="SKTheme.set('light')">Light</button>
+          <button type="button" data-theme-choice="dark" onclick="SKTheme.set('dark')">Dark</button>
+        </div>
+        <div class="sk-sidebar-account-row">
+          <div class="sk-sidebar-profile-button" style="cursor:default; pointer-events:none;">
+            ${SKComponents.avatar(avatarSrc, displayName, 'sm')}
+            <span>${SKUtils.escapeHtml(displayName)}</span>
+          </div>
+          <button class="sk-sidebar-signout-button" onclick="SKLayout.logout()" title="Sign out" aria-label="Sign out">
+            <i class="bi bi-box-arrow-right"></i>
+          </button>
+        </div>
+      `;
+    }
+
+    if (mobileNav) {
+      mobileNav.innerHTML = `
+        <button id="menuToggle" class="sk-bottom-nav-item sk-bottom-nav-menu" onclick="SKLayout.toggleSidebar()">
+          <i class="bi bi-list"></i><span>Menu</span>
+        </button>
+        <button onclick="SKLayout.logout()" class="sk-bottom-nav-item danger">
+          <i class="bi bi-box-arrow-right"></i><span>Sign Out</span>
+        </button>
+      `;
+    }
+
+    // Escape key to close sidebar
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && _sidebarOpen) closeSidebar();
+    });
+
+    if (window.SKTheme && SKTheme.updateToggleUI) {
+      SKTheme.updateToggleUI();
+    }
+
     if (onReady) onReady(user, details);
   }
 
@@ -501,6 +605,14 @@ window.SKLayout = (() => {
       try {
         const user = await loadUser();
         if (!user) throw new Error('Invalid token');
+        
+        // --- VERIFICATION GATE ---
+        if (user.is_email_verified === false) {
+          if (!window.location.href.includes('verify-email.html')) {
+            window.location.href = getRelativePath('auth/verify-email.html');
+          }
+          return;
+        }
         
         const details = await loadUserDetails();
         const role = user.role || '';
