@@ -224,12 +224,12 @@ This project uses a split-stack architecture for production: the static frontend
 ### 2. Backend: PythonAnywhere (Initial Setup)
 We have provided an automated script to set up a brand new PythonAnywhere server from scratch.
 1. Open a **Bash Console** on PythonAnywhere.
-2. Run the initial setup script:
+2. Run the master deployment script:
    ```bash
    git clone https://github.com/TahsinFaiyaz30/Sir-Kothay.git
-   bash Sir-Kothay/scripts/setup_pythonanywhere.sh
+   bash Sir-Kothay/scripts/deploy_pythonanywhere.sh
    ```
-3. **Edit your `.env`** — open `/home/YOURUSERNAME/Sir-Kothay/server/.env` and set real values for `SECRET_KEY`, `ALLOWED_HOSTS`, `GITHUB_WEBHOOK_SECRET`, and email credentials.
+3. **Answer the Prompts** — The script will intelligently ask you for any missing environment variables (like passwords or DB configuration) directly in the console.
 4. **Create a Web App** on the PythonAnywhere **Web** tab:
    - Choose **Manual configuration** → **Python 3.10**.
    - Set **Virtualenv** path to: `/home/YOURUSERNAME/.virtualenvs/venv`
