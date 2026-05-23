@@ -269,23 +269,20 @@ The backend is configured to automatically pull new code, install dependencies, 
 4. **Done!** Every `git push` will now automatically deploy the backend via the Webhook!
 
 ### 4. Secure Environment Variables (Pre-Commit Hook)
-We use a Git pre-commit hook to safely deploy **new** environment variables from your local machine to the live server without needing to SSH.
+We use a Git pre-commit hook to safely deploy **new** or **deleted** environment variables from your local machine to the live server without needing to SSH.
 1. **Install the hook locally:** 
    ```bash
    cp scripts/pre-commit .git/hooks/pre-commit
    ```
    *(Windows users: Ensure the file uses `LF` line endings, not `CRLF`)*
 2. Add `GITHUB_WEBHOOK_SECRET=your-password` (matching the server) to your **local** `server/.env` file.
-3. Add your new variable (e.g. `NEW_API_KEY=change-me`) to `server/.env.example`.
-4. **Commit via the terminal** (e.g. `git commit -m "Added API key"`). The hook will detect the new key and prompt you:
-   ```text
-   🔑 New environment variables detected!
-   Enter PRODUCTION values for your server.
-   NEW_API_KEY [default: change-me]:
-   ```
-5. It will encrypt your input using AES-256 and attach a `.env.deploy.enc` file to your commit.
-6. The PythonAnywhere webhook will detect it, decrypt it, inject the real value into the live server `.env`, and automatically delete the encrypted payload!
-   *(Note: GUI apps like GitHub Desktop cannot show terminal prompts. The script will safely block commits from GitHub Desktop if new `.env` variables are detected.)*
+3. **Add or Delete variables** in `server/.env.example` as needed.
+4. **Commit via the terminal** (e.g. `git commit -m "Updated env vars"`). The hook will detect changes and prompt you:
+   - **For New Variables:** It will prompt you to type the secret production value.
+   - **For Deleted Variables:** It will ask you to confirm if it should also be deleted from the production server.
+5. It will encrypt your inputs/instructions using AES-256 and attach a `.env.deploy.enc` file to your commit.
+6. The PythonAnywhere webhook will detect it, decrypt it, modify the live server `.env` exactly as instructed, and automatically delete the encrypted payload!
+   *(Note: GUI apps like GitHub Desktop cannot show interactive terminal prompts. The script will safely block commits from GitHub Desktop if `.env.example` changes are detected, forcing you to use the terminal to resolve the prompts.)*
 
 ---
 
