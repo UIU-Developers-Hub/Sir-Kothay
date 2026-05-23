@@ -204,6 +204,70 @@ Set `window.SIR_KOTHAY_API_BASE = 'https://your-api.example.com'` in an inline s
 
 ---
 
+## 🌍 Deployment (Production)
+
+This project uses a split-stack architecture for production: the static frontend is hosted on Firebase Hosting, and the Django backend API is hosted on PythonAnywhere.
+
+### 1. Frontend: Firebase Hosting
+1. Install the Firebase CLI: `npm install -g firebase-tools`
+2. Login and initialize:
+   ```bash
+   firebase login
+   firebase init hosting
+   ```
+   * Set the public directory to `client`
+   * Configure as a single-page app: **No**
+   * Set up automatic builds and deploys with GitHub: **Yes** (This creates a GitHub Action to auto-deploy the frontend on push).
+3. Update `client/static/js/api-config.js` or use an inline script to point `API_BASE_URL` to your live PythonAnywhere URL.
+4. Deploy manually (if needed): `firebase deploy --only hosting`
+
+### 2. Backend: PythonAnywhere (Initial Setup)
+We have provided an automated script to set up a brand new PythonAnywhere server from scratch.
+1. Open a **Bash Console** on PythonAnywhere.
+2. Run the initial setup script:
+   ```bash
+   git clone https://github.com/TahsinFaiyaz30/Sir-Kothay.git
+   bash Sir-Kothay/scripts/setup_pythonanywhere.sh
+   ```
+3. **Edit your `.env`** — open `/home/YOURUSERNAME/Sir-Kothay/server/.env` and set real values for `SECRET_KEY`, `ALLOWED_HOSTS`, `GITHUB_WEBHOOK_SECRET`, and email credentials.
+4. **Create a Web App** on the PythonAnywhere **Web** tab:
+   - Choose **Manual configuration** → **Python 3.10**.
+   - Set **Virtualenv** path to: `/home/YOURUSERNAME/.virtualenvs/venv`
+5. **Edit the WSGI file** (click the link on the Web tab). Replace the entire contents with:
+   ```python
+   import sys
+   import os
+   from dotenv import load_dotenv
+
+   path = '/home/YOURUSERNAME/Sir-Kothay/server'
+   if path not in sys.path:
+       sys.path.insert(0, path)
+
+   load_dotenv(os.path.join(path, '.env'))
+
+   from core.wsgi import application  # noqa
+   ```
+6. **Add Static Files** mappings on the Web tab:
+
+   | URL | Directory |
+   |---|---|
+   | `/static/` | `/home/YOURUSERNAME/Sir-Kothay/server/staticfiles` |
+   | `/media/` | `/home/YOURUSERNAME/Sir-Kothay/server/media` |
+
+7. Click the green **Reload** button at the top of the Web tab.
+
+### 3. Auto-Deployment via GitHub Webhooks
+The backend is configured to automatically pull new code, migrate the database, and restart itself whenever you push to GitHub.
+1. Ensure `GITHUB_WEBHOOK_SECRET` is set in your PythonAnywhere `.env` file.
+2. Go to your GitHub Repository **Settings** -> **Webhooks** -> **Add webhook**.
+3. Configure the webhook:
+   - **Payload URL:** `https://your-username.pythonanywhere.com/api/github-webhook/`
+   - **Content type:** `application/json`
+   - **Secret:** The exact same password from your `.env` file.
+4. **Done!** Every `git push` will now automatically deploy both the frontend (via Firebase GitHub Actions) and the backend (via the Webhook).
+
+---
+
 ## ⚙️ Environment Variables
 
 All server configuration is in `server/.env`. Copy `.env.example` to `.env` and edit:
@@ -219,6 +283,7 @@ All server configuration is in `server/.env`. Copy `.env.example` to `.env` and 
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` | — | PostgreSQL credentials (only when `DB_ENGINE` is set). |
 | `CLIENT_PUBLIC_BASE_URL` | empty | Full URL to the client root (e.g. `http://127.0.0.1:5500`). Used for QR codes and email links. |
 | `GITHUB_CONTRIBUTORS_REPO` | `UIU-Developers-Hub/Sir-Kothay` | GitHub repo for the About page contributor list. |
+| `GITHUB_WEBHOOK_SECRET` | — | Shared secret for GitHub Webhook auto-deploy. **Must match** the secret in your GitHub Webhook settings. |
 | `EMAIL_HOST_USER` | empty | Gmail address. When set, enables real SMTP delivery. When empty, emails print to console. |
 | `EMAIL_HOST_PASSWORD` | empty | Gmail App Password (16 chars). See [setup instructions](#-email-setup). |
 

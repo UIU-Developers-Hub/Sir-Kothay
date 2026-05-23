@@ -45,7 +45,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 if not DEBUG:
     CORS_ALLOWED_ORIGINS = _csv(
         'CORS_ALLOWED_ORIGINS',
-        'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5500,http://localhost:5500',
+        'https://sir-kothay-tahsinfaiyaz30.web.app,https://sir-kothay-tahsinfaiyaz30.firebaseapp.com,http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5500,http://localhost:5500',
     )
 else:
     CORS_ALLOWED_ORIGINS = []
@@ -65,7 +65,7 @@ CORS_ALLOW_HEADERS = [
 # CSRF Settings for cross-origin requests
 CSRF_TRUSTED_ORIGINS = _csv(
     'CSRF_TRUSTED_ORIGINS',
-    'http://localhost:3000,http://localhost:5173,http://127.0.0.1:5500,http://localhost:5500',
+    'https://sir-kothay-tahsinfaiyaz30.web.app,https://sir-kothay-tahsinfaiyaz30.firebaseapp.com,http://localhost:3000,http://localhost:5173,http://127.0.0.1:5500,http://localhost:5500',
 )
 
 # Application definition
