@@ -26,8 +26,8 @@ if ! git diff --cached --name-only | grep -q "$ENV_EXAMPLE"; then
     exit 0
 fi
 
-# Extract current keys from .env.example (skip comments and blanks)
-CURRENT_KEYS=$(grep -v '^\s*#' "$ENV_EXAMPLE" | grep -v '^\s*$' | cut -d '=' -f 1 | sort)
+# Extract current keys from .env.example (only valid lines like KEY=value)
+CURRENT_KEYS=$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$ENV_EXAMPLE" | cut -d '=' -f 1 | sort)
 
 # Load previously known keys
 OLD_KEYS=""
@@ -36,7 +36,13 @@ if [ -f "$ENV_KEYS_TRACKER" ]; then
 fi
 
 # Find NEW keys (in current but not in old)
-NEW_KEYS=$(comm -23 <(echo "$CURRENT_KEYS") <(echo "$OLD_KEYS"))
+# Use temp files instead of process substitution for POSIX sh compatibility
+TMP_CUR=$(mktemp)
+TMP_OLD=$(mktemp)
+echo "$CURRENT_KEYS" > "$TMP_CUR"
+echo "$OLD_KEYS" > "$TMP_OLD"
+NEW_KEYS=$(comm -23 "$TMP_CUR" "$TMP_OLD")
+rm -f "$TMP_CUR" "$TMP_OLD"
 
 if [ -z "$NEW_KEYS" ]; then
     # Update tracker and exit — no new keys
@@ -47,7 +53,7 @@ fi
 
 # Check if we can actually read from the user's terminal.
 # GitHub Desktop simulates a terminal but blocks input, so we must test reading.
-if ! bash -c 'read -t 0 < /dev/tty' 2>/dev/null; then
+if ! true < /dev/tty 2>/dev/null; then
     echo "======================================================================"
     echo " 🛑 ERROR: New variables were added to server/.env.example"
     echo " GitHub Desktop cannot show interactive terminal prompts."
@@ -66,20 +72,26 @@ echo "║  Press Enter to skip (use default from example). ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
 
-PAYLOAD=""
-while IFS= read -r key; do
-    # Get default from .env.example
-    default_val=$(grep "^${key}=" "$ENV_EXAMPLE" | head -1 | cut -d '=' -f 2-)
+TMP_PAYLOAD=$(mktemp)
+echo "$NEW_KEYS" | while IFS= read -r key; do
+    # Get default from local .env if it exists, otherwise fallback to .env.example
+    if grep -q "^${key}=" "server/.env" 2>/dev/null; then
+        default_val=$(grep "^${key}=" "server/.env" | head -1 | cut -d '=' -f 2-)
+    else
+        default_val=$(grep "^${key}=" "$ENV_EXAMPLE" | head -1 | cut -d '=' -f 2-)
+    fi
     
-    read -p "  $key [default: $default_val]: " user_val < /dev/tty
+    printf "  %s [default: %s]: " "$key" "$default_val"
+    read user_val < /dev/tty
     if [ -z "$user_val" ]; then
         user_val="$default_val"
     fi
-    PAYLOAD="${PAYLOAD}${key}=${user_val}\n"
-done <<< "$NEW_KEYS"
+    echo "${key}=${user_val}" >> "$TMP_PAYLOAD"
+done
 
 # Encrypt the payload with the webhook secret
-echo -e "$PAYLOAD" | openssl enc -aes-256-cbc -pbkdf2 -salt -pass "pass:${LOCAL_SECRET}" -out "$DEPLOY_FILE" 2>/dev/null
+openssl enc -aes-256-cbc -pbkdf2 -salt -pass "pass:${LOCAL_SECRET}" -in "$TMP_PAYLOAD" -out "$DEPLOY_FILE" 2>/dev/null
+rm -f "$TMP_PAYLOAD"
 
 # Update the key tracker
 echo "$CURRENT_KEYS" > "$ENV_KEYS_TRACKER"

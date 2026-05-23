@@ -61,7 +61,8 @@ if [ "$INTERACTIVE" = true ]; then
     else
         # Check for any missing keys and append them
         while IFS= read -r line || [ -n "$line" ]; do
-            if [[ -z "$line" || "$line" == \#* ]]; then continue; fi
+            # Skip lines that are not valid KEY=value
+            if ! echo "$line" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*='; then continue; fi
             key=$(echo "$line" | cut -d '=' -f 1)
             if ! grep -q "^${key}=" "$ENV_FILE"; then
                 echo "" >> "$ENV_FILE"
@@ -115,7 +116,8 @@ DBEOF
     WARNINGS=0
     PLACEHOLDERS="CHANGE_ME change-me your-gmail your_db_user your_db_password YOURUSERNAME"
     while IFS= read -r line || [ -n "$line" ]; do
-        if [[ -z "$line" || "$line" == \#* ]]; then continue; fi
+        # Skip lines that are not valid KEY=value
+        if ! echo "$line" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*='; then continue; fi
         key=$(echo "$line" | cut -d '=' -f 1)
         val=$(echo "$line" | cut -d '=' -f 2-)
         for placeholder in $PLACEHOLDERS; do
@@ -172,7 +174,8 @@ else
     if [ -f "$ENV_FILE" ] && [ -f "$ENV_EXAMPLE" ]; then
         ADDED_KEYS=""
         while IFS= read -r line || [ -n "$line" ]; do
-            if [[ -z "$line" || "$line" == \#* ]]; then continue; fi
+            # Skip lines that are not valid KEY=value
+            if ! echo "$line" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*='; then continue; fi
             key=$(echo "$line" | cut -d '=' -f 1)
             default_val=$(echo "$line" | cut -d '=' -f 2-)
             if ! grep -q "^${key}=" "$ENV_FILE"; then

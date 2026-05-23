@@ -135,6 +135,8 @@ Sir-Kothay/
 │   ├── .env.example                 # Environment variable template
 │   └── db.sqlite3                   # (gitignored) local dev database
 ├── scripts/
+│   ├── deploy_pythonanywhere.sh     # Master setup & auto-deploy script for PythonAnywhere
+│   ├── pre-commit                   # Git hook: encrypts new env vars for safe deployment
 │   ├── run-local.ps1                # Windows quick-start script
 │   └── run-local.sh                 # Linux/macOS quick-start script
 ├── API_DOCUMENTATION.md
@@ -222,14 +224,14 @@ This project uses a split-stack architecture for production: the static frontend
 4. Deploy manually (if needed): `firebase deploy --only hosting`
 
 ### 2. Backend: PythonAnywhere (Initial Setup)
-We have provided an automated script to set up a brand new PythonAnywhere server from scratch.
+We have provided an automated script to set up a brand new PythonAnywhere server from scratch, or update an existing one.
 1. Open a **Bash Console** on PythonAnywhere.
 2. Run the master deployment script:
    ```bash
    git clone https://github.com/TahsinFaiyaz30/Sir-Kothay.git
    bash Sir-Kothay/scripts/deploy_pythonanywhere.sh
    ```
-3. **Answer the Prompts** — The script will intelligently ask you for any missing environment variables (like passwords or DB configuration) directly in the console.
+3. **Interactive Nano Editor** — The script will copy the `.env.example` file and open the `nano` editor. Fill in all the placeholder values (`CHANGE_ME`, etc.) with your real production secrets. Save and exit (Ctrl+X → Y → Enter).
 4. **Create a Web App** on the PythonAnywhere **Web** tab:
    - Choose **Manual configuration** → **Python 3.10**.
    - Set **Virtualenv** path to: `/home/YOURUSERNAME/.virtualenvs/venv`
@@ -257,14 +259,33 @@ We have provided an automated script to set up a brand new PythonAnywhere server
 7. Click the green **Reload** button at the top of the Web tab.
 
 ### 3. Auto-Deployment via GitHub Webhooks
-The backend is configured to automatically pull new code, migrate the database, and restart itself whenever you push to GitHub.
-1. Ensure `GITHUB_WEBHOOK_SECRET` is set in your PythonAnywhere `.env` file.
+The backend is configured to automatically pull new code, install dependencies, migrate the database, and restart itself whenever you push to GitHub.
+1. Ensure `GITHUB_WEBHOOK_SECRET=your-password` is set in your PythonAnywhere `server/.env` file.
 2. Go to your GitHub Repository **Settings** -> **Webhooks** -> **Add webhook**.
 3. Configure the webhook:
    - **Payload URL:** `https://your-username.pythonanywhere.com/api/github-webhook/`
    - **Content type:** `application/json`
    - **Secret:** The exact same password from your `.env` file.
-4. **Done!** Every `git push` will now automatically deploy both the frontend (via Firebase GitHub Actions) and the backend (via the Webhook).
+4. **Done!** Every `git push` will now automatically deploy the backend via the Webhook!
+
+### 4. Secure Environment Variables (Pre-Commit Hook)
+We use a Git pre-commit hook to safely deploy **new** environment variables from your local machine to the live server without needing to SSH.
+1. **Install the hook locally:** 
+   ```bash
+   cp scripts/pre-commit .git/hooks/pre-commit
+   ```
+   *(Windows users: Ensure the file uses `LF` line endings, not `CRLF`)*
+2. Add `GITHUB_WEBHOOK_SECRET=your-password` (matching the server) to your **local** `server/.env` file.
+3. Add your new variable (e.g. `NEW_API_KEY=change-me`) to `server/.env.example`.
+4. **Commit via the terminal** (e.g. `git commit -m "Added API key"`). The hook will detect the new key and prompt you:
+   ```text
+   🔑 New environment variables detected!
+   Enter PRODUCTION values for your server.
+   NEW_API_KEY [default: change-me]:
+   ```
+5. It will encrypt your input using AES-256 and attach a `.env.deploy.enc` file to your commit.
+6. The PythonAnywhere webhook will detect it, decrypt it, inject the real value into the live server `.env`, and automatically delete the encrypted payload!
+   *(Note: GUI apps like GitHub Desktop cannot show terminal prompts. The script will safely block commits from GitHub Desktop if new `.env` variables are detected.)*
 
 ---
 
