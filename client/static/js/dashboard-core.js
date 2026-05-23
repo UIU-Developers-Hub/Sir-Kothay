@@ -293,11 +293,7 @@ async function loadQRCode() {
   } catch (e) { console.log('No QR code found'); }
 }
 async function handleQRAction() {
-  if (qrCodeUrl) {
-    var sheet = document.getElementById('qrSheet');
-    if (sheet) sheet.classList.remove('open');
-    openModal('downloadModal');
-  }
+  if (qrCodeUrl) openModal('downloadModal');
   else await generateQRCode();
 }
 async function confirmRegenerateQR() {
@@ -320,7 +316,7 @@ async function generateQRCode() {
 async function downloadQROnly() {
   if (!qrCodeUrl) return;
   try {
-    var r = await fetch(qrCodeUrl);
+    var r = await apiFetchImage(API_ENDPOINTS.QR_PNG_EXPORT);
     if (!r.ok) throw new Error('QR HTTP ' + r.status);
     var blob = await r.blob();
     var u = URL.createObjectURL(blob);
