@@ -282,7 +282,8 @@ We use a Git pre-commit hook to safely deploy **new** or **deleted** environment
    - **For Deleted Variables:** It will ask you to confirm if it should also be deleted from the production server.
 5. It will encrypt your inputs/instructions using AES-256 and attach a `.env.deploy.enc` file to your commit.
 6. The PythonAnywhere webhook will detect it, decrypt it, modify the live server `.env` exactly as instructed, and automatically delete the encrypted payload!
-   *(Note: GUI apps like GitHub Desktop cannot show interactive terminal prompts. The script will safely block commits from GitHub Desktop if `.env.example` changes are detected, forcing you to use the terminal to resolve the prompts.)*
+   
+   *(**Note for GitHub Desktop users:** GUI apps cannot show interactive terminal prompts. If you try to commit a `.env.example` change via GitHub Desktop, it will safely block it and show an error. To resolve this, just open your terminal and run: `git commit -am "Update env vars" && git push`)*
 
 ---
 
