@@ -30,6 +30,8 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
   - **Ban / Unban** — block login (distinct from deactivation)
   - **Deactivate / Activate** — toggle account active state
   - **Toggle Admin** — grant/revoke `is_staff` privilege (last-admin protected)
+  - **Toggle Verification** — manually verify or unverify a user's email
+  - **Reset Password** — generate a random password or set a custom one and email it to the user
   - **Change Role** — switch between Faculty, Student, or None (admin-only) with modal UI
   - **User Detail Panel** — slide-over panel with full user info and all actions
   - **Filters & Sorting** — filter by role (Faculty/Student/None) and status (Active/Deactivated/Banned); sort by all columns
@@ -53,6 +55,8 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
 - **Email Notifications** — all chat lifecycle events (new thread, acceptance, reply, close) trigger async email notifications
 
 ### Profile & Identity
+- **Email Verification** — secure OTP (10-minute expiry) and link-based email verification gate required for dashboard access
+- **Password Reset** — end-to-end forgot password flow via secure email tokens
 - **Profile Editor** — update display name, email, designation, organization, bio, phone number, and profile image
 - **Public URL Slugs** — auto-generated URL-safe slugs for broadcast pages (auto-syncs when username changes)
 - **Profile Image Upload** — upload and manage profile photos

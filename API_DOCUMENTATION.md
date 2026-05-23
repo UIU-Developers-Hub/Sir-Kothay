@@ -31,7 +31,7 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
 `role`: `"FACULTY"` or `"STUDENT"` (default: `"FACULTY"`).
 `student_id`: optional at registration. Students are prompted to set it on first dashboard visit.
 
-**Response:** `201` — user object + `tokens.access` / `tokens.refresh`
+**Response:** `201` — user object + `tokens.access` / `tokens.refresh`. An email with a 6-digit OTP code and verification link is automatically sent.
 
 ---
 
@@ -43,7 +43,7 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
 ```
 > Also accepts `student_id` as the identifier field for student login.
 
-**Response:** `200` — user object + tokens
+**Response:** `200` — user object + tokens. If the user is unverified, a fresh verification email is sent automatically if the previous one expired.
 
 ---
 
@@ -79,6 +79,66 @@ Tokens expire after **5 hours**. Use the refresh token to obtain a new access to
 
 ### 1.5 List All Users (Admin)
 **GET** `/api/auth/users/` · 🔒 JWT (staff only) · Paginated
+
+---
+
+### 1.6 Verify Email (OTP Code)
+**POST** `/api/auth/users/verify_email/` · 🔒 JWT
+
+```json
+{ "code": "123456" }
+```
+
+**Response:** `200` — `{ "message": "Email verified successfully." }`
+
+---
+
+### 1.7 Verify Email Link
+**POST** `/api/auth/users/verify_email_link/` · 🌐 Public
+
+```json
+{ "token": "uuid-string-from-url" }
+```
+
+**Response:** `200` — `{ "message": "Email verified successfully." }`
+
+---
+
+### 1.8 Resend Verification
+**POST** `/api/auth/users/resend_verification/` · 🔒 JWT
+
+```json
+{ "email": "new_email@example.com" }
+```
+`email`: optional. If provided, updates the user's email before sending the code.
+
+**Response:** `200` — `{ "message": "Verification email sent." }`
+
+---
+
+### 1.9 Request Password Reset
+**POST** `/api/auth/users/request_password_reset/` · 🌐 Public
+
+```json
+{ "email": "user@example.com" }
+```
+
+**Response:** `200` — `{ "message": "Password reset email sent (if account exists)." }`
+
+---
+
+### 1.10 Confirm Password Reset
+**POST** `/api/auth/users/confirm_password_reset/` · 🌐 Public
+
+```json
+{
+  "uidb64": "...",
+  "token": "...",
+  "new_password": "newpassword123"
+}
+```
+
+**Response:** `200` — `{ "message": "Password reset successfully." }`
 
 ---
 
@@ -295,7 +355,28 @@ Permanently deletes the user. Cannot delete yourself.
 
 ---
 
-### 4.8 Set Student ID (Self-Service)
+### 4.8 Reset User Password
+**POST** `/api/dashboard/admin-users/{id}/reset_password/` · 🔒 JWT (staff)
+
+```json
+{ "new_password": "optionalCustomPassword123" }
+```
+If `new_password` is omitted, a random secure password is automatically generated. The new password is automatically emailed to the user.
+
+**Response:** `{ "status": "success", "message": "..." }`
+
+---
+
+### 4.9 Toggle Email Verified
+**POST** `/api/dashboard/admin-users/{id}/toggle_verify/` · 🔒 JWT (staff)
+
+Manually toggle a user's email verification status (bypassing the email code).
+
+**Response:** `{ "status": "success", "is_email_verified": true }`
+
+---
+
+### 4.10 Set Student ID (Self-Service)
 **POST** `/api/dashboard/student/set-student-id/` · 🔒 JWT (Student)
 
 ```json
@@ -643,6 +724,26 @@ Token-based unsubscribe link (included in notification emails).
 
 ### 9.4 Remove Subscriber
 **DELETE** `/api/notifications/subscribers/{id}/` · 🔒 JWT
+
+---
+
+### 9.5 Manage Subscriptions (Public / Token)
+**POST** `/api/notifications/manage/` · 🌐 Public
+
+Fetches or updates subscriptions and anonymous DMs using either an email or a signed secure token.
+
+**Actions:** `fetch`, `update_sub`, `close_dm`.
+
+---
+
+### 9.6 Request Manage Link
+**POST** `/api/notifications/manage/request-link/` · 🌐 Public
+
+Sends a magic link containing a signed token to the specified email to manage subscriptions securely.
+
+```json
+{ "email": "user@example.com" }
+```
 
 ---
 
