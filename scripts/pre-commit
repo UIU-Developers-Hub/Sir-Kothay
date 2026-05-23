@@ -59,11 +59,13 @@ fi
 # GitHub Desktop simulates a terminal but blocks input, so we must test reading.
 if ! true < /dev/tty 2>/dev/null; then
     echo "======================================================================"
-    echo " 🛑 ERROR: Variables were added or deleted in server/.env.example"
-    echo " GitHub Desktop cannot show interactive terminal prompts."
+    echo "❌ ERROR: Non-interactive environment detected (GitHub Desktop?)"
+    echo "You MUST use a real terminal to commit changes to .env.example!"
     echo ""
-    echo " Please open your terminal (Command Prompt/PowerShell/VS Code)"
-    echo " and run 'git commit' there so you can enter the live server values."
+    echo "To resolve this, open your terminal and run:"
+    echo "  git commit -am \"Update env vars\" && git push"
+    echo ""
+    echo "This will allow you to answer the secure encryption prompts."
     echo "======================================================================"
     exit 1
 fi
