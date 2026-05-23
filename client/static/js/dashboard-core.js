@@ -293,7 +293,11 @@ async function loadQRCode() {
   } catch (e) { console.log('No QR code found'); }
 }
 async function handleQRAction() {
-  if (qrCodeUrl) openModal('downloadModal');
+  if (qrCodeUrl) {
+    var sheet = document.getElementById('qrSheet');
+    if (sheet) sheet.classList.remove('open');
+    openModal('downloadModal');
+  }
   else await generateQRCode();
 }
 async function confirmRegenerateQR() {
@@ -313,8 +317,24 @@ async function generateQRCode() {
     else { var d = await res.json(); await skNotify(d.message || 'Failed', { variant: 'error', title: 'QR code' }); btn.disabled = false; btn.textContent = 'Generate'; }
   } catch (e) { await skNotify('Failed to generate QR code', { variant: 'error', title: 'QR code' }); btn.disabled = false; btn.textContent = 'Generate'; }
 }
-function downloadQROnly() {
-  if (qrCodeUrl) { var a = document.createElement('a'); a.href = qrCodeUrl; a.download = 'my-qr-code.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); closeModal('downloadModal'); }
+async function downloadQROnly() {
+  if (!qrCodeUrl) return;
+  try {
+    var r = await fetch(qrCodeUrl);
+    if (!r.ok) throw new Error('QR HTTP ' + r.status);
+    var blob = await r.blob();
+    var u = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = u;
+    a.download = 'my-qr-code.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(u);
+    closeModal('downloadModal');
+  } catch (e) {
+    await skNotify('Could not download image: ' + e.message, { variant: 'error', title: 'QR code' });
+  }
 }
 async function downloadQRWithInfo() {
   if (!qrCodeUrl) return;

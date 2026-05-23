@@ -228,7 +228,7 @@ window.SKLayout = (() => {
     let mainLinks = links.filter(l => !l.section);
     const hasFacultyNav = mainLinks.some(l => l.id === 'broadcast');
     if (hasFacultyNav) {
-      const priority = ['broadcast', 'calendar', 'inbox', 'templates'];
+      const priority = ['broadcast', 'templates', 'calendar', 'inbox'];
       mainLinks = priority.map(id => mainLinks.find(l => l.id === id)).filter(Boolean);
     } else {
       mainLinks = mainLinks.slice(0, 4);
