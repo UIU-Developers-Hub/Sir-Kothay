@@ -88,7 +88,16 @@ document.addEventListener('DOMContentLoaded', function () {
       var tabBtn = document.querySelector('[data-tab="' + mappedTab + '"]');
       if (tabBtn) tabBtn.click();
       if (threadParam && (tabParam === 'chats' || tabParam === 'inbox')) {
-        setTimeout(function () { openConversation('thread', parseInt(threadParam)); }, 200);
+        var attempts = 0;
+        var tryOpen = setInterval(function () {
+            if (typeof _allConvos !== 'undefined' && _allConvos.find(function(x) { return x.type === 'thread' && x.id === parseInt(threadParam); })) {
+                clearInterval(tryOpen);
+                openConversation('thread', parseInt(threadParam));
+            } else if (attempts > 50) {
+                clearInterval(tryOpen);
+            }
+            attempts++;
+        }, 100);
       }
     }, 0);
   } else {
@@ -269,7 +278,7 @@ async function loadQRCode() {
     var res = await apiRequest(API_BASE_URL + '/api/qrcode/qrcodes/my_qrcode/');
     var data = await res.json();
     if (res.ok && data.image) {
-      qrCodeUrl = API_BASE_URL + data.image;
+      qrCodeUrl = resolveProfileImage(data.image);
       document.getElementById('qrCode').src = qrCodeUrl;
       var sheetEl = document.getElementById('qrCodeSheet');
       if (sheetEl) sheetEl.src = qrCodeUrl;

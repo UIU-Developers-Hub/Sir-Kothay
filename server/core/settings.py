@@ -40,6 +40,7 @@ ALLOWED_HOSTS = _csv('ALLOWED_HOSTS', '127.0.0.1,localhost')
 # file:// pages send Origin: null; they are rejected unless we allow all origins in development.
 CORS_ALLOW_CREDENTIALS = False
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 if not DEBUG:
     CORS_ALLOWED_ORIGINS = _csv(
