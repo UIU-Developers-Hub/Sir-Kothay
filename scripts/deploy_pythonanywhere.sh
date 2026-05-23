@@ -152,6 +152,19 @@ else
                 while IFS= read -r line; do
                     if [ -z "$line" ]; then continue; fi
                     key=$(echo "$line" | cut -d '=' -f 1)
+                    if [[ "$key" == __DELETE__* ]]; then
+                        real_key="${key#__DELETE__}"
+                        if grep -q "^${real_key}=" "$ENV_FILE"; then
+                            if sed --version >/dev/null 2>&1; then
+                                sed -i "/^${real_key}=/d" "$ENV_FILE"
+                            else
+                                sed -i "" "/^${real_key}=/d" "$ENV_FILE"
+                            fi
+                            log "  🗑️  DELETED: ${real_key}"
+                        fi
+                        continue
+                    fi
+                    
                     if grep -q "^${key}=" "$ENV_FILE"; then
                         # Update existing key
                         sed -i "s|^${key}=.*|${line}|" "$ENV_FILE"

@@ -27,25 +27,29 @@ if ! git diff --cached --name-only | grep -q "$ENV_EXAMPLE"; then
 fi
 
 # Extract current keys from .env.example (only valid lines like KEY=value)
-CURRENT_KEYS=$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$ENV_EXAMPLE" | cut -d '=' -f 1 | sort)
+# We strip Windows CR (\r) so the comparison is exact
+CURRENT_KEYS=$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$ENV_EXAMPLE" | cut -d '=' -f 1 | tr -d '\r' | sort)
 
 # Load previously known keys
-OLD_KEYS=""
 if [ -f "$ENV_KEYS_TRACKER" ]; then
-    OLD_KEYS=$(cat "$ENV_KEYS_TRACKER" | sort)
+    OLD_KEYS=$(cat "$ENV_KEYS_TRACKER" | tr -d '\r' | sort)
+else
+    OLD_KEYS=""
 fi
 
 # Find NEW keys (in current but not in old)
+# Find DELETED keys (in old but not in current)
 # Use temp files instead of process substitution for POSIX sh compatibility
 TMP_CUR=$(mktemp)
 TMP_OLD=$(mktemp)
 echo "$CURRENT_KEYS" > "$TMP_CUR"
 echo "$OLD_KEYS" > "$TMP_OLD"
 NEW_KEYS=$(comm -23 "$TMP_CUR" "$TMP_OLD")
+DELETED_KEYS=$(comm -13 "$TMP_CUR" "$TMP_OLD")
 rm -f "$TMP_CUR" "$TMP_OLD"
 
-if [ -z "$NEW_KEYS" ]; then
-    # Update tracker and exit — no new keys
+if [ -z "$NEW_KEYS" ] && [ -z "$DELETED_KEYS" ]; then
+    # Update tracker and exit — nothing changed
     echo "$CURRENT_KEYS" > "$ENV_KEYS_TRACKER"
     git add "$ENV_KEYS_TRACKER"
     exit 0
@@ -55,7 +59,7 @@ fi
 # GitHub Desktop simulates a terminal but blocks input, so we must test reading.
 if ! true < /dev/tty 2>/dev/null; then
     echo "======================================================================"
-    echo " 🛑 ERROR: New variables were added to server/.env.example"
+    echo " 🛑 ERROR: Variables were added or deleted in server/.env.example"
     echo " GitHub Desktop cannot show interactive terminal prompts."
     echo ""
     echo " Please open your terminal (Command Prompt/PowerShell/VS Code)"
@@ -64,31 +68,50 @@ if ! true < /dev/tty 2>/dev/null; then
     exit 1
 fi
 
-echo ""
-echo "╔══════════════════════════════════════════════════╗"
-echo "║  🔑 New environment variables detected!          ║"
-echo "║  Enter PRODUCTION values for your server.        ║"
-echo "║  Press Enter to skip (use default from example). ║"
-echo "╚══════════════════════════════════════════════════╝"
-echo ""
-
 TMP_PAYLOAD=$(mktemp)
-echo "$NEW_KEYS" | while IFS= read -r key; do
-    # Get default from local .env if it exists, otherwise fallback to .env.example
-    if grep -q "^${key}=" "server/.env" 2>/dev/null; then
-        default_val=$(grep "^${key}=" "server/.env" | head -1 | cut -d '=' -f 2-)
-    else
-        default_val=$(grep "^${key}=" "$ENV_EXAMPLE" | head -1 | cut -d '=' -f 2-)
-    fi
-    
-    printf "  %s [default: %s]: " "$key" "$default_val"
-    # Use bash's 'read -e' so arrow keys and backspace work properly (readline mode)
-    user_val=$(bash -c 'read -e val < /dev/tty && echo "$val"')
-    if [ -z "$user_val" ]; then
-        user_val="$default_val"
-    fi
-    echo "${key}=${user_val}" >> "$TMP_PAYLOAD"
-done
+
+if [ -n "$NEW_KEYS" ]; then
+    echo ""
+    echo "╔══════════════════════════════════════════════════╗"
+    echo "║  🔑 New environment variables detected!          ║"
+    echo "║  Enter PRODUCTION values for your server.        ║"
+    echo "║  Press Enter to skip (use default from example). ║"
+    echo "╚══════════════════════════════════════════════════╝"
+    echo ""
+    echo "$NEW_KEYS" | while IFS= read -r key; do
+        if [ -z "$key" ]; then continue; fi
+        # Get default from local .env if it exists, otherwise fallback to .env.example
+        if grep -q "^${key}=" "server/.env" 2>/dev/null; then
+            default_val=$(grep "^${key}=" "server/.env" | head -1 | cut -d '=' -f 2-)
+        else
+            default_val=$(grep "^${key}=" "$ENV_EXAMPLE" | head -1 | cut -d '=' -f 2-)
+        fi
+        
+        printf "  %s [default: %s]: " "$key" "$default_val"
+        # Use bash's 'read -e' so arrow keys and backspace work properly (readline mode)
+        user_val=$(bash -c 'read -e val < /dev/tty && echo "$val"')
+        if [ -z "$user_val" ]; then
+            user_val="$default_val"
+        fi
+        echo "${key}=${user_val}" >> "$TMP_PAYLOAD"
+    done
+fi
+
+if [ -n "$DELETED_KEYS" ]; then
+    echo ""
+    echo "╔══════════════════════════════════════════════════╗"
+    echo "║  🗑️  Deleted environment variables detected!     ║"
+    echo "╚══════════════════════════════════════════════════╝"
+    echo ""
+    echo "$DELETED_KEYS" | while IFS= read -r key; do
+        if [ -z "$key" ]; then continue; fi
+        printf "  Delete '%s' from production server? (y/n) [default: y]: " "$key"
+        user_val=$(bash -c 'read -e val < /dev/tty && echo "$val"')
+        case "$user_val" in
+            [Yy]*|"") echo "__DELETE__${key}=true" >> "$TMP_PAYLOAD" ;;
+        esac
+    done
+fi
 
 # Encrypt the payload with the webhook secret
 openssl enc -aes-256-cbc -pbkdf2 -salt -pass "pass:${LOCAL_SECRET}" -in "$TMP_PAYLOAD" -out "$DEPLOY_FILE" 2>/dev/null
