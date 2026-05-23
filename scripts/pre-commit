@@ -82,7 +82,8 @@ echo "$NEW_KEYS" | while IFS= read -r key; do
     fi
     
     printf "  %s [default: %s]: " "$key" "$default_val"
-    read user_val < /dev/tty
+    # Use bash's 'read -e' so arrow keys and backspace work properly (readline mode)
+    user_val=$(bash -c 'read -e val < /dev/tty && echo "$val"')
     if [ -z "$user_val" ]; then
         user_val="$default_val"
     fi
