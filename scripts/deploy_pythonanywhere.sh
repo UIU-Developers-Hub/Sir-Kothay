@@ -4,6 +4,8 @@
 
 set -e
 
+main() {
+
 REPO_DIR="$HOME/Sir-Kothay"
 LOGFILE="$REPO_DIR/deploy.log"
 VENV_DIR="$HOME/.virtualenvs/venv"
@@ -241,3 +243,6 @@ fi
 
 log "Process finished at $(date)"
 log "==============================================="
+}
+
+main "$@"
