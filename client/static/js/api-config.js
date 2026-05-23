@@ -15,7 +15,7 @@
     // Always map local development to 127.0.0.1:8000 so default `python manage.py runserver` works without tweaks
     var defaultBase = isLocal
         ? 'http://127.0.0.1:8000'
-        : window.location.protocol + '//' + host + ':8000';
+        : 'https://TahsinFaiyaz30.pythonanywhere.com';
     var raw =
         (typeof window !== 'undefined' && window.SIR_KOTHAY_API_BASE) ||
         defaultBase;
