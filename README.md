@@ -305,6 +305,7 @@ All server configuration is in `server/.env`. Copy `.env.example` to `.env` and 
 | `GITHUB_WEBHOOK_SECRET` | — | Shared secret for GitHub Webhook auto-deploy. **Must match** the secret in your GitHub Webhook settings. |
 | `EMAIL_HOST_USER` | empty | Gmail address. When set, enables real SMTP delivery. When empty, emails print to console. |
 | `EMAIL_HOST_PASSWORD` | empty | Gmail App Password (16 chars). See [setup instructions](#-email-setup). |
+| `DEFAULT_FROM_EMAIL` | empty | The "From" name and email address (e.g. `"Sir Kothay <you@gmail.com>"`). |
 
 ### 📧 Email Setup
 
