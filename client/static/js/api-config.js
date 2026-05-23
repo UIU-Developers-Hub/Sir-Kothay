@@ -12,9 +12,9 @@
         host.startsWith('192.168.') ||
         host.startsWith('10.');
         
-    // Always map local development to 127.0.0.1:8000 so default `python manage.py runserver` works without tweaks
+    // Always map local development to port 8000 on the same IP so `python manage.py runserver 0.0.0.0:8000` works on mobile
     var defaultBase = isLocal
-        ? 'http://127.0.0.1:8000'
+        ? 'http://' + (host || '127.0.0.1') + ':8000'
         : 'https://TahsinFaiyaz30.pythonanywhere.com';
     var raw =
         (typeof window !== 'undefined' && window.SIR_KOTHAY_API_BASE) ||
