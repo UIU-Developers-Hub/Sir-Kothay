@@ -1,239 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" href="../static/images/nav-logo.png">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Login - Sir Kothay</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Sign in to Sir Kothay - Leave notes when you're away">
+  <link rel="stylesheet" href="../static/css/style.css?v=ui-fix-30">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <style>
-    body { font-family: 'Poppins', sans-serif; }
-    .brand-color { color: #f68b1f; }
-    .brand-bg { background-color: #f68b1f; }
-    .hover-scale { transition: transform 0.2s ease-in-out; }
-    .hover-scale:hover { transform: scale(1.05); }
-  </style>
 </head>
-<body class="bg-gray-100">
+<body>
+  <div class="sk-app">
+    <!-- Sidebar is injected by JS (layout.js) unconditionally -->
 
-  <!-- Fixed Bottom Navbar on Mobile, Top on Desktop -->
-  <nav class="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto z-50 bg-white/80 backdrop-blur-lg border-t md:border-b border-gray-200/50">
-    <div class="max-w-5xl mx-auto">
+    <!-- Main Content -->
+    <main class="sk-main">
+      <div class="sk-page" style="padding-top: 0">
+        <div class="sk-auth-page">
+    <!-- Decorative blobs -->
+    <div class="sk-auth-blob sk-auth-blob-1"></div>
+    <div class="sk-auth-blob sk-auth-blob-2"></div>
 
-      <!-- Desktop Navbar (Top) -->
-      <div class="hidden md:flex items-center justify-between px-8 py-4">
-        <!-- Logo -->
-        <a href="../index.html" class="flex items-center gap-3">
-          <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo" />
-        </a>
+    <div class="sk-auth-card sk-fade-up">
 
-        <!-- Desktop Links -->
-        <div class="flex items-center gap-6 text-sm font-medium">
-          <a href="../index.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Home</a>
-          <a href="../about.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">About</a>
-          <a href="login.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Login</a>
-          <a href="register.html" class="px-5 py-2 text-white rounded-lg" style="background-color: #f68b1f;" onmouseover="this.style.backgroundColor='#e67a0f'" onmouseout="this.style.backgroundColor='#f68b1f'">Sign Up</a>
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="text-gray-600 hover:text-black">
-            <i class="bi bi-github text-xl"></i>
-          </a>
-        </div>
+      <h1 class="sk-auth-title">Welcome Back</h1>
+      <p class="sk-auth-subtitle">Sign in to your account</p>
+
+      <!-- Error Message -->
+      <div id="errorMessage" style="display:none;padding:0.75rem 1rem;border-radius:var(--sk-radius-lg);background:var(--sk-error-bg);color:var(--sk-error);font-size:var(--sk-text-sm);margin-bottom:1.5rem;animation:sk-fade-in 200ms ease">
       </div>
 
-      <!-- Mobile Bottom Navbar -->
-      <div class="md:hidden">
-        <div class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
-          
-          <!-- Home -->
-          <a href="../index.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;">
-            <i class="bi bi-house-fill text-2xl"></i>
-            <span class="text-xs font-medium">Home</span>
-          </a>
-          
-          <!-- About -->
-          <a href="../about.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;">
-            <i class="bi bi-info-circle-fill text-2xl"></i>
-            <span class="text-xs font-medium">About</span>
-          </a>
-          
-          <!-- Login -->
-          <a href="login.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50" style="color: #f68b1f;">
-            <i class="bi bi-box-arrow-in-right text-2xl"></i>
-            <span class="text-xs font-medium">Login</span>
-          </a>
-
-          <!-- Sign Up -->
-          <a href="register.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:bg-orange-50 transition">
-            <i class="bi bi-person-plus-fill text-2xl"></i>
-            <span class="text-xs font-medium">Sign Up</span>
-          </a>
-
-          <!-- GitHub -->
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-black transition">
-            <i class="bi bi-github text-2xl"></i>
-            <span class="text-xs font-medium">GitHub</span>
-          </a>
-
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="sk-form-group">
+          <label class="sk-label" for="email">Email</label>
+          <input type="email" id="email" class="sk-input" placeholder="Enter your email" required autocomplete="email">
         </div>
-      </div>
-    </div>
-  </nav>
 
-  <!-- Main Content -->
-  <main class="pt-0 md:pt-24 pb-20 md:pb-0 min-h-screen">
-<div class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <!-- Login Container -->
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md hover-scale">
-        <h2 class="text-3xl font-bold text-center brand-color mb-6">Login to Sir Kothay</h2>
-
-        <!-- Error Messages -->
-        <div id="errorMessage" class="text-red-500 text-center mb-4 hidden"></div>
-
-        <!-- Form -->
-        <form id="loginForm" class="space-y-6">
-            <!-- Email Input -->
-            <div>
-                <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
-                <input type="email" name="email" id="email" placeholder="Enter your email"
-                       class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                       required>
-            </div>
-
-            <!-- Password Input -->
-            <div>
-                <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
-                <input type="password" name="password" id="password" placeholder="Enter your password"
-                       class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                       required>
-            </div>
-
-            <!-- Login Button -->
-            <button type="submit" class="w-full text-white py-3 rounded-lg font-semibold hover-scale" style="background-color: #f68b1f;" onmouseover="this.style.backgroundColor='#e67a0f'" onmouseout="this.style.backgroundColor='#f68b1f'">
-                Login
+        <div class="sk-form-group">
+          <div style="display:flex; justify-content:space-between; align-items:baseline">
+            <label class="sk-label" for="password">Password</label>
+            <a href="forgot-password.html" style="font-size:var(--sk-text-sm); color:var(--sk-primary); font-weight:500;">Forgot Password?</a>
+          </div>
+          <div style="position:relative">
+            <input type="password" id="password" class="sk-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right:2.75rem">
+            <button type="button" onclick="togglePassword()" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sk-text-placeholder);cursor:pointer;padding:4px;font-size:1.125rem">
+              <i class="bi bi-eye" id="toggleIcon"></i>
             </button>
-        </form>
+          </div>
+        </div>
 
-        <!-- Register Link -->
-        <p class="text-sm text-center text-gray-600 mt-6">
-            Don't have an account? <a href="register.html" class="text-blue-500 hover:underline font-medium">Sign Up</a>
-        </p>
+        <button type="submit" id="submitBtn" class="sk-btn sk-btn-gradient" style="width:100%;padding:0.75rem;font-size:var(--sk-text-base);margin-top:0.5rem">
+          <span id="btnText">Sign In</span>
+          <i class="bi bi-arrow-right"></i>
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:1.5rem;font-size:var(--sk-text-sm);color:var(--sk-text-tertiary)">
+        Don't have an account?
+        <a href="register.html" style="color:var(--sk-primary);font-weight:600">Sign Up</a>
+      </p>
+
     </div>
-</div>
-
-<!-- API Config -->
-<script src="../static/js/api-config.js"></script>
-
-<!-- Login Form Handler -->
-<script>
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const errorDiv = document.getElementById('errorMessage');
-    
-    try {
-      const response = await fetch(API_ENDPOINTS.LOGIN, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        // Store tokens (backend returns tokens in a nested object)
-        localStorage.setItem('access_token', data.tokens.access);
-        localStorage.setItem('refresh_token', data.tokens.refresh);
-        
-        // Redirect to dashboard
-        window.location.href = '../dashboard/home.html';
-      } else {
-        errorDiv.classList.remove('hidden');
-        errorDiv.textContent = data.detail || 'Login failed. Please check your credentials.';
-      }
-    } catch (error) {
-      errorDiv.classList.remove('hidden');
-      errorDiv.textContent = 'Login failed. Please try again.';
-      console.error('Error:', error);
-    }
-  });
-
-  // Load contributors for footer
-      async function loadFooterContributors() {
-        try {
-          const response = await fetch(window.sirKothayContributorsApiUrl());
-          const contributors = await response.json();
-
-          const container = document.getElementById("contributorAvatarsFooter");
-          if (container) {
-            container.innerHTML = contributors
-              .slice(0, 6)
-              .map(
-                (c) =>
-                  `<a href="${c.html_url}" target="_blank">
-              <img src="${c.avatar_url}" class="h-8 w-8 rounded-full" alt="${c.login}">
-            </a>`,
-              )
-              .join("");
-          }
-        } catch (error) {
-          console.error("Error loading contributors:", error);
-        }
-      }
-      loadFooterContributors();
-</script>
-
-</div>
-  </main>
-
-  <footer class="py-12 px-6 mt-4 mb-20 md:mb-0 bg-gray-900 text-gray-300">
-    <div class="max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <div class="flex items-center gap-3 mb-4 md:justify-center">
-            <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo">
-            <span class="text-2xl font-bold text-white">Sir Kothay?</span>
-          </div>
-          <p class="text-gray-400">Simple notes. Strong bonds.</p>
-        </div>
-
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <h4 class="font-semibold text-white mb-4">Quick Links</h4>
-          <ul class="space-y-2 text-gray-400">
-            <li><a href="../index.html#features" class="hover:text-white transition">Features</a></li>
-            <li><a href="../about.html" class="hover:text-white transition">About Us</a></li>
-            <li><a href="register.html" class="hover:text-white transition">Sign Up</a></li>
-          </ul>
-        </div>
-
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <h4 class="font-semibold text-white mb-4">Connect</h4>
-          <div class="flex gap-4 justify-left md:justify-center">
-            <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" class="text-2xl hover:text-white transition">
-              <i class="bi bi-github"></i>
-            </a>
-            <a href="https://www.facebook.com/uiudevelopershub" class="text-2xl hover:text-white transition">
-              <i class="bi bi-facebook"></i>
-            </a>
-          </div>
-          <div class="flex items-center gap-2 mt-6 text-sm justify-left md:justify-center">
-            <img src="https://github.com/UIU-Developers-Hub.png" class="h-8 w-8 rounded-full" alt="UIU Developers Hub">
-            <span>© 2026 Sir Kothay. Made with ❤️ by <a href="https://github.com/UIU-Developers-Hub" style="color: #f68b1f;" class="hover:underline">UIU Developers Hub</a></span>
-          </div>
-
-          <div id="contributorAvatarsFooter" class="flex gap-2 mt-2">
-              <!-- Contributors will be loaded dynamically -->
-            </div>
         </div>
       </div>
-    </div>
-  </footer>
+    </main>
 
+    <!-- Mobile Bottom Nav -->
+    <nav class="sk-bottom-nav">
+      <div class="sk-bottom-nav-items">
+        <!-- Injected by JS -->
+      </div>
+    </nav>
+  </div>
+
+  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/utils.js"></script>
+  <script src="../static/js/theme.js?v=ui-fix-30"></script>
+  <script src="../static/js/components.js"></script>
+  <script src="../static/js/layout.js?v=ui-fix-30"></script>
+  <script>
+    SKLayout.setupPublicNav && SKLayout.setupPublicNav('login');
+
+    // Redirect if already logged in
+    if (localStorage.getItem('access_token')) {
+      window.location.href = '../dashboard/home.html';
+    }
+
+    function togglePassword() {
+      const pwd = document.getElementById('password');
+      const icon = document.getElementById('toggleIcon');
+      if (pwd.type === 'password') {
+        pwd.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+      } else {
+        pwd.type = 'password';
+        icon.className = 'bi bi-eye';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const errorDiv = document.getElementById('errorMessage');
+      const btn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+
+      errorDiv.style.display = 'none';
+      btn.disabled = true;
+      btnText.textContent = 'Signing in...';
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch(API_ENDPOINTS.LOGIN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('access_token', data.tokens.access);
+          localStorage.setItem('refresh_token', data.tokens.refresh);
+          if (data.user) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+          }
+          localStorage.removeItem('sk_otp_expires_at');
+
+          if (data.user && data.user.is_email_verified === false) {
+            window.location.href = 'verify-email.html';
+            return;
+          }
+
+          // Role-based redirect
+          const role = data.user?.role || data.role || '';
+          if (role === 'STUDENT') {
+            window.location.href = '../dashboard/student.html';
+          } else if (!role && data.user?.is_staff) {
+            window.location.href = '../dashboard/admin.html';
+          } else {
+            window.location.href = '../dashboard/home.html';
+          }
+        } else {
+          const msg = data.detail || data.error || data.message || Object.values(data).flat().join(', ') || 'Login failed';
+          errorDiv.textContent = msg;
+          errorDiv.style.display = 'block';
+        }
+      } catch (err) {
+        errorDiv.textContent = 'Network error. Please check your connection.';
+        errorDiv.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Sign In';
+      }
+    }
+  </script>
 </body>
 </html>

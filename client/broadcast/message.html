@@ -1,437 +1,529 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="../static/images/nav-logo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Broadcast - Sir Kothay</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
+    <meta name="description" content="Sir Kothay - Faculty broadcast page. See availability and send messages.">
+    <link rel="stylesheet" href="../static/css/style.css?v=ui-fix-14">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-      body {
-        font-family: "Poppins", sans-serif;
+      /* Broadcast-specific styles */
+      .bc-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--sk-bg-base);
+        position: relative;
       }
-      #broadcastMessagePanel:focus {
+      .bc-page::before {
+        content: '';
+        display: none;
+      }
+      .bc-page::after {
+        content: '';
+        display: none;
+      }
+      .bc-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        position: relative;
+        z-index: 1;
+      }
+      .bc-card {
+        width: 100%;
+        max-width: 420px;
+        background: var(--sk-card-bg);
+        border: 1px solid var(--sk-card-border);
+        border-radius: var(--sk-radius-xl);
+        overflow: hidden;
+        box-shadow: var(--sk-shadow-md);
+        animation: sk-fade-in 220ms ease both;
+      }
+      .bc-hero {
+        padding: 2rem 1.5rem;
+        text-align: center;
+        color: white;
+        background: var(--sk-primary);
+        position: relative;
+        overflow: hidden;
+      }
+      .bc-hero::before {
+        content: '';
+        display: none;
+      }
+      .bc-hero::after {
+        content: '';
+        display: none;
+      }
+      .bc-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: var(--sk-radius-lg);
+        object-fit: cover;
+        border: 2px solid rgba(255,255,255,0.5);
+        margin: 0 auto 0.75rem;
+        display: block;
+        position: relative;
+        z-index: 1;
+      }
+      .bc-name {
+        font-size: var(--sk-text-xl);
+        font-weight: var(--sk-font-bold);
+        letter-spacing: -0.01em;
+        position: relative;
+        z-index: 1;
+      }
+      /* Broadcast message section */
+      .bc-msg-section {
+        padding: 1.25rem 1.5rem;
+        background: var(--sk-primary-light);
+        text-align: center;
+      }
+      .bc-msg-label {
+        font-size: var(--sk-text-xs);
+        font-weight: var(--sk-font-semibold);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--sk-primary-text);
+        opacity: 0.7;
+        margin-bottom: 0.75rem;
+      }
+      .bc-msg-panel {
+        border-radius: var(--sk-radius-xl);
+        padding: 1.25rem;
+        border: 1px solid var(--sk-primary-muted);
+        background: var(--sk-card-bg);
+      }
+      .bc-msg-panel:focus {
         outline: none;
       }
-      #broadcastMessagePanel:focus-visible {
-        box-shadow:
-          0 0 0 4px rgba(246, 139, 31, 0.55),
-          0 12px 40px rgba(0, 0, 0, 0.12);
+      .bc-msg-panel:focus-visible {
+        box-shadow: 0 0 0 3px var(--sk-primary-muted);
+      }
+      .bc-toast {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        z-index: 9999;
+        padding: 0.625rem 0.875rem;
+        background: var(--sk-bg-surface);
+        border: 1px solid var(--sk-border);
+        border-radius: var(--sk-radius-lg);
+        box-shadow: var(--sk-shadow-sm);
+        color: var(--sk-text-primary);
+        font-size: var(--sk-text-sm);
+      }
+      .bc-msg-text {
+        color: var(--sk-text-primary);
+        font-weight: var(--sk-font-semibold);
+        font-size: var(--sk-text-base);
+        line-height: 1.6;
+      }
+      /* Info row */
+      .bc-info-list {
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .bc-info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .bc-info-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .bc-info-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--sk-radius-lg);
+        background: var(--sk-primary-light);
+        color: var(--sk-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.125rem;
+        flex-shrink: 0;
+      }
+      .bc-info-label {
+        font-size: var(--sk-text-xs);
+        color: var(--sk-text-tertiary);
+      }
+      .bc-info-value {
+        font-size: var(--sk-text-sm);
+        font-weight: var(--sk-font-medium);
+        color: var(--sk-text-primary);
+        text-decoration: none;
+        transition: color var(--sk-transition-fast);
+      }
+      a.bc-info-value:hover {
+        color: var(--sk-primary);
+      }
+      .bc-copy-btn {
+        opacity: 0;
+        transition: opacity var(--sk-transition-fast);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.375rem;
+        border-radius: var(--sk-radius-md);
+        color: var(--sk-text-tertiary);
+        font-size: 1rem;
+      }
+      .bc-info-row:hover .bc-copy-btn {
+        opacity: 1;
+      }
+      .bc-copy-btn:hover {
+        background: var(--sk-bg-muted);
+        color: var(--sk-text-primary);
+      }
+      /* Availability badge */
+      .bc-avail-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        border-radius: var(--sk-radius-xl);
+        font-size: var(--sk-text-sm);
+        font-weight: var(--sk-font-semibold);
+      }
+      .bc-avail-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      /* Sections */
+      .bc-section {
+        padding: 0.75rem 1.5rem;
+        border-top: 1px solid var(--sk-border);
+      }
+      .bc-section-form {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--sk-border);
+        background: var(--sk-bg-muted);
+      }
+      /* Notify toggle buttons */
+      .bc-notify-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        padding: 0.5rem;
+        border-radius: var(--sk-radius-xl);
+        font-size: var(--sk-text-xs);
+        font-weight: var(--sk-font-semibold);
+        border: 1px solid var(--sk-border);
+        background: none;
+        color: var(--sk-text-placeholder);
+        cursor: pointer;
+        transition: all var(--sk-transition-base);
+        font-family: var(--sk-font-sans);
+      }
+      .bc-notify-btn:hover {
+        background: var(--sk-bg-muted);
+      }
+      /* Responsive footer padding */
+      @media (max-width: 767px) {
+        .bc-page > footer {
+          margin-bottom: 5rem;
+        }
       }
     </style>
   </head>
   <body>
-    <!-- Fixed Bottom Navbar on Mobile, Top on Desktop (hidden for guests) -->
-    <nav
-      id="broadcastNav"
-      class="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto z-50 bg-white/80 backdrop-blur-lg border-t md:border-b border-gray-200/50"
-    >
-      <div class="max-w-5xl mx-auto">
-        <!-- Desktop Navbar (Top) -->
-        <div class="hidden md:flex items-center justify-between px-8 py-4">
-          <!-- Logo -->
-          <a href="../index.html" class="flex items-center gap-3">
-            <img
-              src="../static/images/nav-logo.png"
-              class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain"
-              alt="Logo"
-            />
-          </a>
+    <div class="sk-app">
+      <!-- Sidebar injected by layout.js -->
+      <main class="sk-main">
+        <div class="sk-page" style="padding-top: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+          <div class="bc-page" style="min-height: auto; width: 100%;">
+      
 
-          <!-- Desktop Links -->
-          <div
-            id="desktopNav"
-            class="flex items-center gap-6 text-sm font-medium"
-          >
-            <a
-              href="../index.html"
-              class="text-gray-700"
-              style="transition: color 0.2s"
-              onmouseover="this.style.color = '#f68b1f'"
-              onmouseout="this.style.color = ''"
-              >Home</a
-            >
-            <a
-              href="../about.html"
-              class="text-gray-700"
-              style="transition: color 0.2s"
-              onmouseover="this.style.color = '#f68b1f'"
-              onmouseout="this.style.color = ''"
-              >About</a
-            >
-            <a
-              href="../auth/login.html"
-              class="text-gray-700"
-              style="transition: color 0.2s"
-              onmouseover="this.style.color = '#f68b1f'"
-              onmouseout="this.style.color = ''"
-              >Login</a
-            >
-            <a
-              href="../auth/register.html"
-              class="px-5 py-2 text-white rounded-lg"
-              style="background-color: #f68b1f"
-              onmouseover="this.style.backgroundColor = '#e67a0f'"
-              onmouseout="this.style.backgroundColor = '#f68b1f'"
-              >Sign Up</a
-            >
-            <a
-              href="https://github.com/UIU-Developers-Hub/Sir-Kothay"
-              target="_blank"
-              class="text-gray-600 hover:text-black"
-            >
-              <i class="bi bi-github text-xl"></i>
-            </a>
+      <!-- Main Content -->
+      <main id="broadcastMain" class="bc-container">
+        <div class="bc-card">
+          <!-- Hero Section -->
+          <div class="bc-hero">
+            <img id="userImage" src="../static/images/image.png" alt="User" class="bc-avatar">
+            <h1 id="userName" class="bc-name">Loading...</h1>
           </div>
+
+          <!-- Broadcast Message (hidden by default) -->
+          <div id="broadcastSection" class="bc-msg-section hidden">
+            <p class="bc-msg-label">Active message</p>
+            <div id="broadcastMessagePanel" tabindex="0" role="region" aria-label="Broadcast message" class="bc-msg-panel">
+              <p id="broadcastMessage" class="bc-msg-text"></p>
+            </div>
+          </div>
+
+          <!-- Contact Info -->
+          <div class="bc-info-list">
+            <div class="bc-info-row">
+              <div class="bc-info-left">
+                <div class="bc-info-icon"><i class="bi bi-telephone-fill"></i></div>
+                <div>
+                  <p class="bc-info-label">Phone</p>
+                  <a id="userPhone" href="tel:" class="bc-info-value">Loading...</a>
+                </div>
+              </div>
+              <button id="copyPhone" class="bc-copy-btn" title="Copy"><i class="bi bi-clipboard"></i></button>
+            </div>
+
+            <div class="bc-info-row">
+              <div class="bc-info-left">
+                <div class="bc-info-icon"><i class="bi bi-at"></i></div>
+                <div>
+                  <p class="bc-info-label">Email</p>
+                  <a id="userEmail" href="mailto:" class="bc-info-value">Loading...</a>
+                </div>
+              </div>
+              <button id="copyEmail" class="bc-copy-btn" title="Copy"><i class="bi bi-clipboard"></i></button>
+            </div>
+
+            <div class="bc-info-row">
+              <div class="bc-info-left">
+                <div class="bc-info-icon"><i class="bi bi-building"></i></div>
+                <div>
+                  <p class="bc-info-label">Organization</p>
+                  <p id="userOrg" class="bc-info-value" style="cursor:default">Loading...</p>
+                </div>
+              </div>
+              <button id="copyOrg" class="bc-copy-btn" title="Copy"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </div>
+
+          <!-- Availability Status Badge -->
+          <div id="availabilityBadge" class="bc-section">
+            <div id="availBadgeContent" class="bc-avail-badge" style="background:var(--sk-error-bg);color:var(--sk-error);border:1px solid var(--sk-error-bg)">
+              <span class="bc-avail-dot" style="background:var(--sk-error)"></span>
+              <span>Currently Unavailable</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons (role-aware — rendered by JS) -->
+          <div id="actionBtnsSection" class="bc-section" style="display:flex;gap:0.5rem">
+            <button id="notifyMeBtn" onclick="document.getElementById('subscribeForm').classList.toggle('hidden')" class="sk-btn sk-btn-primary" style="flex:1;font-size:var(--sk-text-sm)">
+              <i class="bi bi-bell-fill"></i><span id="notifyBtnLabel">Notify Me When Available</span>
+            </button>
+            <button id="sendMsgBtn" onclick="document.getElementById('dmModal').classList.remove('hidden')" class="sk-btn sk-btn-secondary" style="flex:1;font-size:var(--sk-text-sm)">
+              <i class="bi bi-envelope-fill"></i>Send Message
+            </button>
+          </div>
+
+          <!-- Student-specific: Notification preference (hidden by default) -->
+          <div id="studentNotifyToggleSection" class="bc-section hidden">
+            <p style="font-size:var(--sk-text-xs);color:var(--sk-text-placeholder);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem">Status Notifications</p>
+            <div style="display:flex;gap:0.5rem">
+              <button onclick="setBroadcastNotifyPref('all')" id="bcNotifyAll" class="bc-notify-btn">
+                <i class="bi bi-bell-fill"></i> All updates
+              </button>
+              <button onclick="setBroadcastNotifyPref('available')" id="bcNotifyAvail" class="bc-notify-btn">
+                <i class="bi bi-bell"></i> When available
+              </button>
+              <button onclick="setBroadcastNotifyPref('none')" id="bcNotifyNone" class="bc-notify-btn">
+                <i class="bi bi-bell-slash"></i> Off
+              </button>
+            </div>
+          </div>
+
+          <!-- Student-specific: Chat button (hidden by default) -->
+          <div id="studentChatSection" class="bc-section hidden">
+            <button id="studentChatBtn" onclick="handleStudentChat()" class="sk-btn sk-btn-gradient" style="width:100%">
+              <i class="bi bi-chat-dots"></i>Send Message
+            </button>
+          </div>
+
+          <!-- Owner message (hidden by default) -->
+          <div id="ownerSection" class="bc-section hidden" style="text-align:center;background:var(--sk-bg-muted)">
+            <p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)"><i class="bi bi-eye-slash" style="margin-right:0.25rem"></i>This is your broadcast page. Visitors see the buttons above.</p>
+          </div>
+
+          <!-- Subscribe Form (hidden by default) -->
+          <div id="subscribeForm" class="bc-section-form hidden">
+            <p id="subCopy" style="font-size:var(--sk-text-xs);color:var(--sk-text-secondary);margin-bottom:0.5rem">Get an email notification when this person updates their status:</p>
+            <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
+              <button onclick="setAnonNotifyPref('all')" id="anonNotifyAll" class="bc-notify-btn">
+                <i class="bi bi-bell-fill"></i> All updates
+              </button>
+              <button onclick="setAnonNotifyPref('available')" id="anonNotifyAvail" class="bc-notify-btn" style="background:var(--sk-success-bg);color:var(--sk-success);border-color:var(--sk-success)">
+                <i class="bi bi-bell"></i> When available
+              </button>
+              <input type="hidden" id="anonNotifyPref" value="available">
+            </div>
+            <div style="display:flex;gap:0.5rem">
+              <input id="subEmail" type="email" placeholder="your@email.com" class="sk-input" style="flex:1">
+              <button onclick="doSubscribe()" class="sk-btn sk-btn-primary sk-btn-sm">Subscribe</button>
+            </div>
+            <p id="subResult" class="hidden" style="font-size:var(--sk-text-xs);margin-top:0.5rem"></p>
+          </div>
+
+          <!-- DM Form moved to Modal below -->
         </div>
+      </main>
 
-        <!-- Mobile Bottom Navbar -->
-        <div class="md:hidden" id="mobileNavRoot">
-          <div
-            class="flex items-center justify-around py-3 bg-white border-t border-gray-200"
-          >
-            <!-- Home -->
-            <a
-              href="../index.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50"
-              style="color: #4b5563"
-            >
-              <i class="bi bi-house-fill text-2xl"></i>
-              <span class="text-xs font-medium">Home</span>
-            </a>
+      
 
-            <!-- About -->
-            <a
-              href="../about.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50"
-              style="color: #4b5563"
-            >
-              <i class="bi bi-info-circle-fill text-2xl"></i>
-              <span class="text-xs font-medium">About</span>
-            </a>
+      
+    </div>
+        </div>
+      </main>
 
-            <!-- Login -->
-            <a
-              href="../auth/login.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:bg-orange-50 transition"
-              style="color: #4b5563"
-            >
-              <i class="bi bi-box-arrow-in-right text-2xl"></i>
-              <span class="text-xs font-medium">Login</span>
-            </a>
+      <!-- Mobile Bottom Nav -->
+      <nav class="sk-bottom-nav">
+        <div class="sk-bottom-nav-items">
+          <!-- Injected by JS -->
+        </div>
+      </nav>
+    </div>
 
-            <!-- Sign Up -->
-            <a
-              href="../auth/register.html"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:bg-orange-50 transition"
-            >
-              <i class="bi bi-person-plus-fill text-2xl"></i>
-              <span class="text-xs font-medium">Sign Up</span>
-            </a>
-
-            <!-- GitHub -->
-            <a
-              href="https://github.com/UIU-Developers-Hub/Sir-Kothay"
-              target="_blank"
-              class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-black transition"
-            >
-              <i class="bi bi-github text-2xl"></i>
-              <span class="text-xs font-medium">GitHub</span>
-            </a>
-          </div>
+    <!-- DM Form Modal -->
+    <div id="dmModal" onclick="if(event.target===this) this.classList.add('hidden')" class="sk-modal-overlay hidden">
+      <div class="sk-modal-panel" style="max-width:420px">
+        <div class="sk-modal-header">
+          <h3 class="sk-modal-title">Send a private message</h3>
+          <button class="sk-modal-close" onclick="document.getElementById('dmModal').classList.add('hidden')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="sk-modal-body">
+          <p style="font-size:var(--sk-text-sm);color:var(--sk-text-secondary);margin-bottom:1rem">Send a direct message to this faculty.</p>
+          <input id="dmName" type="text" placeholder="Your name" class="sk-input" style="margin-bottom:0.75rem">
+          <input id="dmEmail" type="email" placeholder="Your email" class="sk-input" style="margin-bottom:0.75rem">
+          <input id="dmSubject" type="text" placeholder="Subject (optional)" class="sk-input" style="margin-bottom:0.75rem">
+          <textarea id="dmBody" placeholder="Your message..." class="sk-textarea" rows="4" style="margin-bottom:1rem"></textarea>
+          <button onclick="doSendDm()" class="sk-btn sk-btn-primary" style="width:100%">Send Message</button>
+          <p id="dmResult" class="hidden" style="font-size:var(--sk-text-sm);margin-top:0.75rem"></p>
         </div>
       </div>
-    </nav>
+    </div>
 
-    <!-- Main Content -->
-    <main id="broadcastMain" class="pt-0 pb-0 min-h-screen">
-      <div
-        class="min-h-screen flex items-center justify-center p-4"
-        style="
-          background: linear-gradient(
-            to bottom right,
-            #fef3e8,
-            #ffe8d1,
-            #ffdab3
-          );
-        "
-      >
-        <div class="w-full max-w-sm">
-          <!-- Card -->
-          <div
-            class="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl border border-white/50 overflow-hidden"
-          >
-            <div
-              class="px-6 py-8 text-white text-center"
-              style="background: linear-gradient(to right, #f68b1f, #f68b1f)"
-            >
-              <div class="relative inline-block">
-                <img
-                  id="userImage"
-                  src="../static/images/image.png"
-                  alt="User"
-                  class="w-12 h-12 rounded-lg ring-8 ring-white/30 shadow-2xl object-cover"
-                />
-                <h1
-                  id="userName"
-                  class="mt-4 text-2xl font-bold tracking-tight"
-                >
-                  Loading...
-                </h1>
-              </div>
-            </div>
-
-            <!-- Broadcast message (above contact details — primary focus) -->
-            <div
-              id="broadcastSection"
-              class="hidden px-6 py-6"
-              style="
-                background: linear-gradient(
-                  135deg,
-                  #fff7ed 0%,
-                  #ffedd5 50%,
-                  #ffe4cc 100%
-                );
-              "
-            >
-              <p
-                class="text-xs font-semibold uppercase tracking-wider text-orange-800/80 text-center mb-3"
-              >
-                Active message
-              </p>
-              <div
-                id="broadcastMessagePanel"
-                tabindex="0"
-                role="region"
-                aria-label="Broadcast message"
-                class="rounded-2xl p-5 border-2 border-orange-400 bg-white shadow-lg ring-2 ring-orange-200/80"
-              >
-                <p
-                  id="broadcastMessage"
-                  class="text-gray-900 font-semibold leading-relaxed text-center text-base md:text-lg"
-                ></p>
-              </div>
-            </div>
-
-            <!-- Compact Info List -->
-            <div class="px-6 py-6 space-y-4 bg-white">
-              <div class="flex items-center justify-between group">
-                <div class="flex items-center space-x-3">
-                  <div
-                    class="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style="background-color: #fef3e8"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      style="color: #f68b1f"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-xs text-gray-500">Phone</p>
-                    <a
-                      id="userPhone"
-                      href="tel:"
-                      class="font-medium text-gray-800 transition"
-                      onmouseover="this.style.color = '#f68b1f'"
-                      onmouseout="this.style.color = ''"
-                    >
-                      Loading...
-                    </a>
-                  </div>
-                </div>
-                <button
-                  id="copyPhone"
-                  class="opacity-0 group-hover:opacity-100 transition p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  <span class="text-xl">📋</span>
-                </button>
-              </div>
-
-              <div class="flex items-center justify-between group">
-                <div class="flex items-center space-x-3">
-                  <div
-                    class="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style="background-color: #fef3e8"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      style="color: #f68b1f"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-xs text-gray-500">Email</p>
-                    <a
-                      id="userEmail"
-                      href="mailto:"
-                      class="font-medium text-gray-800 transition text-sm"
-                      onmouseover="this.style.color = '#f68b1f'"
-                      onmouseout="this.style.color = ''"
-                    >
-                      Loading...
-                    </a>
-                  </div>
-                </div>
-                <button
-                  id="copyEmail"
-                  class="opacity-0 group-hover:opacity-100 transition p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  <span class="text-xl">📋</span>
-                </button>
-              </div>
-
-              <div class="flex items-center justify-between group">
-                <div class="flex items-center space-x-3">
-                  <div
-                    class="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style="background-color: #fef3e8"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      style="color: #f68b1f"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 3h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-xs text-gray-500">Organization</p>
-                    <p id="userOrg" class="font-medium text-gray-800">
-                      Loading...
-                    </p>
-                  </div>
-                </div>
-                <button
-                  id="copyOrg"
-                  class="opacity-0 group-hover:opacity-100 transition p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  <span class="text-xl">📋</span>
-                </button>
-              </div>
-            </div>
-          </div>
+    <!-- Student Chat Modal -->
+    <div id="studentChatModal" onclick="if(event.target===this) this.classList.add('hidden')" class="sk-modal-overlay hidden">
+      <div class="sk-modal-panel" style="max-width:420px">
+        <div class="sk-modal-header">
+          <h3 class="sk-modal-title">Start a chat with this faculty</h3>
+          <button class="sk-modal-close" onclick="document.getElementById('studentChatModal').classList.add('hidden')"><i class="bi bi-x-lg"></i></button>
         </div>
+        <div class="sk-modal-body">
+          <p style="font-size:var(--sk-text-sm);color:var(--sk-text-secondary);margin-bottom:1rem">Send a direct message to this faculty.</p>
+          <input type="text" id="bcChatSubject" placeholder="Subject (e.g. Office hours)" class="sk-input" style="margin-bottom:0.75rem">
+          <textarea id="bcChatBody" placeholder="Your message..." class="sk-textarea" rows="4" style="margin-bottom:1rem"></textarea>
+          <button onclick="submitBroadcastChat()" class="sk-btn sk-btn-gradient" style="width:100%">Send Message</button>
+          <p id="bcChatResult" class="hidden" style="font-size:var(--sk-text-sm);margin-top:0.75rem"></p>
+        </div>
+      </div>
+    </div>
 
-        <!-- API Config -->
-        <script src="../static/js/api-config.js"></script>
+    <!-- API Config -->
+    <script src="../static/js/api-config.js?v=3"></script>
+    <script src="../static/js/utils.js"></script>
+    <script src="../static/js/api.js"></script>
+    <script src="../static/js/components.js"></script>
+    <script src="../static/js/theme.js"></script>
+    <script src="../static/js/layout.js"></script>
+    <script>
+      // Initialize Layout
+      document.addEventListener('DOMContentLoaded', () => {
+        SKLayout.setupPublicNav('broadcast');
+      });
 
-        <script>
-          // Get user slug from URL parameter
-          const urlParams = new URLSearchParams(window.location.search);
-          const userSlug =
-            urlParams.get("user") ||
-            window.location.pathname.split("/").pop().replace(".html", "");
+      var _broadcastFacultyUserId = null;
+    </script>
 
-          // Load user data
-          async function loadUserData() {
-            try {
-              const response = await fetch(
-                `${API_BASE_URL}/api/broadcast/${userSlug}/`,
-              );
+    <script>
+      // Get user slug from URL parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const userSlug =
+        urlParams.get("user") ||
+        window.location.pathname.split("/").pop().replace(".html", "");
 
-              if (!response.ok) {
-                throw new Error(
-                  `API returned ${response.status}: Endpoint not implemented`,
-                );
-              }
+      // Load user data
+      async function loadUserData() {
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/api/broadcast/${userSlug}/`,
+          );
 
-              const data = await response.json();
-
-              // Update user information
-              document.getElementById("userName").textContent =
-                data.username || data.user_username || "User";
-              document.getElementById("userPhone").textContent =
-                data.phone_number || "N/A";
-              document.getElementById("userPhone").href =
-                `tel:${data.phone_number || ""}`;
-              document.getElementById("userEmail").textContent =
-                data.email || data.user_email || "N/A";
-              document.getElementById("userEmail").href =
-                `mailto:${data.email || data.user_email || ""}`;
-              document.getElementById("userOrg").textContent =
-                data.organization || "N/A";
-
-              if (data.profile_image) {
-                document.getElementById("userImage").src =
-                  API_BASE_URL + data.profile_image;
-              }
-
-              // Show broadcast message if exists
-              if (data.active_message) {
-                document.getElementById("broadcastMessage").textContent =
-                  data.active_message;
-                document
-                  .getElementById("broadcastSection")
-                  .classList.remove("hidden");
-                focusBroadcastMessage();
-              }
-
-              // Setup copy buttons
-              document.getElementById("copyPhone").onclick = () =>
-                copyToClipboard(data.phone_number || "N/A");
-              document.getElementById("copyEmail").onclick = () =>
-                copyToClipboard(data.email || data.user_email || "N/A");
-              document.getElementById("copyOrg").onclick = () =>
-                copyToClipboard(data.organization || "N/A");
-            } catch (error) {
-              console.error("Error loading user data:", error);
-              showErrorState(error.message);
-            }
+          if (!response.ok) {
+            throw new Error(
+              `API returned ${response.status}: Endpoint not implemented`,
+            );
           }
 
-          function showErrorState(errorMsg) {
-            document.getElementById("userName").textContent = "User Not Found";
-            document.getElementById("userName").classList.add("text-red-500");
-            document.getElementById("userPhone").textContent =
-              "Endpoint Missing";
-            document.getElementById("userEmail").textContent = "See Console";
-            document.getElementById("userOrg").textContent = "API Error";
+          const data = await response.json();
 
-            // Show error in broadcast section
-            document.getElementById("broadcastMessage").innerHTML = `
-        <strong>⚠️ Backend API Endpoint Missing</strong><br><br>
-        The public broadcast endpoint <code>/api/broadcast/{slug}/</code> is not implemented.<br><br>
-        <small>Error: ${errorMsg}</small>
-      `;
-            document
-              .getElementById("broadcastSection")
-              .classList.remove("hidden");
+          // Update user information
+          document.getElementById("userName").textContent =
+            data.username || data.user_username || "User";
+          document.getElementById("userPhone").textContent =
+            data.phone_number || "N/A";
+          document.getElementById("userPhone").href =
+            `tel:${data.phone_number || ""}`;
+          document.getElementById("userEmail").textContent =
+            data.email || data.user_email || "N/A";
+          document.getElementById("userEmail").href =
+            `mailto:${data.email || data.user_email || ""}`;
+          document.getElementById("userOrg").textContent =
+            data.organization || "N/A";
+
+          if (data.profile_image) {
+            document.getElementById("userImage").src =
+              resolveProfileImage(data.profile_image);
+          }
+
+          // Show broadcast message or default status if exists
+          const displayMsg = data.active_message || data.default_status;
+          if (displayMsg) {
+            document.getElementById("broadcastMessage").textContent = displayMsg;
+            document.getElementById("broadcastSection").classList.remove("hidden");
             focusBroadcastMessage();
+          }
 
-            console.error(`
+          // Update availability badge
+          updateAvailBadge(data.is_available, displayMsg);
+
+          // Track this page view for analytics
+          trackPageVisit();
+
+          // Setup copy buttons
+          document.getElementById("copyPhone").onclick = () =>
+            copyToClipboard(data.phone_number || "N/A");
+          document.getElementById("copyEmail").onclick = () =>
+            copyToClipboard(data.email || data.user_email || "N/A");
+          document.getElementById("copyOrg").onclick = () =>
+            copyToClipboard(data.organization || "N/A");
+
+          // Apply role-aware behavior (hides/shows buttons based on who's viewing)
+          applyRoleAwareBehavior(data);
+        } catch (error) {
+          console.error("Error loading user data:", error);
+          showErrorState(error.message);
+        }
+      }
+
+      function showErrorState(errorMsg) {
+        document.getElementById("userName").textContent = "User Not Found";
+        document.getElementById("userPhone").textContent = "Endpoint Missing";
+        document.getElementById("userEmail").textContent = "See Console";
+        document.getElementById("userOrg").textContent = "API Error";
+
+        // Show error in broadcast section
+        document.getElementById("broadcastMessage").innerHTML = `
+          <strong>⚠️ Backend API Endpoint Missing</strong><br><br>
+          The public broadcast endpoint <code>/api/broadcast/{slug}/</code> is not implemented.<br><br>
+          <small>Error: ${errorMsg}</small>
+        `;
+        document.getElementById("broadcastSection").classList.remove("hidden");
+        focusBroadcastMessage();
+
+        console.error(`
 ╔════════════════════════════════════════════════════════════════╗
 ║                    MISSING API ENDPOINT                        ║
 ╠════════════════════════════════════════════════════════════════╣
@@ -457,214 +549,330 @@
 ║                                                                ║
 ║ Current slug: ${userSlug}                                      ║
 ╚════════════════════════════════════════════════════════════════╝
-      `);
+        `);
+      }
+
+      function focusBroadcastMessage() {
+        var section = document.getElementById("broadcastSection");
+        var panel = document.getElementById("broadcastMessagePanel");
+        if (!section || !panel || section.classList.contains("hidden")) {
+          return;
+        }
+        section.scrollIntoView({ behavior: "smooth", block: "center" });
+        window.setTimeout(function () {
+          try {
+            panel.focus({ preventScroll: true });
+          } catch (e) {
+            panel.focus();
+          }
+        }, 450);
+      }
+
+      (function applyBroadcastNavLayout() {
+        var authed = !!localStorage.getItem("access_token");
+        var nav = document.getElementById("broadcastNav");
+        var main = document.getElementById("broadcastMain");
+        if (!authed) {
+          if (nav) nav.classList.add("hidden");
+        }
+      })();
+
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          const toast = document.createElement("div");
+          toast.textContent = "Copied";
+          toast.className = "bc-toast";
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 2000);
+        });
+      }
+
+      // --- Availability Badge ---
+      function updateAvailBadge(isAvailable, activeMessage) {
+        var badge = document.getElementById('availBadgeContent');
+        var notifyLabel = document.getElementById('notifyBtnLabel');
+        var subCopy = document.getElementById('subCopy');
+        if (isAvailable) {
+          badge.style.background = 'var(--sk-success-bg)';
+          badge.style.color = 'var(--sk-success)';
+          badge.style.border = '1px solid var(--sk-success-bg)';
+          badge.innerHTML = '<span class="bc-avail-dot animate-pulse" style="background:var(--sk-success)"></span><span>Currently Available</span>' +
+            (activeMessage ? '<span style="font-size:var(--sk-text-xs);opacity:0.8;margin-left:0.5rem">— ' + activeMessage + '</span>' : '');
+          if (notifyLabel) notifyLabel.textContent = 'Get Notifications';
+          if (subCopy) subCopy.textContent = 'Get an email notification when this person updates their status:';
+        } else {
+          badge.style.background = 'var(--sk-error-bg)';
+          badge.style.color = 'var(--sk-error)';
+          badge.style.border = '1px solid var(--sk-error-bg)';
+          badge.innerHTML = '<span class="bc-avail-dot" style="background:var(--sk-error)"></span><span>Currently Unavailable</span>' +
+            (activeMessage ? '<span style="font-size:var(--sk-text-xs);opacity:0.8;margin-left:0.5rem">— ' + activeMessage + '</span>' : '');
+          if (notifyLabel) notifyLabel.textContent = 'Get Notifications';
+          if (subCopy) subCopy.textContent = 'Get an email notification when this person updates their status:';
+        }
+      }
+
+      // --- Analytics Tracking ---
+      function trackPageVisit() {
+        var source = (new URLSearchParams(window.location.search)).get('source') || 'page';
+        var headers = { 'Content-Type': 'application/json' };
+        var token = localStorage.getItem('access_token');
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        fetch(API_BASE_URL + '/api/scheduler/analytics/track/', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ slug: userSlug, source: source })
+        }).catch(function () {});
+      }
+
+      // --- Subscribe ---
+      function setAnonNotifyPref(pref) {
+        document.getElementById('anonNotifyPref').value = pref;
+        var map = { all: 'anonNotifyAll', available: 'anonNotifyAvail' };
+        var activeStyles = {
+          all: 'background:var(--sk-info-bg);color:var(--sk-info);border-color:var(--sk-info)',
+          available: 'background:var(--sk-success-bg);color:var(--sk-success);border-color:var(--sk-success)'
+        };
+        Object.keys(map).forEach(function (k) {
+          var el = document.getElementById(map[k]);
+          if (!el) return;
+          if (k === pref) {
+            el.style.cssText = activeStyles[k];
+          } else {
+            el.style.cssText = '';
+          }
+        });
+      }
+
+      async function doSubscribe() {
+        var email = document.getElementById('subEmail').value.trim();
+        var prefValue = document.getElementById('anonNotifyPref').value;
+        var el = document.getElementById('subResult');
+        var emailRegex = /^[^\s@]+@[^\s@]+$/;
+        if (!email) { el.textContent = 'Please enter your email'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden'); return; }
+        if (!emailRegex.test(email)) { el.textContent = 'Please enter a valid email address'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden'); return; }
+        try {
+          var res = await fetch(API_BASE_URL + '/api/notifications/subscribe/' + userSlug + '/', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, notify_preference: prefValue })
+          });
+          var data = await res.json();
+          if (res.ok) {
+            el.textContent = data.message || 'Subscribed!';
+            el.style.color = 'var(--sk-success)';
+            el.classList.remove('hidden');
+            document.getElementById('subEmail').value = '';
+          } else {
+            el.textContent = data.error || data.detail || JSON.stringify(data);
+            el.style.color = 'var(--sk-error)';
+            el.classList.remove('hidden');
+          }
+        } catch (e) {
+          el.textContent = 'Failed to subscribe'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden');
+        }
+      }
+
+      // --- Send DM ---
+      async function doSendDm() {
+        var name = document.getElementById('dmName').value.trim();
+        var email = document.getElementById('dmEmail').value.trim();
+        var subject = document.getElementById('dmSubject').value.trim();
+        var body = document.getElementById('dmBody').value.trim();
+        var el = document.getElementById('dmResult');
+        var emailRegex = /^[^\s@]+@[^\s@]+$/;
+        if (!name || !email || !body) { el.textContent = 'Name, email, and message are required'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden'); return; }
+        if (!emailRegex.test(email)) { el.textContent = 'Please enter a valid email address'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden'); return; }
+        try {
+          var res = await fetch(API_BASE_URL + '/api/messaging/' + userSlug + '/send/', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sender_name: name, sender_email: email, subject: subject, body: body })
+          });
+          var data = await res.json();
+          if (res.ok) {
+            el.textContent = data.message || 'Message sent!';
+            el.style.color = 'var(--sk-success)';
+            document.getElementById('dmName').value = ''; document.getElementById('dmEmail').value = '';
+            document.getElementById('dmSubject').value = ''; document.getElementById('dmBody').value = '';
+          } else {
+            el.textContent = JSON.stringify(data); el.style.color = 'var(--sk-error)';
+          }
+          el.classList.remove('hidden');
+        } catch (e) {
+          el.textContent = 'Failed to send message'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden');
+        }
+      }
+
+      // --- Role-Aware Broadcast Page Logic ---
+      var _broadcastFacultyUserId = null;
+      var _broadcastStudentInterestId = null;
+
+      async function applyRoleAwareBehavior(facultyData) {
+        var token = localStorage.getItem('access_token');
+        if (!token) return; // Anonymous — keep default behavior
+
+        try {
+          var meRes = await fetch(API_BASE_URL + '/api/auth/users/me/', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          if (!meRes.ok) return;
+          var me = await meRes.json();
+
+          _broadcastFacultyUserId = facultyData.user_id || null;
+
+          // Case 1: Same faculty viewing their own page
+          if (me.role === 'FACULTY' && me.username === (facultyData.username || facultyData.user_username)) {
+            document.getElementById('actionBtnsSection').classList.add('hidden');
+            document.getElementById('ownerSection').classList.remove('hidden');
+            return;
           }
 
-          function focusBroadcastMessage() {
-            var section = document.getElementById("broadcastSection");
-            var panel = document.getElementById("broadcastMessagePanel");
-            if (!section || !panel || section.classList.contains("hidden")) {
+          // Case 2: Student logged in
+          if (me.role === 'STUDENT' && _broadcastFacultyUserId) {
+            // Hide anonymous DM buttons, show student-specific UI
+            document.getElementById('actionBtnsSection').classList.add('hidden');
+            document.getElementById('studentChatSection').classList.remove('hidden');
+            document.getElementById('studentNotifyToggleSection').classList.remove('hidden');
+
+            // Check notify preference status
+            try {
+              var intRes = await fetch(API_BASE_URL + '/api/dashboard/student-interests/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+              });
+              if (intRes.ok) {
+                var interests = await intRes.json();
+                var match = interests.find(function (i) { return i.faculty === _broadcastFacultyUserId; });
+                if (match) {
+                  _broadcastStudentInterestId = match.id;
+                  _highlightBcNotifyPref(match.notify_preference || 'none');
+                }
+              }
+            } catch (e) {}
+
+            // Check for existing chat thread
+            try {
+              var chatRes = await fetch(API_BASE_URL + '/api/messaging/chat/check/' + _broadcastFacultyUserId + '/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+              });
+              if (chatRes.ok) {
+                var chatData = await chatRes.json();
+                var chatBtn = document.getElementById('studentChatBtn');
+                if (chatData.has_thread) {
+                  chatBtn.innerHTML = '<i class="bi bi-chat-dots"></i>Continue Chat';
+                  chatBtn.onclick = function () {
+                    window.location.href = '../dashboard/student.html?tab=messages&thread=' + chatData.thread_id;
+                  };
+                } else {
+                  chatBtn.innerHTML = '<i class="bi bi-chat-dots"></i>Send Message';
+                  chatBtn.onclick = function () { showStudentChatInitForm(); };
+                }
+              }
+            } catch (e) {}
+          }
+        } catch (e) { console.error('Role detection error:', e); }
+      }
+
+      function _highlightBcNotifyPref(pref) {
+        var map = { all: 'bcNotifyAll', available: 'bcNotifyAvail', none: 'bcNotifyNone' };
+        var activeStyles = {
+          all: 'background:var(--sk-info-bg);color:var(--sk-info);border-color:var(--sk-info)',
+          available: 'background:var(--sk-success-bg);color:var(--sk-success);border-color:var(--sk-success)',
+          none: 'background:var(--sk-bg-muted);color:var(--sk-text-tertiary);border-color:var(--sk-border)'
+        };
+        Object.keys(map).forEach(function (k) {
+          var el = document.getElementById(map[k]);
+          if (!el) return;
+          if (k === pref) {
+            el.style.cssText = activeStyles[k];
+          } else {
+            el.style.cssText = '';
+          }
+        });
+      }
+
+      async function setBroadcastNotifyPref(pref) {
+        if (!_broadcastStudentInterestId) return;
+        var token = localStorage.getItem('access_token');
+        try {
+          var res = await fetch(API_BASE_URL + '/api/dashboard/student-interests/' + _broadcastStudentInterestId + '/', {
+            method: 'PATCH',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notify_preference: pref })
+          });
+          if (res.ok) {
+            SKComponents.toast('Subscription updated.', 'success');
+            _highlightBcNotifyPref(pref);
+          } else {
+            SKComponents.toast(data.error || 'Failed to update subscription.', 'error');
+          }
+        } catch (e) {
+          SKComponents.toast('Network error. Failed to update.', 'error');
+        }
+      }
+
+      function showStudentChatInitForm() {
+        document.getElementById('studentChatModal').classList.remove('hidden');
+      }
+
+      async function submitBroadcastChat() {
+        var subject = document.getElementById('bcChatSubject').value.trim();
+        var body = document.getElementById('bcChatBody').value.trim();
+        var el = document.getElementById('bcChatResult');
+        if (!subject || !body) { el.textContent = 'Subject and message are required.'; el.style.color = 'var(--sk-error)'; el.classList.remove('hidden'); return; }
+        try {
+          var token = localStorage.getItem('access_token');
+          var res = await fetch(API_BASE_URL + '/api/messaging/chat/initiate/', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ faculty_id: _broadcastFacultyUserId, subject: subject, body: body })
+          });
+          var data = await res.json();
+          if (res.ok) {
+            SKComponents.toast('Chat started! Waiting for faculty to accept.', 'success');
+            setTimeout(function () {
+              var section = document.getElementById('studentChatSection');
+              section.innerHTML = '<button onclick="window.location.href=\'../dashboard/student.html?tab=messages&thread=' + data.id + '\'" class="sk-btn sk-btn-gradient" style="width:100%"><i class="bi bi-chat-dots" style="margin-right:0.25rem"></i>Continue Chat</button>';
+              document.getElementById('studentChatModal').classList.add('hidden');
+            }, 1500);
+          } else {
+            if (data.thread_id) {
+              window.location.href = '../dashboard/student.html?tab=messages&thread=' + data.thread_id;
               return;
             }
-            section.scrollIntoView({ behavior: "smooth", block: "center" });
-            window.setTimeout(function () {
-              try {
-                panel.focus({ preventScroll: true });
-              } catch (e) {
-                panel.focus();
-              }
-            }, 450);
+            SKComponents.toast(data.error || 'Failed to start chat.', 'error');
           }
+        } catch (e) {
+          SKComponents.toast('Failed to send.', 'error');
+        }
+      }
 
-          (function applyBroadcastNavLayout() {
-            var authed = !!localStorage.getItem("access_token");
-            var nav = document.getElementById("broadcastNav");
-            var main = document.getElementById("broadcastMain");
-            var footer = document.querySelector("body > footer");
-            if (!authed) {
-              if (nav) {
-                nav.classList.add("hidden");
-              }
-              if (main) {
-                main.classList.remove("md:pt-24", "pb-20", "md:pb-0");
-                main.classList.add("pb-0", "md:pt-0");
-              }
-              if (footer) {
-                footer.classList.remove("mb-20");
-                footer.classList.add("mb-4");
-              }
-            }
-          })();
+      function handleStudentChat() { showStudentChatInitForm(); }
 
-          function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-              const toast = document.createElement("div");
-              toast.textContent = "✓ Copied!";
-              toast.className =
-                "fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-full text-sm shadow-lg z-50 animate-pulse";
-              document.body.appendChild(toast);
-              setTimeout(() => toast.remove(), 2000);
-            });
+      // Load data on page load
+      loadUserData().then(function () {
+        // applyRoleAwareBehavior is called inside loadUserData after data is loaded
+      });
+
+      // Load contributors for footer
+      async function loadFooterContributors() {
+        try {
+          const response = await fetch(window.sirKothayContributorsApiUrl());
+          const contributors = await response.json();
+          const container = document.getElementById("contributorAvatarsFooter");
+          if (container) {
+            container.innerHTML = contributors
+              .slice(0, 6)
+              .map(
+                (c) =>
+                  `<a href="${c.html_url}" target="_blank" style="display:inline-block;width:24px;height:24px;border-radius:50%;overflow:hidden;border:1px solid var(--sk-border)">
+                    <img src="${c.avatar_url}" style="width:100%;height:100%;object-fit:cover" alt="${c.login}">
+                  </a>`,
+              )
+              .join("");
           }
-
-          // Load data on page load
-          loadUserData();
-
-          const isAuthenticated = !!localStorage.getItem("access_token");
-          if (isAuthenticated) {
-            const desktopNav = document.getElementById("desktopNav");
-            if (desktopNav) {
-              desktopNav.innerHTML = `
-          <a href="../dashboard/home.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Dashboard</a>
-          <a href="../dashboard/profile.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Profile</a>
-          <a href="#" onclick="logoutUser(); return false;" class="text-red-600 hover:text-red-700">Logout</a>
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="text-gray-600 hover:text-black">
-            <i class="bi bi-github text-xl"></i>
-          </a>
-        `;
-            }
-            const mobileRoot = document.getElementById("mobileNavRoot");
-            if (mobileRoot) {
-              mobileRoot.innerHTML = `
-          <div class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
-            <a href="../dashboard/home.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50" style="color: #f68b1f;">
-              <i class="bi bi-speedometer2 text-2xl"></i>
-              <span class="text-xs font-medium">Dashboard</span>
-            </a>
-            <a href="../dashboard/profile.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;">
-              <i class="bi bi-person-circle text-2xl"></i>
-              <span class="text-xs font-medium">Profile</span>
-            </a>
-            <a href="#" onclick="logoutUser(); return false;" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 transition">
-              <i class="bi bi-box-arrow-right text-2xl"></i>
-              <span class="text-xs font-medium">Logout</span>
-            </a>
-            <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-black transition">
-              <i class="bi bi-github text-2xl"></i>
-              <span class="text-xs font-medium">GitHub</span>
-            </a>
-          </div>
-        `;
-            }
-          }
-
-          function logoutUser() {
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("refresh_token");
-            window.location.href = "../index.html";
-          }
-
-          // Load contributors for footer
-          async function loadFooterContributors() {
-            try {
-              const response = await fetch(
-                window.sirKothayContributorsApiUrl(),
-              );
-              const contributors = await response.json();
-
-              const container = document.getElementById(
-                "contributorAvatarsFooter",
-              );
-              if (container) {
-                container.innerHTML = contributors
-                  .slice(0, 6)
-                  .map(
-                    (c) =>
-                      `<a href="${c.html_url}" target="_blank">
-              <img src="${c.avatar_url}" class="h-8 w-8 rounded-full" alt="${c.login}">
-            </a>`,
-                  )
-                  .join("");
-              }
-            } catch (error) {
-              console.error("Error loading contributors:", error);
-            }
-          }
-          loadFooterContributors();
-        </script>
-      </div>
-    </main>
-
-    <footer class="py-12 px-6 mt-0 mb-20 md:mb-0 bg-gray-900 text-gray-300">
-      <div class="max-w-7xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <div class="md:flex md:flex-col md:items-center md:text-center">
-            <div class="flex items-center gap-3 mb-4 md:justify-center">
-              <img
-                src="../static/images/nav-logo.png"
-                class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain"
-                alt="Logo"
-              />
-              <span class="text-2xl font-bold text-white">Sir Kothay?</span>
-            </div>
-            <p class="text-gray-400">Simple notes. Strong bonds.</p>
-          </div>
-
-          <div class="md:flex md:flex-col md:items-center md:text-center">
-            <h4 class="font-semibold text-white mb-4">Quick Links</h4>
-            <ul class="space-y-2 text-gray-400">
-              <li>
-                <a
-                  href="../index.html#features"
-                  class="hover:text-white transition"
-                  >Features</a
-                >
-              </li>
-              <li>
-                <a href="../about.html" class="hover:text-white transition"
-                  >About Us</a
-                >
-              </li>
-              <li>
-                <a
-                  href="../auth/register.html"
-                  class="hover:text-white transition"
-                  >Sign Up</a
-                >
-              </li>
-            </ul>
-          </div>
-
-          <div class="md:flex md:flex-col md:items-center md:text-center">
-            <h4 class="font-semibold text-white mb-4">Connect</h4>
-            <div class="flex gap-4 justify-left md:justify-center">
-              <a
-                href="https://github.com/UIU-Developers-Hub/Sir-Kothay"
-                class="text-2xl hover:text-white transition"
-              >
-                <i class="bi bi-github"></i>
-              </a>
-              <a
-                href="https://www.facebook.com/uiudevelopershub"
-                class="text-2xl hover:text-white transition"
-              >
-                <i class="bi bi-facebook"></i>
-              </a>
-            </div>
-            <div
-              class="flex items-center gap-2 mt-6 text-sm justify-left md:justify-center"
-            >
-              <img
-                src="https://github.com/UIU-Developers-Hub.png"
-                class="h-8 w-8 rounded-full"
-                alt="UIU Developers Hub"
-              />
-              <span
-                >© 2026 Sir Kothay. Made with ❤️ by
-                <a
-                  href="https://github.com/UIU-Developers-Hub"
-                  style="color: #f68b1f"
-                  class="hover:underline"
-                  >UIU Developers Hub</a
-                ></span
-              >
-            </div>
-            <div id="contributorAvatarsFooter" class="flex gap-2 mt-2">
-              <!-- Contributors will be loaded dynamically -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
+        } catch (error) {
+          console.error("Error loading contributors:", error);
+        }
+      }
+      loadFooterContributors();
+    </script>
   </body>
 </html>

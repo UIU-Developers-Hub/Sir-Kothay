@@ -1,907 +1,566 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" href="../static/images/nav-logo.png">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Dashboard - Sir Kothay</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Faculty Dashboard - Manage your broadcast status, schedules, and messages">
+  <link rel="stylesheet" href="../static/css/style.css?v=ui-premium-sidebar-16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <style>
-    body { font-family: 'Poppins', sans-serif; }
-  </style>
 </head>
-<body class="bg-gray-100">
-
-  <!-- Fixed Bottom Navbar on Mobile, Top on Desktop -->
-  <nav class="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto z-50 bg-white/80 backdrop-blur-lg border-t md:border-b border-gray-200/50">
-    <div class="max-w-5xl mx-auto">
-
-      <!-- Desktop Navbar (Top) -->
-      <div class="hidden md:flex items-center justify-between px-8 py-4">
-        <!-- Logo -->
-        <a href="../index.html" class="flex items-center gap-3">
-          <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo" />
-        </a>
-
-        <!-- Desktop Links -->
-        <div class="flex items-center gap-6 text-sm font-medium">
-          <a href="home.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Dashboard</a>
-          <a href="profile.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Profile</a>
-          <a href="#" onclick="logout()" class="text-red-600 hover:text-red-700">Logout</a>
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="text-gray-600 hover:text-black">
-            <i class="bi bi-github text-xl"></i>
-          </a>
-        </div>
+<body>
+  <div class="sk-app">
+    <!-- Sidebar -->
+    <aside class="sk-sidebar">
+      <div class="sk-sidebar-logo">
+        <img src="../static/images/nav-logo.png" alt="Sir Kothay">
       </div>
+      <nav class="sk-sidebar-nav"></nav>
+      <div class="sk-sidebar-footer"></div>
+    </aside>
+    <div class="sk-sidebar-overlay"></div>
 
-      <!-- Mobile Bottom Navbar -->
-      <div class="md:hidden">
-        <div class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
-          
-          <!-- Dashboard -->
-          <a href="home.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50" style="color: #f68b1f;">
-            <i class="bi bi-speedometer2 text-2xl"></i>
-            <span class="text-xs font-medium">Dashboard</span>
-          </a>
-          
-          <!-- Profile -->
-          <a href="profile.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;">
-            <i class="bi bi-person-circle text-2xl"></i>
-            <span class="text-xs font-medium">Profile</span>
-          </a>
-          
-          <!-- Logout -->
-          <a href="#" onclick="logout()" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 transition">
-            <i class="bi bi-box-arrow-right text-2xl"></i>
-            <span class="text-xs font-medium">Logout</span>
-          </a>
-
-          <!-- GitHub -->
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-black transition">
-            <i class="bi bi-github text-2xl"></i>
-            <span class="text-xs font-medium">GitHub</span>
-          </a>
-
+    <!-- Main Content -->
+    <main class="sk-main">
+      <div class="sk-page" id="pageContent">
+        <!-- Loading Skeleton -->
+        <div id="loadingState">
+          <div class="sk-skeleton sk-skeleton-card" style="height:200px;margin-bottom:1.5rem"></div>
+          <div class="sk-skeleton" style="height:48px;border-radius:var(--sk-radius-lg);margin-bottom:1.5rem"></div>
+          <div class="sk-skeleton sk-skeleton-card" style="height:300px"></div>
         </div>
-      </div>
-    </div>
-  </nav>
 
-  <!-- Main Content -->
-  <main class="pt-0 md:pt-24 pb-20 md:pb-0 min-h-screen">
-<div class="bg-gray-100 relative pt-4 min-h-screen">
-    <!-- Loading State -->
-    <div id="loadingState" class="flex justify-center items-center min-h-screen">
-        <div class="text-center">
-            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-600 mx-auto"></div>
-            <p class="mt-4 text-gray-600">Loading dashboard...</p>
-        </div>
-    </div>
-
-    <!-- Main Content (hidden until loaded) -->
-    <div id="mainContent" class="hidden">
-        <!-- Profile Section -->
-        <section class="max-w-4xl mx-auto bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl shadow-lg border border-gray-200 mb-6">
-            <div class="flex flex-col lg:flex-row items-center lg:space-x-8 space-y-6 lg:space-y-0">
-                <!-- User Image -->
-                <div class="relative group">
-                    <img id="userImage" src="../static/images/image.png" alt="User Image"
-                        class="w-28 h-28 lg:w-36 lg:h-36 rounded-xl object-cover border-4 border-white shadow-xl transition-transform group-hover:scale-105">
-                    <div class="absolute inset-0 rounded-xl bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all"></div>
-                </div>
-
-                <!-- User Info -->
-                <div class="flex-1 text-center lg:text-left">
-                    <h1 id="userName" class="text-2xl lg:text-3xl font-bold text-gray-800 mb-1">Loading...</h1>
-                    <p id="userEmail" class="text-gray-600 text-sm lg:text-base mb-1"></p>
-                    <p id="userPhone" class="text-gray-600 text-sm lg:text-base mb-1"></p>
-                    <p id="userOrg" class="text-gray-600 text-sm lg:text-base mb-2"></p>
-                </div>
-
-                <!-- QR Code & Actions -->
-                <div class="flex flex-col items-center space-y-4">
-                    <div class="w-24 h-24 lg:w-32 lg:h-32 bg-white flex items-center justify-center rounded-lg shadow-md border">
-                        <img id="qrCode" src="../static/images/logo_placeholder.jpg" alt="QR Code" class="w-full h-full rounded-lg">
-                    </div>
-                    <div class="flex flex-wrap gap-2 justify-center">
-                        <button id="qrActionBtn" onclick="handleQRAction()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 shadow-md transition-all">Generate</button>
-                        <button id="broadcastBtn" onclick="viewBroadcastPage()" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 shadow-md transition-all">Broadcast</button>
-                        <button onclick="openModal('addMessageModal')" class="sm:hidden bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-purple-700 shadow-md transition-all">Add Message</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Message Cards Section -->
-        <section class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-6 relative">
-            <h2 class="text-xl font-bold mb-4 text-gray-800">Your Messages</h2>
-            <div id="messagesList">
-                <p class="text-gray-500 text-center py-8">Loading messages...</p>
-            </div>
+        <!-- Main Content (hidden until loaded) -->
+        <div id="mainContent" class="hidden sk-dashboard-layout">
+          <aside class="sk-dashboard-sidebar">
+          <!-- Profile Section (Redesigned) -->
+          <section class="sk-card sk-fc-header-card" style="margin-bottom:1.5rem;position:relative;overflow:hidden">
+            <div class="sk-card-accent"></div>
             
-            <!-- Floating Add Button -->
-            <button onclick="openModal('addMessageModal')"
-                class="hidden sm:block fixed bottom-8 right-8 bg-blue-600 text-white px-5 py-3 rounded-full shadow-lg hover:bg-blue-700 z-40">
-                + Add Message
-            </button>
-        </section>
-    </div>
-
-    <!-- Modals -->
-    <!-- Add Message Modal -->
-    <div id="addMessageModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-            <h2 class="text-xl font-semibold mb-4">Add Message</h2>
-            <textarea id="newMessageText" placeholder="Type your message here..."
-                class="w-full border p-2 rounded mb-3"></textarea>
-            <label for="newMessageSchedule" class="block text-sm text-gray-600 mb-1">
-                Optional schedule time
-            </label>
-            <input id="newMessageSchedule" type="datetime-local" class="w-full border p-2 rounded mb-3" />
-            <label for="newMessageDuration" class="block text-sm text-gray-600 mb-1">
-                Active duration
-            </label>
-            <select id="newMessageDuration" class="w-full border p-2 rounded mb-3">
-                <option value="">Until I change</option>
-                <option value="15">15 minutes</option>
-                <option value="60">1 hour</option>
-                <option value="360">6 hours</option>
-                <option value="720">12 hours</option>
-                <option value="1440">24 hours</option>
-            </select>
-            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 justify-end">
-                <button type="button" onclick="closeModal('addMessageModal')"
-                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-                <button type="button" onclick="submitNewMessage()"
-                    class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Message Modal -->
-    <div id="editMessageModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-            <h2 class="text-xl font-semibold mb-4">Edit Message</h2>
-            <textarea id="editMessageTextarea" placeholder="Type your message here..."
-                class="w-full border p-2 rounded mb-3"></textarea>
-            <label for="editMessageSchedule" class="block text-sm text-gray-600 mb-1">
-                Optional schedule time
-            </label>
-            <input id="editMessageSchedule" type="datetime-local" class="w-full border p-2 rounded mb-3" />
-            <label for="editMessageDuration" class="block text-sm text-gray-600 mb-1">
-                Active duration
-            </label>
-            <select id="editMessageDuration" class="w-full border p-2 rounded mb-3">
-                <option value="">Until I change</option>
-                <option value="15">15 minutes</option>
-                <option value="60">1 hour</option>
-                <option value="360">6 hours</option>
-                <option value="720">12 hours</option>
-                <option value="1440">24 hours</option>
-            </select>
-            <input type="hidden" id="editMessageId">
-            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 justify-end">
-                <button type="button" onclick="closeModal('editMessageModal')"
-                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-                <button type="button" onclick="submitEditMessage()"
-                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Download Modal -->
-    <div id="downloadModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
-            <h2 class="text-xl font-semibold mb-4">Download Options</h2>
-            <p class="mb-4">Choose what to download:</p>
-            <div class="flex flex-col space-y-2">
-                <button onclick="downloadQROnly()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-center">Download QR Code Only</button>
-                <button onclick="downloadQRWithInfo()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 text-center">Download QR with User Info</button>
-            </div>
-            <div class="flex justify-end mt-4">
-                <button type="button" onclick="closeModal('downloadModal')"
-                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- API Config -->
-<script src="../static/js/api-config.js"></script>
-<script src="../static/js/notify-modal.js"></script>
-
-<script>
-// Check if user is logged in
-function checkAuth() {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-        window.location.href = '../auth/login.html';
-        return false;
-    }
-    return true;
-}
-
-// Logout function
-function logout() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    window.location.href = '../auth/login.html';
-}
-
-// Load dashboard data
-async function loadDashboard() {
-    if (!checkAuth()) return;
-
-    try {
-        console.log('Loading dashboard...');
-        console.log('Token:', localStorage.getItem('access_token') ? 'Present' : 'Missing');
-        
-        const response = await apiRequest(API_ENDPOINTS.USER_DETAILS);
-        console.log('Response status:', response.status);
-        
-        const data = await response.json();
-        console.log('Response data:', data);
-
-        if (response.ok) {
-            // Update UI with user data
-            document.getElementById('userName').textContent = data.user_username || 'User';
-            document.getElementById('userEmail').textContent = data.user_email || '';
-            document.getElementById('userPhone').textContent = data.phone_number || '';
-            document.getElementById('userOrg').textContent = `Organization: ${data.organization || 'N/A'}`;
-            
-            if (data.profile_image) {
-                document.getElementById('userImage').src = API_BASE_URL + data.profile_image;
-            }
-
-            // Store user slug for broadcast link
-            userSlug = data.slug;
-
-            // Show main content
-            document.getElementById('loadingState').classList.add('hidden');
-            document.getElementById('mainContent').classList.remove('hidden');
-
-            // Load QR code and messages
-            loadQRCode();
-            loadMessages();
-        } else {
-            console.error('API Error:', data);
-            throw new Error(data.detail || 'Failed to load dashboard');
-        }
-    } catch (error) {
-        console.error('Dashboard Load Error:', error);
-        await skNotify(
-            'Failed to load dashboard. Please clear your browser cache and login again.\n\nSteps:\n1. Press F12\n2. Type: localStorage.clear()\n3. Refresh and login again',
-            { variant: 'error', title: 'Dashboard error' }
-        );
-        logout();
-    }
-}
-
-// Load messages
-async function loadMessages() {
-    try {
-        const response = await apiRequest(API_ENDPOINTS.MESSAGES);
-        const data = await response.json();
-
-        const messagesList = document.getElementById('messagesList');
-        
-        if (data && data.length > 0) {
-            messagesList.innerHTML = data.map(msg => `
-                <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 bg-gray-50 p-4 rounded-md shadow-sm mb-3">
-                    <div class="flex-1 text-center sm:text-left">
-                        <p class="text-gray-600 text-sm sm:text-base">${escapeHtml(msg.message)}</p>
-                        <p class="text-xs text-gray-400 mt-1">${renderMessageStatus(msg)}</p>
-                        <p class="text-xs text-gray-400 mt-1">${renderMessageDuration(msg.duration_minutes)}</p>
-                        <p class="text-xs text-gray-400 mt-1">${renderMessageSchedule(msg.scheduled_for)}</p>
-                        <p class="text-xs text-gray-400 mt-1">${renderActiveUntil(msg.active_until)}</p>
-                    </div>
-                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                        <button onclick="toggleMessageStatus(${msg.id})" class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600">
-                            ${msg.active ? 'Deactivate' : 'Activate'}
-                        </button>
-                        <button onclick="openEditModal(${msg.id}, '${escapeHtml(msg.message).replace(/'/g, "\\'")}', ${msg.scheduled_for ? `'${msg.scheduled_for}'` : 'null'}, ${msg.duration_minutes ?? 'null'} )" class="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">
-                            Edit
-                        </button>
-                        <button onclick="confirmDeleteMessage(${msg.id})" class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
-                    </div>
+            <div class="sk-fc-header-grid">
+              <!-- Left: Identity -->
+              <div class="sk-fc-header-identity">
+                <div class="sk-fc-header-avatar-wrap">
+                  <img id="userImage" src="../static/images/image.png" alt="User">
                 </div>
-            `).join('');
-        } else {
-            messagesList.innerHTML = '<div class="text-center text-gray-600 py-4">You have no messages.</div>';
-        }
-    } catch (error) {
-        console.error('Error loading messages:', error);
-        document.getElementById('messagesList').innerHTML = '<p class="text-red-500 text-center py-8">Failed to load messages</p>';
-    }
-}
+                <div class="sk-fc-header-info">
+                  <h1 id="userName">Loading...</h1>
+                  <p id="userEmail" class="sk-text-muted"></p>
+                  <p class="sk-fc-header-meta"><span id="userPhone"></span> <span class="sk-dot-sep">•</span> <span id="userOrg"></span></p>
+                </div>
+              </div>
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function toApiDateTime(localValue) {
-    return localValue ? new Date(localValue).toISOString() : null;
-}
-
-function toLocalDateTimeInput(apiValue) {
-    if (!apiValue) return '';
-    const date = new Date(apiValue);
-    if (Number.isNaN(date.getTime())) return '';
-    const offset = date.getTimezoneOffset();
-    const local = new Date(date.getTime() - offset * 60000);
-    return local.toISOString().slice(0, 16);
-}
-
-function renderMessageSchedule(value) {
-    if (!value) return 'No schedule';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'Scheduled';
-    return `Scheduled: ${date.toLocaleString()}`;
-}
-
-function renderMessageStatus(msg) {
-    if (msg.active) {
-        return '<span class="text-green-600 font-semibold">Active</span>';
-    }
-    if (msg.scheduled_for) {
-        return '<span class="text-blue-600 font-semibold">Scheduled</span>';
-    }
-    return '<span class="text-gray-500">Inactive</span>';
-}
-
-function renderMessageDuration(value) {
-    if (!value) return 'Duration: Until I change';
-    if (value < 60) return `Duration: ${value} minute(s)`;
-    if (value % 60 === 0) return `Duration: ${value / 60} hour(s)`;
-    return `Duration: ${value} minutes`;
-}
-
-function renderActiveUntil(value) {
-    if (!value) return '';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return `Active until: ${date.toLocaleString()}`;
-}
-
-// Modal functions
-function openModal(id) {
-    document.getElementById(id).classList.remove('hidden');
-}
-
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
-}
-
-// QR Code functions
-let qrCodeUrl = null;
-
-async function loadQRCode() {
-    try {
-        const response = await apiRequest(`${API_BASE_URL}/api/qrcode/qrcodes/my_qrcode/`);
-        const data = await response.json();
-
-        if (response.ok && data.image) {
-            qrCodeUrl = API_BASE_URL + data.image;
-            document.getElementById('qrCode').src = qrCodeUrl;
-            document.getElementById('qrActionBtn').textContent = 'Download';
-            document.getElementById('qrActionBtn').onclick = () => openModal('downloadModal');
-        }
-    } catch (error) {
-        console.log('No QR code found, user can generate one');
-    }
-}
-
-async function handleQRAction() {
-    const btnText = document.getElementById('qrActionBtn').textContent;
-    
-    if (btnText === 'Download') {
-        openModal('downloadModal');
-    } else {
-        await generateQRCode();
-    }
-}
-
-async function generateQRCode() {
-    try {
-        const btn = document.getElementById('qrActionBtn');
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-        
-        const response = await apiRequest(`${API_BASE_URL}/api/qrcode/qrcodes/generate/`, {
-            method: 'POST'
-        });
-        const data = await response.json();
-
-        if (response.ok) {
-            await skNotify('QR Code generated successfully!', { variant: 'success', title: 'QR code' });
-            btn.disabled = false;
-            await loadQRCode();
-        } else {
-            await skNotify(data.message || 'Failed to generate QR code', { variant: 'error', title: 'QR code' });
-            btn.disabled = false;
-            btn.textContent = 'Generate';
-        }
-    } catch (error) {
-        console.error('Error generating QR code:', error);
-        await skNotify('Failed to generate QR code', { variant: 'error', title: 'QR code' });
-        const btn = document.getElementById('qrActionBtn');
-        btn.disabled = false;
-        btn.textContent = 'Generate';
-    }
-}
-
-function downloadQROnly() {
-    if (qrCodeUrl) {
-        const link = document.createElement('a');
-        link.href = qrCodeUrl;
-        link.download = 'my-qr-code.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        closeModal('downloadModal');
-    }
-}
-
-async function downloadQRWithInfo() {
-    if (!qrCodeUrl) return;
-
-    function drawableSize(d) {
-        var w = d.naturalWidth != null ? d.naturalWidth : d.width;
-        var h = d.naturalHeight != null ? d.naturalHeight : d.height;
-        return { w: w, h: h };
-    }
-
-    function closeDrawable(d) {
-        if (d && typeof d.close === 'function') {
-            try {
-                d.close();
-            } catch (e) {
-                /* ignore */
-            }
-        }
-    }
-
-    async function drawableFromBlob(blob) {
-        if (typeof createImageBitmap === 'function') {
-            try {
-                return await createImageBitmap(blob);
-            } catch (e) {
-                console.warn('createImageBitmap failed, using Image fallback:', e);
-            }
-        }
-        return new Promise(function (resolve, reject) {
-            var u = URL.createObjectURL(blob);
-            var img = new Image();
-            img.onload = function () {
-                URL.revokeObjectURL(u);
-                resolve(img);
-            };
-            img.onerror = function () {
-                URL.revokeObjectURL(u);
-                reject(new Error('Could not decode QR image'));
-            };
-            img.src = u;
-        });
-    }
-
-    var qrDrawable = null;
-    var footerDrawable = null;
-    try {
-        var res = await apiFetchImage(API_ENDPOINTS.QR_PNG_EXPORT);
-        if (!res.ok) {
-            var errBody = await res.text();
-            throw new Error('QR export HTTP ' + res.status + ': ' + errBody.slice(0, 160));
-        }
-        var qrBlob = await res.blob();
-        qrDrawable = await drawableFromBlob(qrBlob);
-
-        async function loadFooterDrawable() {
-            var attempts = [];
-
-            async function tryFooterResponse(fr, label) {
-                if (!fr || !fr.ok) {
-                    return null;
+              <style>
+                .sk-fc-force-uniform {
+                  height: 38px !important;
+                  min-height: 38px !important;
+                  font-size: 14px !important;
+                  padding-top: 0 !important;
+                  padding-bottom: 0 !important;
+                  display: inline-flex !important;
+                  align-items: center !important;
+                  box-sizing: border-box !important;
                 }
-                var fb = await fr.blob();
-                var ctype = (fr.headers.get('Content-Type') || fb.type || '').toLowerCase();
-                if (ctype.indexOf('text/html') >= 0 || ctype.indexOf('application/json') >= 0) {
-                    return null;
+                .sk-fc-force-uniform-btn {
+                  height: 36px !important;
+                  min-height: 36px !important;
+                  font-size: 13px !important;
+                  padding-top: 0 !important;
+                  padding-bottom: 0 !important;
+                  display: inline-flex !important;
+                  align-items: center !important;
+                  justify-content: center !important;
+                  box-sizing: border-box !important;
                 }
-                try {
-                    return await drawableFromBlob(fb);
-                } catch (de) {
-                    console.warn('Footer decode failed:', label, de);
-                    return null;
-                }
-            }
+              </style>
+              <!-- Middle: Management -->
+              <div class="sk-fc-header-management">
+                <div class="sk-fc-manage-live">
+                  <div class="sk-fc-manage-label">Live Status <span class="sk-fc-hint">(Subscribers notified)</span></div>
+                  <button id="availabilityToggle" onclick="toggleAvailability()" class="sk-status-toggle">
+                    <span id="availDot" class="sk-status-dot"></span>
+                    <span id="availLabel">Unavailable</span>
+                  </button>
+                </div>
+                
+                <div class="sk-fc-manage-fallback">
+                  <div class="sk-fc-manage-label">Default Fallback</div>
+                  <div class="sk-fc-fallback-form">
+                    <input id="defaultStatusInput" type="text" placeholder="e.g. Away from desk" class="sk-input sk-fc-force-uniform" style="padding-left: 0.875rem;">
+                    <div style="display: flex; gap: 0.5rem; width: 100%">
+                      <select id="defaultAvailInput" class="sk-select sk-fc-force-uniform" style="padding-left: 0.875rem;">
+                        <option value="false">Unavailable</option>
+                        <option value="true">Available</option>
+                      </select>
+                      <button onclick="saveDefaultSettings()" class="sk-btn sk-btn-primary sk-fc-force-uniform" style="justify-content: center;"><i class="bi bi-check2"></i> Save</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            attempts.push({
-                label: 'api_footer_png',
-                run: function () {
-                    return apiFetchImage(API_ENDPOINTS.FOOTER_PNG_EXPORT);
-                },
-            });
-            attempts.push({
-                label: 'same_origin_static',
-                run: function () {
-                    return fetch(new URL('../static/images/qr/footer.png', window.location.href).href, {
-                        mode: 'cors',
-                        cache: 'no-store',
-                    });
-                },
-            });
-            attempts.push({
-                label: 'api_host_static',
-                run: function () {
-                    return fetch(API_BASE_URL + '/static/images/qr/footer.png', {
-                        mode: 'cors',
-                        cache: 'no-store',
-                    });
-                },
-            });
+              <!-- Right: QR & Links -->
+              <div class="sk-fc-header-actions">
+                <div class="sk-fc-qr-container">
+                  <img id="qrCode" src="../static/images/logo_placeholder.jpg" alt="QR Code">
+                </div>
+                <div class="sk-fc-action-btns" style="flex-direction: column; max-width: 100%;">
+                  <div style="display: flex; gap: 0.5rem; width: 100%;">
+                    <button id="qrActionBtn" onclick="handleQRAction()" class="sk-btn sk-btn-success sk-fc-force-uniform-btn" style="flex: 1"><i class="bi bi-qr-code-scan"></i> Generate</button>
+                    <button id="broadcastBtn" onclick="viewBroadcastPage()" class="sk-btn sk-btn-primary sk-fc-force-uniform-btn" style="flex: 1"><i class="bi bi-broadcast"></i> View</button>
+                  </div>
+                  <button id="qrRegenerateBtn" onclick="confirmRegenerateQR()" class="sk-btn sk-btn-secondary sk-fc-force-uniform-btn" style="width: 100%; display:none;"><i class="bi bi-arrow-clockwise"></i> Regenerate QR</button>
+                </div>
+                <!-- Mobile only trigger -->
+                <button class="sk-fc-mobile-qr-trigger" onclick="document.getElementById('qrSheet').classList.add('open')">
+                  <i class="bi bi-qr-code"></i> View QR Code
+                </button>
+              </div>
+            </div>
+          </section>
+          <!-- QR Bottom Sheet -->
+          <div id="qrSheet" class="sk-sheet">
+            <div class="sk-sheet-backdrop" onclick="document.getElementById('qrSheet').classList.remove('open')"></div>
+            <div class="sk-sheet-panel">
+              <div class="sk-sheet-handle"></div>
+              <h3 class="sk-sheet-title">Your QR Code</h3>
+              <p class="sk-sheet-subtitle">Scan to view your broadcast page</p>
+              <div class="sk-sheet-qr"><img id="qrCodeSheet" src="../static/images/logo_placeholder.jpg" alt="QR"></div>
+              <div class="sk-sheet-btns" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; width: 100%;">
+                  <button onclick="handleQRAction()" class="sk-btn sk-btn-success sk-sheet-btn" style="flex: 1; font-size: 14px !important; padding: 0.75rem !important;"><i class="bi bi-download"></i> Download</button>
+                  <button onclick="viewBroadcastPage()" class="sk-btn sk-btn-primary sk-sheet-btn" style="flex: 1; font-size: 14px !important; padding: 0.75rem !important;"><i class="bi bi-broadcast"></i> View</button>
+                </div>
+                <button onclick="confirmRegenerateQR()" class="sk-btn sk-btn-secondary sk-sheet-btn" style="width: 100%; font-size: 14px !important; padding: 0.75rem !important;"><i class="bi bi-arrow-clockwise"></i> Regenerate QR</button>
+              </div>
+              <button class="sk-sheet-close" onclick="document.getElementById('qrSheet').classList.remove('open')">Close</button>
+            </div>
+          </div>
 
-            for (var ai = 0; ai < attempts.length; ai++) {
-                try {
-                    var fr = await attempts[ai].run();
-                    var decoded = await tryFooterResponse(fr, attempts[ai].label);
-                    if (decoded) {
-                        return decoded;
+          </aside>
+          <div class="sk-dashboard-main">
+          <!-- Dashboard section switcher, controlled by sidebar and mobile bottom nav -->
+          <div id="dashboardTabs" class="sk-nav-proxy" aria-hidden="true">
+              <button class="sk-tab tab-btn active" data-tab="messages"><i class="bi bi-broadcast"></i> Broadcast</button>
+              <button class="sk-tab tab-btn" data-tab="templates"><i class="bi bi-lightning"></i> Quick Status</button>
+              <button class="sk-tab tab-btn" data-tab="calendar"><i class="bi bi-calendar3"></i> Calendar</button>
+              <button class="sk-tab tab-btn" data-tab="inbox"><i class="bi bi-chat-dots"></i> Messages <span id="unreadBadge" class="sk-sidebar-badge" style="display:none">0</span></button>
+              <button class="sk-tab tab-btn" data-tab="fc-settings"><i class="bi bi-gear"></i> Settings</button>
+          </div>
+
+          <!-- Tab: Broadcast Messages -->
+          <section id="tab-messages" class="tab-content">
+            <div class="sk-card">
+              <div class="sk-card-header">
+                <div>
+                  <div class="sk-card-title">Live Broadcast Status</div>
+                  <div class="sk-card-subtitle">Your current status visible on your broadcast page and QR code</div>
+                </div>
+                <button onclick="openNewMessageModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Status</button>
+              </div>
+              <div id="messagesList">
+                <div style="padding:2rem">
+                  <div class="sk-skeleton-row">
+                    <div class="sk-skeleton sk-skeleton-avatar"></div>
+                    <div style="flex:1">
+                      <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
+                      <div class="sk-skeleton sk-skeleton-text w-1/2"></div>
+                    </div>
+                  </div>
+                  <div class="sk-skeleton-row">
+                    <div class="sk-skeleton sk-skeleton-avatar"></div>
+                    <div style="flex:1">
+                      <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
+                      <div class="sk-skeleton sk-skeleton-text w-1/2"></div>
+                    </div>
+                  </div>
+                  <div class="sk-skeleton-row">
+                    <div class="sk-skeleton sk-skeleton-avatar"></div>
+                    <div style="flex:1">
+                      <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
+                      <div class="sk-skeleton sk-skeleton-text w-1/2"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tab: Quick Status Templates -->
+          <section id="tab-templates" class="tab-content hidden">
+            <div class="sk-card">
+              <div class="sk-card-header">
+                <div class="sk-card-title">Quick Status Templates</div>
+                <button onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Template</button>
+              </div>
+              <div id="templatesList" class="sk-grid sk-grid-3"></div>
+            </div>
+          </section>
+
+          <!-- Tab: Calendar -->
+          <section id="tab-calendar" class="tab-content hidden">
+            <div class="sk-dashboard-stack">
+              <div class="sk-card">
+                <div class="sk-card-header">
+                  <div style="display:flex;align-items:center;gap:0.75rem">
+                    <button onclick="calNavMonth(-1)" class="sk-btn sk-btn-ghost sk-btn-icon" title="Previous month"><i class="bi bi-chevron-left"></i></button>
+                    <h2 id="calMonthLabel" class="sk-card-title">May 2026</h2>
+                    <button onclick="calNavMonth(1)" class="sk-btn sk-btn-ghost sk-btn-icon" title="Next month"><i class="bi bi-chevron-right"></i></button>
+                  </div>
+                  <div class="sk-card-actions">
+                    <button onclick="openNewScheduleModal()" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-arrow-repeat"></i> New Schedule</button>
+                    <button onclick="openNewEventModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Event</button>
+                  </div>
+                </div>
+                <div id="calendarGrid" class="sk-calendar-grid"></div>
+                <div class="sk-calendar-legend">
+                  <span><span class="sk-calendar-legend-dot event"></span>Events</span>
+                  <span><span class="sk-calendar-legend-dot recurring"></span>Recurring</span>
+                </div>
+              </div>
+              <div class="sk-card">
+                <div class="sk-card-header" style="flex-wrap: wrap; gap: 0.5rem;">
+                  <div style="flex: 1 1 100%;">
+                    <div class="sk-card-title">Schedules</div>
+                    <div class="sk-card-subtitle">Calendar events and recurring rules</div>
+                  </div>
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <select id="scheduleTypeFilter" class="sk-select" style="width: auto; padding: 0.25rem 2rem 0.25rem 0.75rem; font-size: 0.875rem;" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
+                      <option value="all" selected>All Types</option>
+                      <option value="calendar">Calendar Only</option>
+                      <option value="recurring">Recurring Only</option>
+                    </select>
+                    <select id="scheduleStatusFilter" class="sk-select" style="width: auto; padding: 0.25rem 2rem 0.25rem 0.75rem; font-size: 0.875rem;" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
+                      <option value="all" selected>All Statuses</option>
+                      <option value="active">Active Only</option>
+                      <option value="paused">Paused Only</option>
+                    </select>
+                    <select id="scheduleTimeFilter" class="sk-select" style="width: auto; padding: 0.25rem 2rem 0.25rem 0.75rem; font-size: 0.875rem;" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
+                      <option value="upcoming7" selected>Upcoming 7 Days</option>
+                      <option value="upcoming30">Upcoming 30 Days</option>
+                      <option value="upcoming">Upcoming All</option>
+                      <option value="today">Today</option>
+                      <option value="last7">Last 7 Days</option>
+                      <option value="last30">Last 30 Days</option>
+                      <option value="all">All Time</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="schedulesList"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tab: Messages (Unified Inbox) -->
+          <section id="tab-inbox" class="tab-content hidden">
+            <div class="sk-split sk-chat-shell">
+              <!-- Left: Conversation List -->
+              <div id="chatListPanel" class="sk-split-left sk-chat-rail">
+                <div class="sk-split-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap">
+                  <h2 style="font-size:var(--sk-text-sm);font-weight:700;color:var(--sk-text-primary)"><i class="bi bi-chat-dots" style="color:var(--sk-primary);margin-right:0.25rem"></i>Messages</h2>
+                  <div style="display:flex;gap:0.25rem;align-items:center;flex-wrap:wrap">
+                    <button onclick="_setChatFilter('all')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm" data-filter="all" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs)">All</button>
+                    <button onclick="_setChatFilter('threads')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm" data-filter="threads" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs)">Students</button>
+                    <button onclick="_setChatFilter('dms')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm" data-filter="dms" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs)">Visitors</button>
+                    <button onclick="_closeAndDeleteAll()" class="sk-btn sk-btn-ghost sk-btn-sm" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs);color:var(--sk-text-placeholder)"><i class="bi bi-trash3"></i></button>
+                  </div>
+                </div>
+                <div style="padding:0.5rem 0.75rem;border-bottom:1px solid var(--sk-border)">
+                  <div class="sk-search">
+                    <i class="bi bi-search sk-search-icon" style="font-size:0.75rem"></i>
+                    <input type="text" id="chatSearchInput" placeholder="Search conversations..." class="sk-input" style="padding-left:2rem;padding-top:0.375rem;padding-bottom:0.375rem;font-size:var(--sk-text-xs)" oninput="_filterConversations()">
+                  </div>
+                </div>
+                <div id="conversationList" class="sk-split-body" style="padding:0"></div>
+              </div>
+              <!-- Right: Conversation Detail -->
+              <div id="chatDetailPanel" class="sk-split-right sk-chat-stage hidden-mobile">
+                <div id="chatEmptyState" class="sk-split-body sk-chat-empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--sk-text-placeholder)">
+                  <i class="bi bi-chat-square-text" style="font-size:3rem;margin-bottom:0.75rem"></i>
+                  <p style="font-size:var(--sk-text-sm);font-weight:500">Select a conversation</p>
+                  <p style="font-size:var(--sk-text-xs);margin-top:0.25rem">Choose from the list to view messages</p>
+                </div>
+                <div id="chatActiveConvo" class="sk-chat-active" style="display:none">
+                  <div id="chatConvoHeader" class="sk-split-header sk-chat-thread-header" style="display:flex;align-items:center;gap:0.75rem"></div>
+                  <div id="chatConvoMessages" class="sk-split-body sk-chat-messages" style="display:flex;flex-direction:column;gap:0.375rem"></div>
+                  <div id="chatReplyBar" class="sk-split-footer sk-chat-composer"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tab: Settings -->
+          <section id="tab-fc-settings" class="tab-content hidden">
+            <div class="sk-card">
+              <div class="sk-card-header" style="margin-bottom:1.5rem">
+                <div>
+                  <div class="sk-card-title"><i class="bi bi-gear" style="color:var(--sk-text-tertiary);margin-right:0.5rem"></i>Chat & Notification Settings</div>
+                  <div class="sk-card-subtitle">Configure how you receive notifications and manage chat behavior</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:1.5rem">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">New chat notifications</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Email me when a student starts a new chat thread.</p></div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyNew" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Reply notifications</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Email me when a student sends a reply in active threads.</p></div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyReplies" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Chat closed notifications</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Email me when a chat thread is closed.</p></div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyClosed" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Auto-close inactive chats</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Automatically close threads after a period of inactivity.</p></div>
+                  <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <input type="number" id="fcSettingAutoCloseValue" class="sk-input" style="width: 70px; padding: 0.35rem 0.5rem; text-align: right;" min="1" onchange="saveFacultySettings()">
+                    <select id="fcSettingAutoCloseUnit" class="sk-select" style="width: 105px; padding: 0.35rem 0.5rem;" onchange="saveFacultySettings()">
+                      <option value="1">Seconds</option>
+                      <option value="60">Minutes</option>
+                      <option value="3600">Hours</option>
+                      <option value="86400">Days</option>
+                      <option value="2592000">Months</option>
+                      <option value="31536000">Years</option>
+                    </select>
+                    <label class="sk-toggle" title="Enable Auto-close" style="margin-left: 0.5rem;">
+                      <input type="checkbox" id="fcSettingAutoCloseEnabled" onchange="toggleAutoDeleteVisibility(); saveFacultySettings();">
+                      <div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div>
+                    </label>
+                  </div>
+                </div>
+                <div id="fcSettingAutoDeleteWrapper" style="display:flex;align-items:center;justify-content:space-between;gap:1rem; padding-left: 1.5rem;">
+                  <div style="display:flex; gap:0.5rem;">
+                    <i class="bi bi-arrow-return-right" style="color: var(--sk-text-tertiary); font-size: 1.1rem; margin-top: -2px;"></i>
+                    <div>
+                      <p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Delete auto-closed chats</p>
+                      <p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Permanently delete threads instead of just closing them.</p>
+                    </div>
+                  </div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingAutoDelete" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                </div>
+                
+                <script>
+                  function toggleAutoDeleteVisibility() {
+                    const enabled = document.getElementById('fcSettingAutoCloseEnabled').checked;
+                    const wrapper = document.getElementById('fcSettingAutoDeleteWrapper');
+                    const inputVal = document.getElementById('fcSettingAutoCloseValue');
+                    const inputUnit = document.getElementById('fcSettingAutoCloseUnit');
+                    
+                    if (!enabled) {
+                      wrapper.style.opacity = '0.5';
+                      wrapper.style.pointerEvents = 'none';
+                      document.getElementById('fcSettingAutoDelete').checked = false;
+                      inputVal.disabled = true;
+                      inputUnit.disabled = true;
+                      inputVal.style.opacity = '0.5';
+                      inputUnit.style.opacity = '0.5';
+                    } else {
+                      wrapper.style.opacity = '1';
+                      wrapper.style.pointerEvents = 'auto';
+                      inputVal.disabled = false;
+                      inputUnit.disabled = false;
+                      inputVal.style.opacity = '1';
+                      inputUnit.style.opacity = '1';
                     }
-                } catch (fe) {
-                    console.warn('Footer load attempt failed:', attempts[ai].label, fe);
-                }
-            }
-            return null;
-        }
-
-        footerDrawable = await loadFooterDrawable();
-
-        var canvas = document.createElement('canvas');
-        var ctx = canvas.getContext('2d');
-        canvas.width = 600;
-
-        var padX = 24;
-        var contentW = canvas.width - 2 * padX;
-        var footerDrawH = 0;
-        if (footerDrawable) {
-            var fs = drawableSize(footerDrawable);
-            if (fs.w > 0) {
-                footerDrawH = Math.round(fs.h * (contentW / fs.w));
-            }
-        }
-
-        var headerH = 120;
-        var qrSize = 300;
-        var qrY = 150;
-        var qrX = (canvas.width - qrSize) / 2;
-        var taglineY = qrY + qrSize + 26;
-        var infoY = qrY + qrSize + 56;
-        var mainBottom = infoY + 180;
-        canvas.height = Math.ceil(mainBottom + 24 + Math.max(footerDrawH, 1) + 16);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        var gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-        gradient.addColorStop(0, '#f68b1f');
-        gradient.addColorStop(1, '#f68b1f');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, canvas.width, headerH);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 32px Poppins, Arial';
-        ctx.textAlign = 'center';
-        var userName = document.getElementById('userName').textContent;
-        ctx.fillText(userName, canvas.width / 2, 70);
-
-        ctx.drawImage(qrDrawable, qrX, qrY, qrSize, qrSize);
-
-        ctx.fillStyle = '#4b5563';
-        ctx.font = '600 17px Poppins, Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Scan QR code to know where I am', canvas.width / 2, taglineY);
-
-        ctx.fillStyle = '#333333';
-        ctx.font = 'bold 20px Poppins, Arial';
-        ctx.textAlign = 'left';
-
-        var infoX = 50;
-
-        ctx.fillText('Email:', infoX, infoY);
-        ctx.font = '18px Poppins, Arial';
-        ctx.fillStyle = '#666666';
-        var email = document.getElementById('userEmail').textContent;
-        ctx.fillText(email, infoX, infoY + 30);
-
-        ctx.fillStyle = '#333333';
-        ctx.font = 'bold 20px Poppins, Arial';
-        ctx.fillText('Phone:', infoX, infoY + 70);
-        ctx.font = '18px Poppins, Arial';
-        ctx.fillStyle = '#666666';
-        var phone = document.getElementById('userPhone').textContent;
-        ctx.fillText(phone, infoX, infoY + 100);
-
-        ctx.fillStyle = '#333333';
-        ctx.font = 'bold 20px Poppins, Arial';
-        var orgText = document.getElementById('userOrg').textContent;
-        ctx.fillText(orgText, infoX, infoY + 140);
-
-        if (footerDrawable && footerDrawH > 0) {
-            ctx.drawImage(footerDrawable, padX, canvas.height - footerDrawH - 8, contentW, footerDrawH);
-        } else {
-            ctx.fillStyle = '#f68b1f';
-            ctx.font = 'bold 16px Poppins, Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('Sir Kothay - Stay Connected', canvas.width / 2, canvas.height - 30);
-        }
-
-        await new Promise(function (resolve, reject) {
-            canvas.toBlob(function (outBlob) {
-                if (!outBlob) {
-                    reject(new Error('Canvas toBlob returned empty (browser security restriction).'));
-                    return;
-                }
-                try {
-                    var url = URL.createObjectURL(outBlob);
-                    var link = document.createElement('a');
-                    link.href = url;
-                    link.download = 'qr-code-with-info.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    closeModal('downloadModal');
-                    resolve();
-                } catch (downErr) {
-                    reject(downErr);
-                }
-            }, 'image/png', 0.92);
-        });
-    } catch (err) {
-        console.error('downloadQRWithInfo:', err);
-        var msg =
-            err && err.message
-                ? String(err.message).slice(0, 220)
-                : 'Unknown error';
-        await skNotify(
-            'Could not build the full-page image.\n\n' +
-                msg +
-                '\n\nIf the problem is login, refresh and sign in again. You can still use “Download QR only”.',
-            { variant: 'error', title: 'QR code' }
-        );
-    } finally {
-        closeDrawable(qrDrawable);
-        closeDrawable(footerDrawable);
-    }
-}
-
-// Broadcast page function
-let userSlug = null;
-
-function viewBroadcastPage() {
-    if (userSlug) {
-        window.open(`../broadcast/message.html?user=${userSlug}`, '_blank');
-    } else {
-        skNotify('User slug not available. Reload the dashboard or update your profile.', {
-            variant: 'error',
-            title: 'Broadcast link'
-        });
-    }
-}
-
-// Message functions
-async function submitNewMessage() {
-    const messageText = document.getElementById('newMessageText').value;
-    const scheduleValue = document.getElementById('newMessageSchedule').value;
-    const durationValue = document.getElementById('newMessageDuration').value;
-    if (messageText && messageText.trim()) {
-        try {
-            const response = await apiRequest(`${API_BASE_URL}/api/broadcast/messages/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: messageText.trim(),
-                    active: !scheduleValue,
-                    scheduled_for: toApiDateTime(scheduleValue),
-                    duration_minutes: durationValue ? parseInt(durationValue, 10) : null
-                })
-            });
-            const data = await response.json();
-
-            if (response.ok) {
-                document.getElementById('newMessageText').value = '';
-                document.getElementById('newMessageSchedule').value = '';
-                document.getElementById('newMessageDuration').value = '';
-                closeModal('addMessageModal');
-                await skNotify('Message added successfully!', { variant: 'success', title: 'Messages' });
-                loadMessages();
-            } else {
-                const errors = Object.values(data).flat().join(', ');
-                await skNotify(errors || 'Failed to add message', { variant: 'error', title: 'Messages' });
-            }
-        } catch (error) {
-            console.error('Error adding message:', error);
-            await skNotify('Failed to add message', { variant: 'error', title: 'Messages' });
-        }
-    } else {
-        await skNotify('Please enter a message', { variant: 'info', title: 'Messages' });
-    }
-}
-
-function openEditModal(id, message, scheduledFor, durationMinutes) {
-    document.getElementById('editMessageId').value = id;
-    document.getElementById('editMessageTextarea').value = message;
-    document.getElementById('editMessageSchedule').value = toLocalDateTimeInput(scheduledFor);
-    document.getElementById('editMessageDuration').value = durationMinutes || '';
-    openModal('editMessageModal');
-}
-
-async function submitEditMessage() {
-    const id = document.getElementById('editMessageId').value;
-    const newMessage = document.getElementById('editMessageTextarea').value;
-    const scheduleValue = document.getElementById('editMessageSchedule').value;
-    const durationValue = document.getElementById('editMessageDuration').value;
-    
-    if (newMessage && newMessage.trim()) {
-        try {
-            const response = await apiRequest(`${API_BASE_URL}/api/broadcast/messages/${id}/`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: newMessage.trim(),
-                    active: !scheduleValue,
-                    scheduled_for: toApiDateTime(scheduleValue),
-                    duration_minutes: durationValue ? parseInt(durationValue, 10) : null
-                })
-            });
-            const data = await response.json();
-
-            if (response.ok) {
-                closeModal('editMessageModal');
-                await skNotify('Message updated successfully!', { variant: 'success', title: 'Messages' });
-                loadMessages();
-            } else {
-                const errors = Object.values(data).flat().join(', ');
-                await skNotify(errors || 'Failed to update message', { variant: 'error', title: 'Messages' });
-            }
-        } catch (error) {
-            console.error('Error updating message:', error);
-            await skNotify('Failed to update message', { variant: 'error', title: 'Messages' });
-        }
-    } else {
-        await skNotify('Please enter a message', { variant: 'info', title: 'Messages' });
-    }
-}
-
-async function toggleMessageStatus(id) {
-    try {
-        const response = await apiRequest(`${API_BASE_URL}/api/broadcast/messages/${id}/set_active/`, {
-            method: 'POST'
-        });
-        const data = await response.json();
-
-        if (response.ok) {
-            await skNotify(data.message || 'Message status updated!', { variant: 'success', title: 'Messages' });
-            loadMessages();
-        } else {
-            await skNotify(data.message || 'Failed to update message status', { variant: 'error', title: 'Messages' });
-        }
-    } catch (error) {
-        console.error('Error toggling message:', error);
-        await skNotify('Failed to update message status', { variant: 'error', title: 'Messages' });
-    }
-}
-
-function confirmDeleteMessage(id) {
-    skConfirm('Are you sure you want to delete this message?', {
-        title: 'Delete message',
-        confirmText: 'Delete',
-        cancelText: 'Cancel',
-        danger: true
-    }).then(function (ok) {
-        if (ok) deleteMessage(id);
-    });
-}
-
-async function deleteMessage(id) {
-    try {
-        const response = await apiRequest(`${API_BASE_URL}/api/broadcast/messages/${id}/`, {
-            method: 'DELETE'
-        });
-
-        if (response.ok) {
-            await skNotify('Message deleted successfully!', { variant: 'success', title: 'Messages' });
-            loadMessages();
-        } else {
-            const data = await response.json();
-            await skNotify(data.message || 'Failed to delete message', { variant: 'error', title: 'Messages' });
-        }
-    } catch (error) {
-        console.error('Error deleting message:', error);
-        await skNotify('Failed to delete message', { variant: 'error', title: 'Messages' });
-    }
-}
-
- // Load contributors for footer
-      async function loadFooterContributors() {
-        try {
-          const response = await fetch(window.sirKothayContributorsApiUrl());
-          const contributors = await response.json();
-
-          const container = document.getElementById("contributorAvatars");
-          if (container) {
-            container.innerHTML = contributors
-              .slice(0, 6)
-              .map(
-                (c) =>
-                  `<a href="${c.html_url}" target="_blank">
-              <img src="${c.avatar_url}" class="h-8 w-8 rounded-full" alt="${c.login}">
-            </a>`,
-              )
-              .join("");
-          }
-        } catch (error) {
-          console.error("Error loading contributors:", error);
-        }
-      }
-
-      loadFooterContributors();
-
-// Load dashboard on page load
-loadDashboard();
-</script>
-
-</div>
-  </main>
-
-    <footer class="py-12 px-6 mt-4 mb-20 md:mb-0 bg-gray-900 text-gray-300">
-    <div class="max-w-7xl mx-auto">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                <div class="md:flex md:flex-col md:items-center md:text-center">
-                    <div class="flex items-center gap-3 mb-4 md:justify-center">
-            <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-0.5 shadow-md object-contain" alt="Logo">
-            <span class="text-2xl font-bold text-white">Sir Kothay?</span>
-          </div>
-          <p class="text-gray-400">Simple notes. Strong bonds.</p>
-                </div>
-
-                <div class="md:flex md:flex-col md:items-center md:text-center">
-                    <h4 class="font-semibold text-white mb-4">Quick Links</h4>
-                    <ul class="space-y-2 text-gray-400">
-            <li><a href="home.html" class="hover:text-white transition">Dashboard</a></li>
-            <li><a href="profile.html" class="hover:text-white transition">Profile</a></li>
-            <li><a href="../about.html" class="hover:text-white transition">About Us</a></li>
-          </ul>
-                </div>
-
-                <div class="md:flex md:flex-col md:items-center md:text-center">
-                    <h4 class="font-semibold text-white mb-4">Connect</h4>
-                    <div class="flex gap-4 justify-left md:justify-center">
-            <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" class="text-2xl hover:text-white transition">
-              <i class="bi bi-github"></i>
-            </a>
-            <a href="https://www.facebook.com/uiudevelopershub" class="text-2xl hover:text-white transition">
-              <i class="bi bi-facebook"></i>
-            </a>
-          </div>
-                    <div class="flex items-center gap-2 mt-6 text-sm justify-left md:justify-center">
-            <img src="https://github.com/UIU-Developers-Hub.png" class="h-8 w-8 rounded-full" alt="UIU Developers Hub">
-            <span>© 2026 Sir Kothay. Made with ❤️ by <a href="https://github.com/UIU-Developers-Hub" style="color: #f68b1f;" class="hover:underline">UIU Developers Hub</a></span>
-          </div>
-            <div id="contributorAvatars" class="flex gap-2 mt-2">
-              <!-- Contributors will be loaded dynamically -->
+                  }
+                </script>
+              </div>
             </div>
+          </section>
+          </div>
         </div>
       </div>
-    </div>
-  </footer>
+    </main>
 
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="sk-bottom-nav">
+      <div class="sk-bottom-nav-items"></div>
+    </nav>
+  </div>
+
+  <!-- ═══════════════ MODALS ═══════════════ -->
+  <!-- Message Modal -->
+  <div id="messageModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('messageModal')">
+    <div class="sk-modal-panel" style="max-width:480px">
+      <div class="sk-modal-header">
+        <h3 id="messageModalTitle" class="sk-modal-title">Set Broadcast Status</h3>
+        <button class="sk-modal-close" onclick="closeModal('messageModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <input type="hidden" id="messageId" value="">
+        <p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary);margin-bottom:0.75rem">This is what visitors see on your page and QR code.</p>
+        <div id="templateQuickPicks" style="margin-bottom:0.75rem"></div>
+        <div class="sk-form-group">
+          <textarea id="newMessageText" placeholder="e.g. In Room 405 — available until 3pm" class="sk-textarea" rows="3"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem" class="sk-form-group">
+          <div>
+            <label class="sk-label"><i class="bi bi-clock"></i> Schedule for later</label>
+            <input id="newMessageSchedule" type="datetime-local" class="sk-input">
+          </div>
+          <div>
+            <label class="sk-label"><i class="bi bi-hourglass-split"></i> Auto-expire after</label>
+            <div style="display:flex;gap:0.5rem">
+              <input type="number" id="newMessageDuration" placeholder="Time" class="sk-input" style="width:60%" min="1">
+              <select id="newMessageDurationUnit" class="sk-select" style="width:40%">
+                <option value="1">Sec</option><option value="60" selected>Min</option><option value="3600">Hrs</option><option value="86400">Days</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:var(--sk-text-xs);color:var(--sk-text-placeholder);margin-bottom:0.75rem"><i class="bi bi-info-circle"></i> When a timed status expires, your <strong>default status</strong> will be restored.</p>
+        <div class="sk-form-group">
+          <label class="sk-label">Also set availability to:</label>
+          <select id="newMessageAvail" class="sk-select">
+            <option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option>
+          </select>
+        </div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeModal('messageModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button id="btnSaveOnly" onclick="submitMessage(false)" class="sk-btn sk-btn-secondary"><i class="bi bi-save"></i> Save</button>
+        <button id="btnSaveAndGoLive" onclick="submitMessage(true)" class="sk-btn sk-btn-gradient"><i class="bi bi-broadcast"></i> Save & Go Live</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Download Modal -->
+  <div id="downloadModal" class="sk-modal-overlay hidden" style="z-index: 10001;" onclick="if(event.target===this)closeModal('downloadModal')">
+    <div class="sk-modal-panel" style="max-width:360px">
+      <div class="sk-modal-header">
+        <h3 class="sk-modal-title">Download Options</h3>
+        <button class="sk-modal-close" onclick="closeModal('downloadModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body" style="display:flex;flex-direction:column;gap:0.75rem">
+        <button onclick="downloadQROnly()" class="sk-btn sk-btn-primary" style="width:100%"><i class="bi bi-qr-code"></i> Download QR Code Only</button>
+        <button onclick="downloadQRWithInfo()" class="sk-btn sk-btn-success" style="width:100%"><i class="bi bi-image"></i> Download QR with User Info</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template Modal -->
+  <div id="addTemplateModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('addTemplateModal')">
+    <div class="sk-modal-panel" style="max-width:420px">
+      <div class="sk-modal-header">
+        <h3 id="templateModalTitle" class="sk-modal-title">New Quick Status</h3>
+        <button class="sk-modal-close" onclick="closeModal('addTemplateModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <input type="hidden" id="tplId">
+        <div class="sk-form-group"><label class="sk-label">Label</label><input id="tplLabel" type="text" placeholder="e.g. In a Meeting" class="sk-input"></div>
+        <div class="sk-form-group"><label class="sk-label">Message</label><textarea id="tplMessage" placeholder="Broadcast message text..." class="sk-textarea"></textarea></div>
+        <div class="sk-form-group">
+          <label class="sk-label">When activated, set availability to:</label>
+          <select id="tplAvail" class="sk-select"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
+        </div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeModal('addTemplateModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button id="templateModalSubmit" onclick="submitTemplate()" class="sk-btn sk-btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Modal -->
+  <div id="addScheduleModal" class="sk-modal-overlay hidden" style="z-index: 1000;" onclick="if(event.target===this)closeModal('addScheduleModal')">
+    <div class="sk-modal-panel" style="max-width:420px">
+      <div class="sk-modal-header">
+        <h3 id="scheduleModalTitle" class="sk-modal-title">New Recurring Schedule</h3>
+        <button class="sk-modal-close" onclick="closeModal('addScheduleModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <input type="hidden" id="schedId">
+        <div class="sk-form-group"><label class="sk-label">Day</label><select id="schedDay" class="sk-select"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></div>
+        <div class="sk-form-group"><label class="sk-label">Time</label><input id="schedTime" type="time" class="sk-input"></div>
+        <div class="sk-form-group"><label class="sk-label">Broadcast Message</label><textarea id="schedMessage" placeholder="Broadcast message..." class="sk-textarea"></textarea></div>
+        <div class="sk-form-group">
+          <label class="sk-label">Duration</label>
+          <div style="display:flex;gap:0.5rem">
+            <input type="number" id="schedDuration" placeholder="Blank = never" class="sk-input" style="width:65%" min="1">
+            <select id="schedDurationUnit" class="sk-select" style="width:35%"><option value="1">Sec</option><option value="60" selected>Min</option><option value="3600">Hrs</option><option value="86400">Days</option></select>
+          </div>
+        </div>
+        <div class="sk-form-group">
+          <label class="sk-label">When triggered, set availability to:</label>
+          <select id="schedAvail" class="sk-select"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
+        </div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeModal('addScheduleModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button id="scheduleModalSubmit" onclick="submitSchedule()" class="sk-btn sk-btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Modal -->
+  <div id="addEventModal" class="sk-modal-overlay hidden" style="z-index: 1000;" onclick="if(event.target===this)closeModal('addEventModal')">
+    <div class="sk-modal-panel" style="max-width:420px">
+      <div class="sk-modal-header">
+        <h3 id="eventModalTitle" class="sk-modal-title">New Scheduled Broadcast</h3>
+        <button class="sk-modal-close" onclick="closeModal('addEventModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <input type="hidden" id="evtId">
+        <div class="sk-form-group"><label class="sk-label">Message</label><input id="evtTitle" type="text" placeholder="e.g. In a meeting" class="sk-input"></div>
+        <div class="sk-form-group"><label class="sk-label">Start</label><input id="evtStart" type="datetime-local" class="sk-input"></div>
+        <div class="sk-form-group"><label class="sk-label">End</label><input id="evtEnd" type="datetime-local" class="sk-input"></div>
+        <div class="sk-form-group">
+          <label class="sk-label">Color</label>
+          <input id="evtColor" type="color" value="#f68b1f" class="sk-color-picker" style="-webkit-appearance: none; appearance: none; width: 100%; height: 42px; background: var(--sk-input-bg); border: 1.5px solid var(--sk-input-border); border-radius: var(--sk-radius-lg); cursor: pointer; padding: 4px;">
+        </div>
+        <div class="sk-form-group">
+          <label class="sk-label">During event, set availability to:</label>
+          <select id="evtAvail" class="sk-select"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
+        </div>
+      </div>
+      <div class="sk-modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; width: 100%;">
+        <button id="eventModalDelete" type="button" onclick="deleteEvent()" class="sk-btn sk-btn-ghost" style="color:var(--sk-error); display:none; margin-right:auto;"><i class="bi bi-trash"></i> Delete</button>
+        <button onclick="closeModal('addEventModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button id="eventModalSubmit" onclick="submitEvent()" class="sk-btn sk-btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day View Modal -->
+  <div id="dayViewModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('dayViewModal')">
+    <div class="sk-modal-panel" style="max-width:500px">
+      <div class="sk-modal-header">
+        <h3 id="dayViewModalTitle" class="sk-modal-title">Events</h3>
+        <button class="sk-modal-close" onclick="closeModal('dayViewModal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body" style="padding: 1rem; max-height: 60vh; overflow-y: auto;">
+        <div id="dayViewList" class="sk-schedule-list"></div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeModal('dayViewModal')" class="sk-btn sk-btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/utils.js?v=ui-fix-3"></script>
+  <script src="../static/js/theme.js?v=ui-fix-30"></script>
+  <script src="../static/js/components.js"></script>
+  <script src="../static/js/layout.js?v=ui-fix-30"></script>
+  <script src="../static/js/notify-modal.js?v=ui-fix-5"></script>
+  <script src="../static/js/sk-modal.js?v=ui-fix-5"></script>
+  <script src="../static/js/dashboard-core.js?v=ui-premium-sidebar-4"></script>
+  <script src="../static/js/dashboard-templates.js?v=ui-fix-5"></script>
+  <script src="../static/js/dashboard-schedules.js?v=ui-schedules-5"></script>
+  <script src="../static/js/dashboard-calendar.js?v=ui-schedules-7"></script>
+  <script src="../static/js/dashboard-chat.js?v=ui-fix-11"></script>
+  <script>
+    // Initialize layout with sidebar
+    SKLayout.init({
+      page: 'dashboard',
+      requireAuth: true,
+      type: 'dashboard',
+      onReady: function() {
+        // Dashboard-core handles loading via DOMContentLoaded
+      }
+    });
+  </script>
 </body>
 </html>

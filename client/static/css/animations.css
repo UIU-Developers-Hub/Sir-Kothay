@@ -1,0 +1,233 @@
+/* ============================================================
+   SIR KOTHAY — Animations
+   Skeleton shimmer, transitions, micro-animations
+   ============================================================ */
+
+/* ── Skeleton Shimmer ────────────────────────────────────── */
+@keyframes sk-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.sk-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--sk-skeleton-base) 25%,
+    var(--sk-skeleton-shine) 50%,
+    var(--sk-skeleton-base) 75%
+  );
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--sk-radius-md);
+}
+
+.sk-skeleton-text {
+  height: 0.875rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.sk-skeleton-text.w-3\/4 { width: 75%; }
+.sk-skeleton-text.w-1\/2 { width: 50%; }
+.sk-skeleton-text.w-1\/3 { width: 33%; }
+.sk-skeleton-text.w-2\/3 { width: 66%; }
+
+.sk-skeleton-heading {
+  height: 1.5rem;
+  width: 60%;
+  margin-bottom: 1rem;
+}
+
+.sk-skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--sk-radius-full);
+  flex-shrink: 0;
+}
+
+.sk-skeleton-avatar.lg {
+  width: 64px;
+  height: 64px;
+}
+
+.sk-skeleton-avatar.xl {
+  width: 96px;
+  height: 96px;
+}
+
+.sk-skeleton-card {
+  height: 160px;
+  border-radius: var(--sk-radius-lg);
+}
+
+.sk-skeleton-btn {
+  height: 40px;
+  width: 120px;
+  border-radius: var(--sk-radius-md);
+}
+
+.sk-skeleton-img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: var(--sk-radius-lg);
+}
+
+.sk-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+}
+
+.sk-skeleton-row .sk-skeleton-text {
+  margin-bottom: 0;
+}
+
+/* ── Fade Animations ─────────────────────────────────────── */
+@keyframes sk-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sk-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sk-fade-down {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sk-fade-in {
+  animation: sk-fade-in var(--sk-transition-smooth) both;
+}
+
+.sk-fade-up {
+  animation: sk-fade-up var(--sk-transition-smooth) both;
+}
+
+.sk-fade-down {
+  animation: sk-fade-down var(--sk-transition-smooth) both;
+}
+
+/* ── Slide Animations ────────────────────────────────────── */
+@keyframes sk-slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sk-slide-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sk-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.sk-slide-in-right {
+  animation: sk-slide-in-right var(--sk-transition-smooth) both;
+}
+
+.sk-slide-in-left {
+  animation: sk-slide-in-left var(--sk-transition-smooth) both;
+}
+
+.sk-slide-up {
+  animation: sk-slide-up var(--sk-transition-smooth) both;
+}
+
+/* ── Scale Animations ────────────────────────────────────── */
+@keyframes sk-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sk-scale-up {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.sk-scale-in {
+  animation: sk-scale-in var(--sk-transition-smooth) both;
+}
+
+/* ── Staggered Entrance ──────────────────────────────────── */
+.sk-stagger-1 { animation-delay: 50ms; }
+.sk-stagger-2 { animation-delay: 100ms; }
+.sk-stagger-3 { animation-delay: 150ms; }
+.sk-stagger-4 { animation-delay: 200ms; }
+.sk-stagger-5 { animation-delay: 250ms; }
+.sk-stagger-6 { animation-delay: 300ms; }
+.sk-stagger-7 { animation-delay: 350ms; }
+.sk-stagger-8 { animation-delay: 400ms; }
+
+/* ── Pulse / Status ──────────────────────────────────────── */
+@keyframes sk-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+@keyframes sk-pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.5); opacity: 0.4; }
+}
+
+.sk-pulse {
+  animation: sk-pulse 2s ease-in-out infinite;
+}
+
+.sk-pulse-dot {
+  animation: sk-pulse-dot 2s ease-in-out infinite;
+}
+
+/* ── Spin ─────────────────────────────────────────────────── */
+@keyframes sk-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.sk-spin {
+  animation: sk-spin 1s linear infinite;
+}
+
+/* ── Modal / Overlay ─────────────────────────────────────── */
+@keyframes sk-modal-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sk-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sk-slide-panel-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ── Hover Lift ──────────────────────────────────────────── */
+.sk-hover-lift {
+  transition: border-color var(--sk-transition-base), box-shadow var(--sk-transition-base);
+}
+
+.sk-hover-lift:hover {
+  border-color: var(--sk-primary-muted);
+  box-shadow: var(--sk-shadow-sm);
+}
+
+/* ── Reduced Motion ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .sk-skeleton {
+    animation: none;
+    background: var(--sk-skeleton-base);
+  }
+}

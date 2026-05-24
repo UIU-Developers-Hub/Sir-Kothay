@@ -1,397 +1,436 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" href="../static/images/nav-logo.png">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Profile • Sir Kothay?</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Edit your Sir Kothay profile">
+  <link rel="stylesheet" href="../static/css/style.css?v=ui-fix-30">
+  <link rel="stylesheet" href="../static/css/components.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
-    body { font-family: 'Poppins', sans-serif; }
+    .sk-profile-header {
+      background: linear-gradient(135deg, var(--sk-primary), #6366f1);
+      height: 140px;
+      border-radius: var(--sk-radius-xl) var(--sk-radius-xl) 0 0;
+      position: relative;
+    }
+    .sk-profile-avatar-container {
+      position: absolute;
+      bottom: -40px;
+      left: 32px;
+      background: var(--sk-bg-surface);
+      padding: 6px;
+      border-radius: 50%;
+      box-shadow: var(--sk-shadow-md);
+    }
+    .sk-profile-avatar-container img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+    }
+    .sk-profile-info {
+      padding: 56px 32px 32px 32px;
+    }
+    .sk-profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .sk-profile-form-section {
+      background: var(--sk-bg-surface);
+      border: 1px solid var(--sk-border);
+      border-radius: var(--sk-radius-xl);
+      padding: 24px;
+      box-shadow: var(--sk-shadow-sm);
+    }
+    .sk-section-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--sk-text-primary);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--sk-border);
+      padding-bottom: 0.75rem;
+    }
   </style>
 </head>
-<body class="bg-gray-100">
+<body>
+  <div class="sk-app">
+    <!-- Sidebar -->
+    <aside class="sk-sidebar">
+      <div class="sk-sidebar-logo"><img src="../static/images/nav-logo.png" alt="Sir Kothay"></div>
+      <nav class="sk-sidebar-nav"></nav>
+      <div class="sk-sidebar-footer"></div>
+    </aside>
+    <div class="sk-sidebar-overlay"></div>
 
-  <!-- Fixed Bottom Navbar on Mobile, Top on Desktop -->
-  <nav class="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto z-50 bg-white/80 backdrop-blur-lg border-t md:border-b border-gray-200/50">
-    <div class="max-w-5xl mx-auto">
+    <!-- Main Content -->
+    <main class="sk-main">
+      <div class="sk-page">
+        <!-- Top Nav -->
+        <header style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
+          <div>
+            <h1 class="sk-page-title">Profile Settings</h1>
+            <p class="sk-page-subtitle">Manage your personal information and preferences.</p>
+          </div>
+        </header>
 
-      <!-- Desktop Navbar (Top) -->
-      <div class="hidden md:flex items-center justify-between px-8 py-4">
-        <!-- Logo -->
-        <a href="../index.html" class="flex items-center gap-3">
-          <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-1 shadow-md object-contain" alt="Logo" />
-        </a>
-
-        <!-- Desktop Links -->
-        <div class="flex items-center gap-6 text-sm font-medium">
-          <a href="home.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Dashboard</a>
-          <a href="profile.html" class="text-gray-700" style="transition: color 0.2s;" onmouseover="this.style.color='#f68b1f'" onmouseout="this.style.color=''">Profile</a>
-          <a href="#" onclick="logout()" class="text-red-600 hover:text-red-700">Logout</a>
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="text-gray-600 hover:text-black">
-            <i class="bi bi-github text-xl"></i>
-          </a>
-        </div>
-      </div>
-
-      <!-- Mobile Bottom Navbar -->
-      <div class="md:hidden">
-        <div class="flex items-center justify-around py-3 bg-white border-t border-gray-200">
-          
-          <!-- Dashboard -->
-          <a href="home.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition hover:bg-orange-50" style="color: #4b5563;">
-            <i class="bi bi-speedometer2 text-2xl"></i>
-            <span class="text-xs font-medium">Dashboard</span>
-          </a>
-          
-          <!-- Profile -->
-          <a href="profile.html" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition bg-orange-50" style="color: #f68b1f;">
-            <i class="bi bi-person-circle text-2xl"></i>
-            <span class="text-xs font-medium">Profile</span>
-          </a>
-          
-          <!-- Logout -->
-          <a href="#" onclick="logout()" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 transition">
-            <i class="bi bi-box-arrow-right text-2xl"></i>
-            <span class="text-xs font-medium">Logout</span>
-          </a>
-
-          <!-- GitHub -->
-          <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-600 hover:text-black transition">
-            <i class="bi bi-github text-2xl"></i>
-            <span class="text-xs font-medium">GitHub</span>
-          </a>
-
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Main Content -->
-  <main class="pt-0 md:pt-24 pb-20 md:pb-0 min-h-screen">
-<div class="pt-6 pb-20 md:pb-6 px-4 max-w-4xl mx-auto">
-
-    <!-- Profile Header Card -->
-    <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
-        <div class="h-32 md:h-40" style="background: linear-gradient(to right, #f68b1f, #f68b1f);"></div>
-        
-        <div class="relative px-6 pb-8 pt-4 -mt-16 md:-mt-20">
-            <div class="flex flex-col md:flex-row items-center md:items-end gap-6">
-                <!-- Profile Picture -->
-                <div class="relative group">
-                    <img id="profileImage" src="../static/images/image.png" alt="User"
-                         class="w-28 h-28 md:w-36 md:h-36 rounded-xl border-4 border-white shadow-xl object-cover transition-transform group-hover:scale-105">
-                    <div class="absolute inset-0 rounded-xl bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all"></div>
-                </div>
-
-                <!-- User Info -->
-                <div class="text-center md:text-left flex-1">
-                    <h1 id="displayName" class="text-3xl md:text-4xl font-bold text-gray-900">Loading...</h1>
-                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2 text-gray-600">
-                        <span id="displayEmail" class="flex items-center gap-1"><i class="bi bi-envelope"></i></span>
-                        <span id="displayDesignation" class="flex items-center gap-1"></span>
-                        <span id="displayOrganization" class="flex items-center gap-1"></span>
-                    </div>
-                </div>
+        <div class="sk-card" style="padding:0;overflow:visible;margin-bottom:2rem;">
+          <div class="sk-profile-header">
+            <div class="sk-profile-avatar-container" style="cursor: pointer;" onclick="document.getElementById('profile_image').click()" title="Change Profile Image">
+              <img id="profileImage" src="../static/images/image.png" alt="User Avatar">
+              <div style="position: absolute; bottom: 0; right: 0; background: var(--sk-primary); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: var(--sk-shadow-md); border: 2px solid var(--sk-bg-surface); z-index: 2;">
+                <i class="bi bi-pencil-fill" style="font-size: 0.875rem;"></i>
+              </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Edit Profile Form Card -->
-    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-10">
-        <div class="flex items-center gap-3 mb-8">
-            <div class="p-3 rounded-xl" style="background-color: #fef3e8;">
-                <i class="bi bi-person-gear text-2xl" style="color: #f68b1f;"></i>
+          </div>
+          <div class="sk-profile-info">
+            <h2 id="displayName" style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.25rem;">Loading...</h2>
+            <div style="display:flex; flex-wrap:wrap; gap: 1rem; color: var(--sk-text-secondary); font-size: 0.875rem;">
+              <span id="displayEmail"><i class="bi bi-envelope me-1"></i>...</span>
+              <span id="displayRoleBadge"></span>
             </div>
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900">Edit Profile</h2>
-                <p class="text-gray-600">Update your personal information and preferences</p>
-            </div>
+          </div>
         </div>
 
-        <form id="profileForm" class="space-y-6" enctype="multipart/form-data">
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Username -->
-                <div>
-                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <i class="bi bi-person-fill" style="color: #f68b1f;"></i> Username
-                    </label>
-                    <input type="text" id="username" name="username" required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
-                </div>
+        <form id="profileForm" enctype="multipart/form-data">
+          <!-- Hidden file input for profile image -->
+          <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display:none;" onchange="previewProfileImage(this)">
 
-                <!-- Email -->
-                <div>
-                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <i class="bi bi-envelope-fill" style="color: #f68b1f;"></i> Email
-                    </label>
-                    <input type="email" id="email" name="email" required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
-                </div>
-
-                <!-- Phone -->
-                <div>
-                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <i class="bi bi-telephone-fill" style="color: #f68b1f;"></i> Phone Number
-                    </label>
-                    <input type="tel" id="phone_number" name="phone_number"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
-                </div>
-
-                <!-- Organization -->
-                <div>
-                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <i class="bi bi-building" style="color: #f68b1f;"></i> Organization
-                    </label>
-                    <input type="text" id="organization" name="organization"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
-                </div>
-
-                <!-- Designation -->
-                <div>
-                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <i class="bi bi-briefcase-fill" style="color: #f68b1f;"></i> Designation
-                    </label>
-                    <input type="text" id="designation" name="designation"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
-                </div>
-
-                <!-- Profile Image -->
-                <div>
-                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <i class="bi bi-image" style="color: #f68b1f;"></i> Profile Image
-                    </label>
-                    <input type="file" id="profile_image" name="profile_image" accept="image/*"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-50 file:text-green-700 hover:file:bg-green-100 transition">
-                </div>
-            </div>
-
-            <!-- Bio -->
-            <div>
-                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <i class="bi bi-chat-quote-fill" style="color: #f68b1f;"></i> Bio
-                </label>
-                <textarea id="bio" name="bio" rows="4" placeholder="Tell us a little about yourself..."
-                          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition resize-none"></textarea>
-            </div>
-
-            <!-- Message Display -->
-            <div id="message" class="hidden p-4 rounded-xl"></div>
-
-            <!-- Submit Buttons -->
-            <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
-                <button type="submit"
-                        class="flex-1 order-2 sm:order-1 px-8 py-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition shadow-lg transform hover:scale-105">
-                    <i class="bi bi-check2-circle mr-2"></i>
-                    Save Changes
-                </button>
-                <a href="home.html"
-                   class="flex-1 text-center px-8 py-4 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition order-1 sm:order-2">
-                    <i class="bi bi-arrow-left mr-2"></i>
-                    Back to Dashboard
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- API Config -->
-<script src="../static/js/api-config.js"></script>
-
-<script>
-// Check if user is logged in
-function checkAuth() {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-        window.location.href = '../auth/login.html';
-        return false;
-    }
-    return true;
-}
-
-// Logout function
-function logout() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    window.location.href = '../auth/login.html';
-}
-
-// Load user profile
-async function loadProfile() {
-    if (!checkAuth()) return;
-
-    try {
-        console.log('Loading profile...');
-        console.log('Token:', localStorage.getItem('access_token') ? 'Present' : 'Missing');
-        
-        const response = await apiRequest(API_ENDPOINTS.USER_DETAILS);
-        console.log('Response status:', response.status);
-        
-        const data = await response.json();
-        console.log('Response data:', data);
-
-        if (response.ok) {
-            // Update form fields
-            document.getElementById('username').value = data.user_username || '';
-            document.getElementById('email').value = data.user_email || '';
-            document.getElementById('phone_number').value = data.phone_number || '';
-            document.getElementById('organization').value = data.organization || '';
-            document.getElementById('designation').value = data.designation || '';
-            document.getElementById('bio').value = data.bio || '';
-
-            // Update display
-            document.getElementById('displayName').textContent = data.user_username || 'User';
-            document.getElementById('displayEmail').innerHTML = `<i class="bi bi-envelope"></i> ${data.user_email || ''}`;
+          <div class="sk-profile-grid">
             
-            if (data.designation) {
-                document.getElementById('displayDesignation').innerHTML = `<span class="text-gray-500">•</span><i class="bi bi-briefcase"></i> ${data.designation}`;
-            }
-            if (data.organization) {
-                document.getElementById('displayOrganization').innerHTML = `<span class="text-gray-500">•</span><i class="bi bi-building"></i> ${data.organization}`;
-            }
+            <!-- Basic Info Section -->
+            <div class="sk-profile-form-section">
+              <div class="sk-section-title">
+                <i class="bi bi-person-badge text-primary"></i> Basic Information
+              </div>
+              <div class="sk-form-group">
+                <label class="sk-label">Full Name</label>
+                <input type="text" id="username" name="username" required class="sk-input" placeholder="e.g. John Doe">
+              </div>
+              <div class="sk-form-group">
+                <label class="sk-label">Email Address</label>
+                <input type="email" id="email" name="email" required class="sk-input" placeholder="you@example.com">
+              </div>
+              
+              <!-- Student ID (Hidden by default) -->
+              <div class="sk-form-group hidden" id="studentIdGroup">
+                <label class="sk-label">Student ID</label>
+                <input type="text" id="student_id" name="student_id" class="sk-input" placeholder="e.g. 011242111">
+                <p class="sk-help-text text-primary" style="margin-top:0.25rem;font-size:0.75rem;"><i class="bi bi-info-circle me-1"></i>Your Student ID must be unique.</p>
+              </div>
 
-            if (data.profile_image) {
-                document.getElementById('profileImage').src = API_BASE_URL + data.profile_image;
-            }
-        } else {
-            console.error('API Error:', data);
-            throw new Error(data.detail || 'Failed to load profile');
-        }
-    } catch (error) {
-        console.error('Profile Load Error:', error);
-        showMessage('Failed to load profile. Please clear cache and login again.', 'error');
-    }
-}
+              <div class="sk-form-group">
+                <label class="sk-label">Phone Number (Optional)</label>
+                <input type="tel" id="phone_number" name="phone_number" class="sk-input" placeholder="+880...">
+              </div>
+            </div>
 
-// Save profile
-document.getElementById('profileForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+            <!-- Professional Info Section -->
+            <div class="sk-profile-form-section">
+              <div class="sk-section-title">
+                <i class="bi bi-briefcase text-primary"></i> Professional Details
+              </div>
+              <div class="sk-form-group">
+                <label class="sk-label">Organization / University</label>
+                <input type="text" id="organization" name="organization" class="sk-input" placeholder="e.g. United International University">
+              </div>
+              <div class="sk-form-group">
+                <label class="sk-label">Designation / Role</label>
+                <input type="text" id="designation" name="designation" class="sk-input" placeholder="e.g. Senior Lecturer">
+              </div>
+            </div>
+          </div>
 
-    const formData = new FormData();
-    formData.append('username', document.getElementById('username').value);
-    formData.append('email', document.getElementById('email').value);
-    formData.append('phone_number', document.getElementById('phone_number').value);
-    formData.append('organization', document.getElementById('organization').value);
-    formData.append('designation', document.getElementById('designation').value);
-    formData.append('bio', document.getElementById('bio').value);
+          <!-- Bio Section -->
+          <div class="sk-profile-form-section" style="margin-top: 1.5rem;">
+            <div class="sk-section-title">
+              <i class="bi bi-chat-quote text-primary"></i> About You
+            </div>
+            <div class="sk-form-group">
+              <label class="sk-label">Bio</label>
+              <textarea id="bio" name="bio" rows="4" placeholder="Write a short bio about yourself..." class="sk-textarea"></textarea>
+            </div>
+          </div>
 
-    const fileInput = document.getElementById('profile_image');
-    if (fileInput.files.length > 0) {
-        formData.append('profile_image', fileInput.files[0]);
-    }
+          <div style="display:flex; justify-content:flex-end; gap: 1rem; margin-top: 2rem; margin-bottom: 3rem;">
+            <a href="home.html" id="backBtn" class="sk-btn sk-btn-secondary">Cancel</a>
+            <button type="submit" class="sk-btn sk-btn-primary" id="saveBtn">
+              <i class="bi bi-check2-circle me-1"></i> Save Changes
+            </button>
+          </div>
+        </form>
 
-    try {
+        <!-- Security Section -->
+        <form id="passwordForm">
+          <div class="sk-profile-form-section" style="margin-top: 1.5rem; margin-bottom: 3rem;">
+            <div class="sk-section-title">
+              <i class="bi bi-shield-lock text-primary"></i> Security (Change Password)
+            </div>
+            
+            <div class="sk-profile-grid">
+              <div class="sk-form-group">
+                <label class="sk-label">Current Password</label>
+                <div style="position:relative">
+                  <input type="password" id="old_password" name="old_password" class="sk-input" placeholder="Enter current password" required style="padding-right:2.75rem">
+                  <button type="button" onclick="togglePwd('old_password','oldPwdIcon')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sk-text-placeholder);cursor:pointer;padding:4px;font-size:1.125rem">
+                    <i class="bi bi-eye" id="oldPwdIcon"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="sk-form-group">
+                <label class="sk-label">New Password</label>
+                <div style="position:relative">
+                  <input type="password" id="new_password" name="new_password" class="sk-input" placeholder="Enter new password" required style="padding-right:2.75rem">
+                  <button type="button" onclick="togglePwd('new_password','newPwdIcon')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sk-text-placeholder);cursor:pointer;padding:4px;font-size:1.125rem">
+                    <i class="bi bi-eye" id="newPwdIcon"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="sk-form-group">
+                <label class="sk-label">Confirm New Password</label>
+                <div style="position:relative">
+                  <input type="password" id="confirm_password" name="confirm_password" class="sk-input" placeholder="Confirm new password" required style="padding-right:2.75rem">
+                  <button type="button" onclick="togglePwd('confirm_password','confirmPwdIcon')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sk-text-placeholder);cursor:pointer;padding:4px;font-size:1.125rem">
+                    <i class="bi bi-eye" id="confirmPwdIcon"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top: 1.5rem;">
+              <button type="submit" class="sk-btn sk-btn-warning" id="pwdBtn">
+                <i class="bi bi-key me-1"></i> Update Password
+              </button>
+            </div>
+          </div>
+        </form>
+
+      </div>
+    </main>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="sk-bottom-nav">
+      <div class="sk-bottom-nav-items"></div>
+    </nav>
+  </div>
+
+  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/utils.js"></script>
+  <script src="../static/js/theme.js"></script>
+  <script src="../static/js/components.js"></script>
+  <script src="../static/js/layout.js"></script>
+  <script>
+    SKLayout.init({
+      page: 'profile',
+      requireAuth: true,
+      type: 'dashboard',
+      onReady: async function() {
+        await loadProfile();
+      }
+    });
+
+    async function loadProfile() {
+      try {
         const token = localStorage.getItem('access_token');
-        const response = await fetch(API_ENDPOINTS.UPDATE_USER_DETAILS, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
-            body: formData
+        
+        // 1. Fetch user role first
+        const meRes = await fetch(API_BASE_URL + '/api/auth/users/me/', { headers: { 'Authorization': `Bearer ${token}` } });
+        const meData = await meRes.json();
+        const role = meData.role;
+        
+        // Setup Back Button correctly depending on role
+        document.getElementById('backBtn').href = role === 'STUDENT' ? 'student.html' : 'home.html';
+        
+        // Setup Badge
+        let badgeHtml = '';
+        if (role === 'STUDENT') badgeHtml = '<span class="sk-badge" style="background:var(--sk-primary-light);color:var(--sk-primary);"><i class="bi bi-mortarboard-fill me-1"></i>Student</span>';
+        else if (role === 'FACULTY') badgeHtml = '<span class="sk-badge" style="background:var(--sk-success-bg);color:var(--sk-success);"><i class="bi bi-person-workspace me-1"></i>Faculty</span>';
+        else badgeHtml = '<span class="sk-badge" style="background:var(--sk-bg-muted);color:var(--sk-text-secondary);"><i class="bi bi-shield-lock me-1"></i>Admin</span>';
+        document.getElementById('displayRoleBadge').innerHTML = badgeHtml;
+
+        // 2. Fetch User Details
+        const res = await fetch(API_ENDPOINTS.USER_DETAILS, {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
+        const data = await res.json();
+        
+        if (res.ok) {
+          // Populate Hero
+          document.getElementById('displayName').textContent = data.user_username || 'User';
+          document.getElementById('displayEmail').innerHTML = `<i class="bi bi-envelope me-1"></i>${data.user_email || ''}`;
+          document.getElementById('profileImage').src = SKUtils.resolveProfileImage(data.profile_image_url || data.profile_image);
 
-        const data = await response.json();
-
-        if (response.ok) {
-            showMessage('Profile updated successfully!', 'success');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            const errors = Object.values(data).flat().join(', ');
-            showMessage(errors || 'Failed to update profile', 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showMessage('Failed to update profile. Please try again.', 'error');
-    }
-});
-
-function showMessage(text, type) {
-    const messageDiv = document.getElementById('message');
-    messageDiv.textContent = text;
-    messageDiv.className = `p-4 rounded-xl ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
-    messageDiv.classList.remove('hidden');
-    
-    setTimeout(() => {
-        messageDiv.classList.add('hidden');
-    }, 5000);
-}
-
-// Load contributors for footer
-      async function loadFooterContributors() {
-        try {
-          const response = await fetch(window.sirKothayContributorsApiUrl());
-          const contributors = await response.json();
-
-          const container = document.getElementById("contributorAvatars");
-          if (container) {
-            container.innerHTML = contributors
-              .slice(0, 6)
-              .map(
-                (c) =>
-                  `<a href="${c.html_url}" target="_blank">
-              <img src="${c.avatar_url}" class="h-8 w-8 rounded-full" alt="${c.login}">
-            </a>`,
-              )
-              .join("");
+          // Populate Form
+          document.getElementById('username').value = data.user_username || '';
+          document.getElementById('email').value = data.user_email || '';
+          document.getElementById('phone_number').value = data.phone_number || '';
+          document.getElementById('organization').value = data.organization || '';
+          document.getElementById('designation').value = data.designation || '';
+          document.getElementById('bio').value = data.bio || '';
+          
+          // Student ID logic
+          if (role === 'STUDENT') {
+            document.getElementById('studentIdGroup').classList.remove('hidden');
+            document.getElementById('student_id').value = data.user_student_id || '';
           }
-        } catch (error) {
-          console.error("Error loading contributors:", error);
+        } else {
+          throw new Error(data.detail || 'Failed to load profile');
         }
+      } catch (error) {
+        console.error('Profile Load Error:', error);
+        SKComponents.toast('Failed to load profile details.', 'error');
+      }
+    }
+
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="sk-spinner sk-spinner-sm me-2"></span> Saving...';
+
+      const formData = new FormData();
+      formData.append('username', document.getElementById('username').value.trim());
+      formData.append('email', document.getElementById('email').value.trim());
+      formData.append('phone_number', document.getElementById('phone_number').value.trim());
+      formData.append('organization', document.getElementById('organization').value.trim());
+      formData.append('designation', document.getElementById('designation').value.trim());
+      formData.append('bio', document.getElementById('bio').value.trim());
+      
+      const studentIdInput = document.getElementById('student_id');
+      if (!document.getElementById('studentIdGroup').classList.contains('hidden')) {
+        formData.append('student_id', studentIdInput.value.trim());
       }
 
-      loadFooterContributors();
+      try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(API_ENDPOINTS.UPDATE_USER_DETAILS, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        
+        const data = await response.json();
+        if (response.ok) {
+          SKComponents.toast('Profile updated successfully!', 'success');
+          SKLayout.clearUserCache();
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          // Show specifically the first error
+          const firstError = Object.values(data)[0];
+          const errorText = Array.isArray(firstError) ? firstError[0] : firstError;
+          SKComponents.toast(errorText || 'Failed to update profile.', 'error');
+        }
+      } catch (error) {
+        console.error('Update Error:', error);
+        SKComponents.toast('A network error occurred while updating profile.', 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Save Changes';
+      }
+    });
 
-// Load profile on page load
-loadProfile();
-</script>
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pwdBtn = document.getElementById('pwdBtn');
+      pwdBtn.disabled = true;
+      pwdBtn.innerHTML = '<span class="sk-spinner sk-spinner-sm me-2"></span> Updating...';
 
-</div>
-  </main>
+      const old_password = document.getElementById('old_password').value;
+      const new_password = document.getElementById('new_password').value;
+      const confirm_password = document.getElementById('confirm_password').value;
 
-  <footer class="py-12 px-6 mt-4 mb-20 md:mb-0 bg-gray-900 text-gray-300">
-    <div class="max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <div class="flex items-center gap-3 mb-4 md:justify-center">
-            <img src="../static/images/nav-logo.png" class="h-10 rounded-lg bg-[#f68b1f] p-1 object-contain" alt="Logo">
-            <span class="text-2xl font-bold text-white">Sir Kothay?</span>
-          </div>
-          <p class="text-gray-400">Simple notes. Strong bonds.</p>
-        </div>
+      if (new_password !== confirm_password) {
+        SKComponents.toast('New passwords do not match.', 'error');
+        pwdBtn.disabled = false;
+        pwdBtn.innerHTML = '<i class="bi bi-key me-1"></i> Update Password';
+        return;
+      }
 
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <h4 class="font-semibold text-white mb-4">Quick Links</h4>
-          <ul class="space-y-2 text-gray-400">
-            <li><a href="home.html" class="hover:text-white transition">Dashboard</a></li>
-            <li><a href="profile.html" class="hover:text-white transition">Profile</a></li>
-            <li><a href="../about.html" class="hover:text-white transition">About Us</a></li>
-          </ul>
-        </div>
+      try {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch(API_BASE_URL + '/api/auth/users/change_password/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ old_password, new_password, confirm_password })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          SKComponents.toast('Password updated successfully.', 'success');
+          document.getElementById('old_password').value = '';
+          document.getElementById('new_password').value = '';
+          document.getElementById('confirm_password').value = '';
+        } else {
+          SKComponents.toast(data.error || 'Failed to change password.', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        SKComponents.toast('Network error occurred.', 'error');
+      } finally {
+        pwdBtn.disabled = false;
+        pwdBtn.innerHTML = '<i class="bi bi-key me-1"></i> Update Password';
+      }
+    });
 
-        <div class="md:flex md:flex-col md:items-center md:text-center">
-          <h4 class="font-semibold text-white mb-4">Connect</h4>
-          <div class="flex gap-4 justify-left md:justify-center">
-            <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" class="text-2xl hover:text-white transition">
-              <i class="bi bi-github"></i>
-            </a>
-            <a href="https://www.facebook.com/uiudevelopershub" class="text-2xl hover:text-white transition">
-              <i class="bi bi-facebook"></i>
-            </a>
-          </div>
-          <div class="flex items-center gap-2 mt-6 text-sm justify-left md:justify-center">
-            <img src="https://github.com/UIU-Developers-Hub.png" class="h-8 w-8 rounded-full" alt="UIU Developers Hub">
-            <span>© 2026 Sir Kothay. Made with ❤️ by <a href="https://github.com/UIU-Developers-Hub" style="color: #f68b1f;" class="hover:underline">UIU Developers Hub</a></span>
-          </div>
-            <div id="contributorAvatars" class="flex gap-2 mt-2">
-              <!-- Contributors will be loaded dynamically -->
-            </div>
-        </div>
-      </div>
-    </div>
-  </footer>
+    function togglePwd(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+      }
+    }
 
+    async function previewProfileImage(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('profileImage').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        // Auto-save the image
+        const formData = new FormData();
+        formData.append('profile_image', file);
+
+        try {
+          const token = localStorage.getItem('access_token');
+          const res = await fetch(API_ENDPOINTS.UPDATE_USER_DETAILS, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+          });
+          
+          if (res.ok) {
+            SKComponents.toast('Profile picture updated successfully!', 'success');
+            SKLayout.clearUserCache();
+            setTimeout(() => window.location.reload(), 1000);
+          } else {
+            const data = await res.json();
+            const firstError = Object.values(data)[0];
+            const errorText = Array.isArray(firstError) ? firstError[0] : firstError;
+            SKComponents.toast(errorText || 'Failed to update picture.', 'error');
+          }
+        } catch (error) {
+          console.error('Image Upload Error:', error);
+          SKComponents.toast('Network error occurred while uploading picture.', 'error');
+        }
+      }
+    }
+  </script>
 </body>
 </html>

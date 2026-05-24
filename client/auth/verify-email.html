@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../static/images/nav-logo.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Verify Email - Sir Kothay</title>
+  <link rel="stylesheet" href="../static/css/style.css?v=ui-fix-30">
+  <link rel="stylesheet" href="../static/css/components.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="../static/js/theme.js"></script>
+</head>
+<body>
+  <div class="sk-app">
+    <main class="sk-main" style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+      <div class="sk-auth-page" style="width: 100%;">
+        <div class="sk-auth-blob sk-auth-blob-1"></div>
+        <div class="sk-auth-blob sk-auth-blob-2"></div>
+
+        <div class="sk-auth-card sk-fade-up" style="max-width:480px; width: 100%;">
+          <div style="text-align: center; margin-bottom: 1.5rem;">
+            <i class="bi bi-envelope-check" style="font-size: 3rem; color: var(--sk-primary);"></i>
+          </div>
+          <h1 class="sk-auth-title" style="text-align: center;">Verify your email</h1>
+          <p class="sk-auth-subtitle" style="text-align: center; margin-bottom: 0.5rem;" id="subtitleText">
+            We sent a 6-digit code to your email.
+          </p>
+          <p id="timerContainer" style="text-align: center; font-size: var(--sk-text-sm); color: var(--sk-text-tertiary); margin-bottom: 1.5rem;">
+            Code expires in <span id="otpTimer" style="font-weight: 600; color: var(--sk-primary);">10:00</span>
+          </p>
+
+          <div id="message" style="display:none;padding:0.75rem 1rem;border-radius:var(--sk-radius-lg);font-size:var(--sk-text-sm);margin-bottom:1.5rem;animation:sk-fade-in 200ms ease;text-align:center;"></div>
+
+          <!-- Token Verification loading state -->
+          <div id="tokenLoading" style="display:none; text-align: center; padding: 2rem;">
+            <div class="sk-spinner sk-spinner-md" style="border-color: var(--sk-primary); border-right-color: transparent;"></div>
+            <p style="margin-top: 1rem; color: var(--sk-text-secondary);">Verifying your link...</p>
+          </div>
+
+          <!-- Code Entry Form -->
+          <form id="verifyForm" onsubmit="handleVerify(event)">
+            <div class="sk-form-group">
+              <label class="sk-label" style="text-align: center; display: block;">Enter 6-digit Code</label>
+              <input type="text" id="code" class="sk-input" placeholder="000000" maxlength="6" required style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem; font-weight: 700;">
+            </div>
+
+            <button type="submit" id="submitBtn" class="sk-btn sk-btn-gradient" style="width:100%;padding:0.75rem;font-size:var(--sk-text-base);margin-top:0.5rem">
+              <span id="btnText">Verify Account</span>
+            </button>
+          </form>
+
+          <!-- Change Email Form (Hidden by default) -->
+          <form id="changeEmailForm" onsubmit="handleChangeEmail(event)" style="display: none; margin-top: 1rem; padding: 1rem; background: var(--sk-bg-surface); border: 1px solid var(--sk-border); border-radius: var(--sk-radius-md);">
+            <div class="sk-form-group">
+              <label class="sk-label">New Email Address</label>
+              <input type="email" id="newEmail" class="sk-input" placeholder="Enter new email" required>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="sk-btn sk-btn-secondary" style="flex: 1;" onclick="toggleChangeEmail()">Cancel</button>
+              <button type="submit" id="changeEmailBtn" class="sk-btn sk-btn-primary" style="flex: 1;">Update & Resend</button>
+            </div>
+          </form>
+
+          <div id="actionButtons" style="display:flex; flex-direction: column; gap: 0.75rem; margin-top:1.5rem;">
+            <div style="display: flex; gap: 0.75rem;">
+              <button type="button" class="sk-btn sk-btn-secondary" onclick="handleResend()" id="resendBtn" style="flex: 1; justify-content: center;">
+                <i class="bi bi-arrow-repeat me-1"></i> Resend Code
+              </button>
+              <button type="button" class="sk-btn sk-btn-secondary" onclick="toggleChangeEmail()" style="flex: 1; justify-content: center;">
+                <i class="bi bi-pencil me-1"></i> Change Email
+              </button>
+            </div>
+            <button type="button" class="sk-btn sk-btn-frosty-danger" onclick="handleLogout()" style="width: 100%; justify-content: center;">
+              <i class="bi bi-box-arrow-right me-1"></i> Log Out
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/components.js"></script>
+  <script src="../static/js/utils.js"></script>
+  <script src="../static/js/layout.js"></script>
+  <script>
+    let otpInterval = null;
+
+    function startOtpTimer() {
+      if (otpInterval) clearInterval(otpInterval);
+      
+      let expiresAt = localStorage.getItem('sk_otp_expires_at');
+      if (!expiresAt) {
+        expiresAt = Date.now() + 10 * 60 * 1000;
+        localStorage.setItem('sk_otp_expires_at', expiresAt);
+      } else {
+        expiresAt = parseInt(expiresAt, 10);
+      }
+
+      const timerSpan = document.getElementById('otpTimer');
+      if (!timerSpan) return;
+      
+      function update() {
+        const now = Date.now();
+        const diff = expiresAt - now;
+        
+        if (diff <= 0) {
+          clearInterval(otpInterval);
+          timerSpan.textContent = "00:00 (Expired)";
+          timerSpan.style.color = "var(--sk-error)";
+          return;
+        }
+        
+        const totalSeconds = Math.floor(diff / 1000);
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        
+        timerSpan.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        timerSpan.style.color = "var(--sk-primary)";
+      }
+      
+      update();
+      otpInterval = setInterval(update, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      
+      const hasToken = !!localStorage.getItem('access_token');
+
+      if (hasToken) {
+        await SKLayout.init({ type: 'verify' });
+      } else {
+        // Unauthenticated users clicking the link get the public guest layout
+        await SKLayout.setupPublicNav('login');
+      }
+
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          document.getElementById('subtitleText').textContent = `We sent a 6-digit code to ${user.email}`;
+        } catch(e) {}
+      }
+      
+      startOtpTimer();
+
+      if (token) {
+        document.getElementById('subtitleText').style.display = 'none';
+        document.getElementById('timerContainer').style.display = 'none';
+        document.getElementById('verifyForm').style.display = 'none';
+        document.getElementById('actionButtons').style.display = 'none';
+        document.getElementById('tokenLoading').style.display = 'block';
+        await verifyWithToken(token);
+      }
+    });
+
+    function showMessage(text, isError = true) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.style.display = 'block';
+      msg.style.background = isError ? 'var(--sk-error-bg)' : 'var(--sk-success-bg)';
+      msg.style.color = isError ? 'var(--sk-error)' : 'var(--sk-success)';
+    }
+
+    async function verifyWithToken(token) {
+      try {
+        const res = await fetch(API_BASE_URL + '/api/auth/users/verify_email_link/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          showMessage('Email verified successfully! Redirecting...', false);
+          updateLocalUserStatus();
+          setTimeout(() => { window.location.href = '../dashboard/home.html'; }, 2000);
+        } else {
+          showMessage(data.error || 'Invalid or expired verification link.');
+          document.getElementById('verifyForm').style.display = 'block';
+          document.getElementById('actionButtons').style.display = 'flex';
+          document.getElementById('tokenLoading').style.display = 'none';
+        }
+      } catch (err) {
+        showMessage('Network error occurred.');
+        document.getElementById('verifyForm').style.display = 'block';
+        document.getElementById('actionButtons').style.display = 'flex';
+        document.getElementById('tokenLoading').style.display = 'none';
+      }
+    }
+
+    async function handleVerify(e) {
+      e.preventDefault();
+      const code = document.getElementById('code').value;
+      const btn = document.getElementById('submitBtn');
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        showMessage('You must be logged in to verify. Please log out and log in again.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="sk-spinner sk-spinner-sm me-2"></span> Verifying...';
+
+      try {
+        const res = await fetch(API_BASE_URL + '/api/auth/users/verify_email/', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ code })
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          showMessage('Email verified successfully! Redirecting...', false);
+          updateLocalUserStatus();
+          setTimeout(() => { window.location.href = '../dashboard/home.html'; }, 2000);
+        } else {
+          showMessage(data.error || 'Invalid verification code.');
+        }
+      } catch (err) {
+        showMessage('Network error occurred.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Verify Account';
+      }
+    }
+
+    async function handleResend() {
+      const btn = document.getElementById('resendBtn');
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        showMessage('You must be logged in. Please log out and log in again.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat me-1 sk-spin"></i> Sending...';
+
+      try {
+        const res = await fetch(API_BASE_URL + '/api/auth/users/resend_verification/', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('sk_otp_expires_at', Date.now() + 10 * 60 * 1000);
+          startOtpTimer();
+          
+          document.getElementById('subtitleText').style.display = 'block';
+          const timerContainer = document.getElementById('timerContainer');
+          if (timerContainer) timerContainer.style.display = 'block';
+          
+          showMessage('A new code has been sent to your email.', false);
+        } else {
+          showMessage(data.error || 'Failed to resend code.');
+        }
+      } catch (err) {
+        showMessage('Network error occurred.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Resend Code';
+      }
+    }
+
+    function toggleChangeEmail() {
+      const form = document.getElementById('changeEmailForm');
+      const buttons = document.getElementById('actionButtons');
+      if (form.style.display === 'none') {
+        form.style.display = 'block';
+        buttons.style.display = 'none';
+      } else {
+        form.style.display = 'none';
+        buttons.style.display = 'flex';
+      }
+    }
+
+    async function handleChangeEmail(e) {
+      e.preventDefault();
+      const newEmail = document.getElementById('newEmail').value;
+      const btn = document.getElementById('changeEmailBtn');
+      const token = localStorage.getItem('access_token');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="sk-spinner sk-spinner-sm me-2"></span> Updating...';
+
+      try {
+        const res = await fetch(API_BASE_URL + '/api/auth/users/resend_verification/', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ email: newEmail })
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('sk_otp_expires_at', Date.now() + 10 * 60 * 1000);
+          startOtpTimer();
+          
+          document.getElementById('subtitleText').style.display = 'block';
+          const timerContainer = document.getElementById('timerContainer');
+          if (timerContainer) timerContainer.style.display = 'block';
+          
+          showMessage('Email updated. A new code has been sent to ' + newEmail, false);
+          document.getElementById('subtitleText').textContent = `We sent a 6-digit code to ${newEmail}`;
+          
+          // Update local storage user email
+          try {
+            let u = JSON.parse(localStorage.getItem('user'));
+            u.email = newEmail;
+            localStorage.setItem('user', JSON.stringify(u));
+          } catch(e) {}
+          
+          toggleChangeEmail();
+        } else {
+          showMessage(data.error || 'Failed to change email.');
+        }
+      } catch (err) {
+        showMessage('Network error occurred.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Update & Resend';
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('sk_otp_expires_at');
+      window.location.href = '../index.html';
+    }
+
+    function updateLocalUserStatus() {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          user.is_email_verified = true;
+          localStorage.setItem('user', JSON.stringify(user));
+        } catch(e) {}
+      }
+    }
+  </script>
+</body>
+</html>

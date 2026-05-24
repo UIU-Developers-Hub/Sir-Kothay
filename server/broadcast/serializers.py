@@ -7,14 +7,14 @@ class BroadcastMessageSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(source='user.email', read_only=True)
     user_username = serializers.CharField(source='user.username', read_only=True)
     scheduled_for = serializers.DateTimeField(required=False, allow_null=True)
-    duration_minutes = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    duration_seconds = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     active_until = serializers.DateTimeField(read_only=True)
     
     class Meta:
         model = BroadcastMessage
         fields = [
             'id', 'user', 'user_email', 'user_username', 'message', 'active',
-            'scheduled_for', 'duration_minutes', 'active_until'
+            'scheduled_for', 'duration_seconds', 'active_until', 'set_availability'
         ]
         read_only_fields = ['id', 'user']
 

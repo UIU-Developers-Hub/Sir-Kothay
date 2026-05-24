@@ -1,0 +1,261 @@
+/* ============================================================
+   SIR KOTHAY — Design Tokens
+   UIU Orange Theme | Light & Dark Mode
+   ============================================================ */
+
+:root {
+  /* ── Brand Colors (UIU Orange) ─────────────────────────── */
+  --sk-orange-50:  #FFF7ED;
+  --sk-orange-100: #FFEDD5;
+  --sk-orange-200: #FED7AA;
+  --sk-orange-300: #FDBA74;
+  --sk-orange-400: #FB923C;
+  --sk-orange-500: #F97316;
+  --sk-orange-600: #EA580C;
+  --sk-orange-700: #C2410C;
+  --sk-orange-800: #9A3412;
+  --sk-orange-900: #7C2D12;
+  --sk-orange-950: #431407;
+
+  /* ── Neutral Warm (Stone) ──────────────────────────────── */
+  --sk-stone-50:  #FAFAF9;
+  --sk-stone-100: #F5F5F4;
+  --sk-stone-200: #E7E5E4;
+  --sk-stone-300: #D6D3D1;
+  --sk-stone-400: #A8A29E;
+  --sk-stone-500: #78716C;
+  --sk-stone-600: #57534E;
+  --sk-stone-700: #44403C;
+  --sk-stone-800: #292524;
+  --sk-stone-900: #1C1917;
+  --sk-stone-950: #0C0A09;
+
+  /* ── Semantic Colors ───────────────────────────────────── */
+  --sk-success:     #16A34A;
+  --sk-success-bg:  #F0FDF4;
+  --sk-warning:     #EAB308;
+  --sk-warning-bg:  #FEFCE8;
+  --sk-error:       #DC2626;
+  --sk-error-bg:    #FEF2F2;
+  --sk-info:        #2563EB;
+  --sk-info-bg:     #EFF6FF;
+
+  /* ── Typography ────────────────────────────────────────── */
+  --sk-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --sk-font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  --sk-text-xs:   0.75rem;    /* 12px */
+  --sk-text-sm:   0.875rem;   /* 14px */
+  --sk-text-base: 1rem;       /* 16px */
+  --sk-text-lg:   1.125rem;   /* 18px */
+  --sk-text-xl:   1.25rem;    /* 20px */
+  --sk-text-2xl:  1.5rem;     /* 24px */
+  --sk-text-3xl:  1.875rem;   /* 30px */
+  --sk-text-4xl:  2.25rem;    /* 36px */
+  --sk-text-5xl:  3rem;       /* 48px */
+
+  --sk-leading-tight:  1.25;
+  --sk-leading-normal: 1.5;
+  --sk-leading-relaxed: 1.75;
+
+  --sk-font-normal:   400;
+  --sk-font-medium:   500;
+  --sk-font-semibold: 600;
+  --sk-font-bold:     700;
+
+  /* ── Spacing (4px base) ────────────────────────────────── */
+  --sk-space-0:  0;
+  --sk-space-1:  0.25rem;   /* 4px */
+  --sk-space-2:  0.5rem;    /* 8px */
+  --sk-space-3:  0.75rem;   /* 12px */
+  --sk-space-4:  1rem;      /* 16px */
+  --sk-space-5:  1.25rem;   /* 20px */
+  --sk-space-6:  1.5rem;    /* 24px */
+  --sk-space-8:  2rem;      /* 32px */
+  --sk-space-10: 2.5rem;    /* 40px */
+  --sk-space-12: 3rem;      /* 48px */
+  --sk-space-16: 4rem;      /* 64px */
+  --sk-space-20: 5rem;      /* 80px */
+  --sk-space-24: 6rem;      /* 96px */
+
+  /* ── Border Radius ─────────────────────────────────────── */
+  --sk-radius-sm:   0.375rem;  /* 6px */
+  --sk-radius-md:   0.5rem;    /* 8px */
+  --sk-radius-lg:   0.75rem;   /* 12px */
+  --sk-radius-xl:   1rem;      /* 16px */
+  --sk-radius-2xl:  1.25rem;   /* 20px */
+  --sk-radius-full: 9999px;
+
+  /* ── Transitions ───────────────────────────────────────── */
+  --sk-transition-fast:   150ms ease;
+  --sk-transition-base:   200ms ease;
+  --sk-transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --sk-transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Z-Index Scale ─────────────────────────────────────── */
+  --sk-z-base:     1;
+  --sk-z-dropdown: 10;
+  --sk-z-sticky:   20;
+  --sk-z-sidebar:  30;
+  --sk-z-topbar:   40;
+  --sk-z-modal:    50;
+  --sk-z-toast:    60;
+  --sk-z-tooltip:  70;
+
+  /* ── Layout ────────────────────────────────────────────── */
+  --sk-sidebar-width:     260px;
+  --sk-sidebar-collapsed: 72px;
+  --sk-bottomnav-height:  64px;
+  --sk-content-max-width: 1600px;
+}
+
+/* ============================================================
+   LIGHT THEME (Default)
+   ============================================================ */
+:root,
+[data-theme="light"] {
+  /* ── Surface / Background ──────────────────────────────── */
+  --sk-bg-base:      #FAFAF9;
+  --sk-bg-surface:   #FFFFFF;
+  --sk-bg-elevated:  #FFFFFF;
+  --sk-bg-muted:     #F5F5F4;
+  --sk-bg-subtle:    #E7E5E4;
+  --sk-bg-overlay:   rgba(28, 25, 23, 0.26);
+
+  /* ── Text ──────────────────────────────────────────────── */
+  --sk-text-primary:     #1C1917;
+  --sk-text-secondary:   #57534E;
+  --sk-text-tertiary:    #78716C;
+  --sk-text-placeholder: #A8A29E;
+  --sk-text-inverse:     #FAFAF9;
+  --sk-text-on-primary:  #FFFFFF;
+
+  /* ── Primary (Orange) ──────────────────────────────────── */
+  --sk-primary:       #EA580C;
+  --sk-primary-hover: #C2410C;
+  --sk-primary-light: #FFF7ED;
+  --sk-primary-muted: #FFEDD5;
+  --sk-primary-text:  #9A3412;
+
+  /* ── Border ────────────────────────────────────────────── */
+  --sk-border:       #E7E5E4;
+  --sk-border-light: #F5F5F4;
+  --sk-border-focus: #FB923C;
+
+  /* ── Shadows ───────────────────────────────────────────── */
+  --sk-shadow-xs:  0 1px 2px rgba(28, 25, 23, 0.04);
+  --sk-shadow-sm:  0 1px 3px rgba(28, 25, 23, 0.06), 0 1px 2px rgba(28, 25, 23, 0.04);
+  --sk-shadow-md:  0 4px 6px -1px rgba(28, 25, 23, 0.06), 0 2px 4px -2px rgba(28, 25, 23, 0.04);
+  --sk-shadow-lg:  0 8px 18px rgba(28, 25, 23, 0.08);
+  --sk-shadow-xl:  0 12px 28px rgba(28, 25, 23, 0.10);
+
+  /* ── Glass ─────────────────────────────────────────────── */
+  --sk-glass-bg:     rgba(255, 255, 255, 0.7);
+  --sk-glass-border: rgba(255, 255, 255, 0.4);
+  --sk-glass-blur:   12px;
+
+  /* ── Input ─────────────────────────────────────────────── */
+  --sk-input-bg:     #FFFFFF;
+  --sk-input-border: #D6D3D1;
+  --sk-input-focus:  #FB923C;
+
+  /* ── Sidebar ───────────────────────────────────────────── */
+  --sk-sidebar-bg:     #FFFFFF;
+  --sk-sidebar-border: #E7E5E4;
+  --sk-sidebar-hover:  #FFF7ED;
+  --sk-sidebar-active: #FFEDD5;
+
+  /* ── Card ──────────────────────────────────────────────── */
+  --sk-card-bg:     #FFFFFF;
+  --sk-card-border: #E7E5E4;
+  --sk-card-hover:  #FAFAF9;
+
+  /* ── Scrollbar ─────────────────────────────────────────── */
+  --sk-scrollbar-track: #F5F5F4;
+  --sk-scrollbar-thumb: #D6D3D1;
+  --sk-scrollbar-hover: #A8A29E;
+
+  /* ── Skeleton ──────────────────────────────────────────── */
+  --sk-skeleton-base: #E7E5E4;
+  --sk-skeleton-shine: #F5F5F4;
+}
+
+/* ============================================================
+   DARK THEME
+   ============================================================ */
+[data-theme="dark"] {
+  /* ── Surface / Background ──────────────────────────────── */
+  --sk-bg-base:      #0C0A09;
+  --sk-bg-surface:   #1C1917;
+  --sk-bg-elevated:  #292524;
+  --sk-bg-muted:     #292524;
+  --sk-bg-subtle:    #44403C;
+  --sk-bg-overlay:   rgba(0, 0, 0, 0.48);
+
+  /* ── Text ──────────────────────────────────────────────── */
+  --sk-text-primary:     #FAFAF9;
+  --sk-text-secondary:   #D6D3D1;
+  --sk-text-tertiary:    #A8A29E;
+  --sk-text-placeholder: #78716C;
+  --sk-text-inverse:     #1C1917;
+  --sk-text-on-primary:  #FFFFFF;
+
+  /* ── Primary (Orange — slightly brighter for dark bg) ─── */
+  --sk-primary:       #F97316;
+  --sk-primary-hover: #FB923C;
+  --sk-primary-light: rgba(249, 115, 22, 0.12);
+  --sk-primary-muted: rgba(249, 115, 22, 0.18);
+  --sk-primary-text:  #FDBA74;
+
+  /* ── Border ────────────────────────────────────────────── */
+  --sk-border:       #44403C;
+  --sk-border-light: #292524;
+  --sk-border-focus: #FB923C;
+
+  /* ── Shadows ───────────────────────────────────────────── */
+  --sk-shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.2);
+  --sk-shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --sk-shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --sk-shadow-lg:  0 8px 18px rgba(0, 0, 0, 0.28);
+  --sk-shadow-xl:  0 12px 28px rgba(0, 0, 0, 0.34);
+
+  /* ── Glass ─────────────────────────────────────────────── */
+  --sk-glass-bg:     rgba(28, 25, 23, 0.7);
+  --sk-glass-border: rgba(68, 64, 60, 0.4);
+  --sk-glass-blur:   12px;
+
+  /* ── Input ─────────────────────────────────────────────── */
+  --sk-input-bg:     #292524;
+  --sk-input-border: #44403C;
+  --sk-input-focus:  #FB923C;
+
+  /* ── Sidebar ───────────────────────────────────────────── */
+  --sk-sidebar-bg:     #1C1917;
+  --sk-sidebar-border: #292524;
+  --sk-sidebar-hover:  rgba(249, 115, 22, 0.08);
+  --sk-sidebar-active: rgba(249, 115, 22, 0.15);
+
+  /* ── Card ──────────────────────────────────────────────── */
+  --sk-card-bg:     #1C1917;
+  --sk-card-border: #292524;
+  --sk-card-hover:  #292524;
+
+  /* ── Scrollbar ─────────────────────────────────────────── */
+  --sk-scrollbar-track: #1C1917;
+  --sk-scrollbar-thumb: #44403C;
+  --sk-scrollbar-hover: #57534E;
+
+  /* ── Skeleton ──────────────────────────────────────────── */
+  --sk-skeleton-base: #292524;
+  --sk-skeleton-shine: #44403C;
+
+  /* ── Semantic adjustments for dark ─────────────────────── */
+  --sk-success:     #22C55E;
+  --sk-success-bg:  rgba(34, 197, 94, 0.1);
+  --sk-warning:     #FACC15;
+  --sk-warning-bg:  rgba(250, 204, 21, 0.1);
+  --sk-error:       #EF4444;
+  --sk-error-bg:    rgba(239, 68, 68, 0.1);
+  --sk-info:        #3B82F6;
+  --sk-info-bg:     rgba(59, 130, 246, 0.1);
+}

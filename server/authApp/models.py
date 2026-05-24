@@ -25,6 +25,16 @@ class CustomUser(AbstractUser):
     Display name (`username`) may contain any characters up to 150 chars.
     Public URLs use a separate slug on UserDetails (ASCII, path-safe).
     """
+    ROLE_CHOICES = (
+        ('', 'None'),
+        ('FACULTY', 'Faculty'),
+        ('STUDENT', 'Student'),
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='FACULTY', blank=True)
+    student_id = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    is_banned = models.BooleanField(default=False, help_text='Banned users cannot login even if is_active is True.')
+    is_email_verified = models.BooleanField(default=False, help_text='Whether the user has verified their email address.')
+    
     email = models.EmailField(unique=True)
 
     username = models.CharField(
@@ -45,3 +55,12 @@ class CustomUser(AbstractUser):
     @property
     def readable_name(self):
         return " ".join(self.username.split('_')).title()
+
+class EmailVerificationToken(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='email_verification')
+    token = models.CharField(max_length=64, unique=True)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Verification for {self.user.email}"

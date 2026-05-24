@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../static/images/nav-logo.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Admin Dashboard - Sir Kothay</title>
+  <meta name="description" content="Admin Panel - Manage users, roles, and system settings">
+  <link rel="stylesheet" href="../static/css/style.css?v=ui-fix-30">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    .sort-btn { cursor:pointer; user-select:none; }
+    .sort-btn:hover { color: var(--sk-primary); }
+    .sort-btn .bi { font-size:0.65rem; margin-left:2px; opacity:0.5; }
+    .sort-btn.active .bi { opacity:1; color: var(--sk-primary); }
+  </style>
+</head>
+<body>
+  <div class="sk-app">
+    <!-- Sidebar -->
+    <aside class="sk-sidebar">
+      <div class="sk-sidebar-logo"><img src="../static/images/nav-logo.png" alt="Sir Kothay"></div>
+      <nav class="sk-sidebar-nav"></nav>
+      <div class="sk-sidebar-footer"></div>
+    </aside>
+    <div class="sk-sidebar-overlay"></div>
+
+    <!-- Main Content -->
+    <main class="sk-main">
+      <div class="sk-page">
+        <!-- Loading Skeleton -->
+        <div id="loadingState">
+          <div class="sk-skeleton sk-skeleton-card" style="height:120px;margin-bottom:1.5rem"></div>
+          <div class="sk-skeleton sk-skeleton-card" style="height:60px;margin-bottom:1rem"></div>
+          <div class="sk-skeleton sk-skeleton-card" style="height:400px"></div>
+        </div>
+
+        <div id="mainContent" class="hidden">
+          <!-- Admin Header -->
+          <section class="sk-admin-hero">
+            <div>
+              <h1 class="sk-admin-title"><i class="bi bi-shield-lock"></i>Admin Dashboard</h1>
+              <p id="adminGreeting" class="sk-admin-subtitle">Manage system users, roles, and status.</p>
+            </div>
+            <div class="sk-admin-stats">
+              <div class="sk-stat-card"><div class="sk-stat-icon orange"><i class="bi bi-people"></i></div><div><div class="sk-stat-value" id="totalUsersCount">0</div><div class="sk-stat-label">Total</div></div></div>
+              <div class="sk-stat-card"><div class="sk-stat-icon blue"><i class="bi bi-person-workspace"></i></div><div><div class="sk-stat-value" id="facultyCount">0</div><div class="sk-stat-label">Faculty</div></div></div>
+              <div class="sk-stat-card"><div class="sk-stat-icon green"><i class="bi bi-mortarboard"></i></div><div><div class="sk-stat-value" id="studentCount">0</div><div class="sk-stat-label">Students</div></div></div>
+              <div class="sk-stat-card"><div class="sk-stat-icon red"><i class="bi bi-shield"></i></div><div><div class="sk-stat-value" id="adminCount">0</div><div class="sk-stat-label">Admins</div></div></div>
+            </div>
+          </section>
+
+          <!-- Filters & Search -->
+          <section class="sk-admin-filters">
+            <div class="sk-admin-filter-grid">
+              <div class="sk-search">
+                <i class="bi bi-search sk-search-icon"></i>
+                <input type="text" id="adminSearch" placeholder="Search by name, email, or student ID..." class="sk-input" oninput="renderAdminUsers()">
+              </div>
+              <select id="filterRole" class="sk-select" onchange="renderAdminUsers()">
+                <option value="">All Roles</option><option value="FACULTY">Faculty</option><option value="STUDENT">Student</option><option value="NONE">None (Admin only)</option>
+              </select>
+              <select id="filterStatus" class="sk-select" onchange="renderAdminUsers()">
+                <option value="">All Status</option><option value="active">Active</option><option value="deactivated">Deactivated</option><option value="banned">Banned</option>
+              </select>
+              <button onclick="resetFilters()" class="sk-btn sk-btn-ghost sk-btn-sm"><i class="bi bi-x-circle"></i> Reset</button>
+            </div>
+          </section>
+
+          <!-- Users Table -->
+          <section class="sk-card sk-admin-table-card">
+            <div class="sk-card-header">
+              <div>
+                <h2 class="sk-card-title"><i class="bi bi-people-fill" style="color:var(--sk-primary);margin-right:0.5rem"></i>User Management</h2>
+                <div class="sk-card-subtitle">Manage user roles, status, and account access.</div>
+              </div>
+              <span id="filteredCount" style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary)"></span>
+            </div>
+            <div class="sk-table-wrap">
+              <table class="sk-table">
+                <thead>
+                  <tr>
+                    <th class="sort-btn" onclick="setSort('id')">ID <i class="bi" id="sortIcon_id"></i></th>
+                    <th class="sort-btn" onclick="setSort('username')">Name <i class="bi" id="sortIcon_username"></i></th>
+                    <th class="sort-btn" onclick="setSort('email')">Email <i class="bi" id="sortIcon_email"></i></th>
+                    <th class="sort-btn" onclick="setSort('role')">Role <i class="bi" id="sortIcon_role"></i></th>
+                    <th class="sort-btn" onclick="setSort('is_active')">Status <i class="bi" id="sortIcon_is_active"></i></th>
+                    <th class="sort-btn" onclick="setSort('date_joined')">Joined <i class="bi" id="sortIcon_date_joined"></i></th>
+                    <th style="text-align:center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminUsersTable"></tbody>
+              </table>
+              <p id="emptyTableMessage" style="display:none;text-align:center;padding:2rem;color:var(--sk-text-placeholder)">No users found matching your filters.</p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="sk-bottom-nav"><div class="sk-bottom-nav-items"></div></nav>
+  </div>
+
+  <!-- User Detail Slide-Over Panel -->
+  <div id="userDetailOverlay" class="sk-admin-drawer-overlay hidden" onclick="closeUserDetail()">
+    <div id="userDetailPanel" class="sk-admin-drawer" onclick="event.stopPropagation()">
+      <div class="sk-admin-drawer-header">
+        <h3 class="sk-admin-drawer-title"><i class="bi bi-person-badge"></i>User Details</h3>
+        <button onclick="closeUserDetail()" class="sk-modal-close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="userDetailBody" class="sk-admin-drawer-body"></div>
+    </div>
+  </div>
+
+  <!-- Change Role Modal -->
+  <div id="changeRoleModal" class="sk-modal-overlay hidden" style="z-index:200">
+    <div class="sk-modal-panel" style="max-width:380px">
+      <div class="sk-modal-header">
+        <h3 class="sk-modal-title"><i class="bi bi-arrow-left-right" style="color:var(--sk-primary);margin-right:0.5rem"></i>Change Role</h3>
+        <button class="sk-modal-close" onclick="closeChangeRoleModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <p style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary);margin-bottom:1rem">Select a new role for <strong id="crUserName"></strong></p>
+        <input type="hidden" id="crUserId">
+        <div id="crRoleOptions" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem"></div>
+        <div id="crStudentIdGroup" class="hidden" style="margin-bottom:1rem">
+          <label class="sk-label">Student ID <span style="color:var(--sk-text-placeholder)">(optional)</span></label>
+          <input type="text" id="crStudentId" placeholder="e.g. 0112430141" class="sk-input">
+          <p style="font-size:var(--sk-text-xs);color:var(--sk-text-placeholder);margin-top:0.25rem">Leave blank — student will set it on next login.</p>
+        </div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeChangeRoleModal()" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button onclick="confirmChangeRole()" class="sk-btn sk-btn-primary">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div id="resetPasswordModal" class="sk-modal-overlay hidden" style="z-index:200">
+    <div class="sk-modal-panel" style="max-width:380px">
+      <div class="sk-modal-header">
+        <h3 class="sk-modal-title"><i class="bi bi-key" style="color:var(--sk-warning);margin-right:0.5rem"></i>Reset Password</h3>
+        <button class="sk-modal-close" onclick="closeResetPasswordModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sk-modal-body">
+        <p style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary);margin-bottom:1rem">Reset password for <strong id="rpUserName"></strong></p>
+        <input type="hidden" id="rpUserId">
+        
+        <div class="sk-form-group">
+          <label class="sk-label">New Password <span style="color:var(--sk-text-placeholder)">(optional)</span></label>
+          <input type="text" id="rpPassword" placeholder="Enter custom password..." class="sk-input">
+          <p style="font-size:var(--sk-text-xs);color:var(--sk-text-placeholder);margin-top:0.25rem">If left blank, a random 8-character password will be generated automatically. The new password will be emailed to the user.</p>
+        </div>
+      </div>
+      <div class="sk-modal-footer">
+        <button onclick="closeResetPasswordModal()" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button onclick="confirmResetPassword()" class="sk-btn sk-btn-warning">Reset & Email User</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/utils.js"></script>
+  <script src="../static/js/theme.js?v=ui-fix-30"></script>
+  <script src="../static/js/components.js"></script>
+  <script src="../static/js/layout.js?v=ui-fix-30"></script>
+  <script src="../static/js/notify-modal.js?v=ui-fix-5"></script>
+  <script src="../static/js/admin-dashboard.js?v=ui-fix-9"></script>
+  <script>
+    SKLayout.init({
+      page: 'admin',
+      requireAuth: true,
+      type: 'dashboard'
+    });
+  </script>
+</body>
+</html>

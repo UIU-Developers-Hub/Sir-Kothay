@@ -1,0 +1,133 @@
+#!/bin/sh
+# Git pre-commit hook: Detect new .env keys and prompt for production values.
+# Encrypts them so they travel safely through git to the server.
+#
+# INSTALL: Run from the repo root:
+#   cp scripts/pre-commit .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+
+ENV_EXAMPLE="server/.env.example"
+ENV_KEYS_TRACKER=".env.keys.track"
+DEPLOY_FILE=".env.deploy.enc"
+
+# Load webhook secret from local .env (gitignored)
+LOCAL_SECRET=""
+if [ -f "server/.env" ]; then
+    LOCAL_SECRET=$(grep "^GITHUB_WEBHOOK_SECRET=" "server/.env" | cut -d '=' -f 2-)
+fi
+
+if [ -z "$LOCAL_SECRET" ]; then
+    # No local secret means encryption isn't possible — skip silently
+    exit 0
+fi
+
+# If .env.example isn't staged, nothing to check
+if ! git diff --cached --name-only | grep -q "$ENV_EXAMPLE"; then
+    exit 0
+fi
+
+# Extract current keys from .env.example (only valid lines like KEY=value)
+# We strip Windows CR (\r) so the comparison is exact
+CURRENT_KEYS=$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$ENV_EXAMPLE" | cut -d '=' -f 1 | tr -d '\r' | sort)
+
+# Load previously known keys
+if [ -f "$ENV_KEYS_TRACKER" ]; then
+    OLD_KEYS=$(cat "$ENV_KEYS_TRACKER" | tr -d '\r' | sort)
+else
+    OLD_KEYS=""
+fi
+
+# Find NEW keys (in current but not in old)
+# Find DELETED keys (in old but not in current)
+# Use temp files instead of process substitution for POSIX sh compatibility
+TMP_CUR=$(mktemp)
+TMP_OLD=$(mktemp)
+echo "$CURRENT_KEYS" > "$TMP_CUR"
+echo "$OLD_KEYS" > "$TMP_OLD"
+NEW_KEYS=$(comm -23 "$TMP_CUR" "$TMP_OLD")
+DELETED_KEYS=$(comm -13 "$TMP_CUR" "$TMP_OLD")
+rm -f "$TMP_CUR" "$TMP_OLD"
+
+if [ -z "$NEW_KEYS" ] && [ -z "$DELETED_KEYS" ]; then
+    # Update tracker and exit — nothing changed
+    echo "$CURRENT_KEYS" > "$ENV_KEYS_TRACKER"
+    git add "$ENV_KEYS_TRACKER"
+    exit 0
+fi
+
+# Check if we can actually read from the user's terminal.
+# GitHub Desktop simulates a terminal but blocks input, so we must test reading.
+if ! true < /dev/tty 2>/dev/null; then
+    echo "======================================================================"
+    echo "❌ ERROR: Non-interactive environment detected (GitHub Desktop?)"
+    echo "You MUST use a real terminal to commit changes to .env.example!"
+    echo ""
+    echo "To resolve this, open your terminal and run:"
+    echo "  git commit -am \"Update env vars\" && git push"
+    echo ""
+    echo "This will allow you to answer the secure encryption prompts."
+    echo "======================================================================"
+    exit 1
+fi
+
+TMP_PAYLOAD=$(mktemp)
+
+if [ -n "$NEW_KEYS" ]; then
+    echo ""
+    echo "╔══════════════════════════════════════════════════╗"
+    echo "║  🔑 New environment variables detected!          ║"
+    echo "║  Enter PRODUCTION values for your server.        ║"
+    echo "║  Press Enter to skip (use default from example). ║"
+    echo "╚══════════════════════════════════════════════════╝"
+    echo ""
+    echo "$NEW_KEYS" | while IFS= read -r key; do
+        if [ -z "$key" ]; then continue; fi
+        # Get default from local .env if it exists, otherwise fallback to .env.example
+        if grep -q "^${key}=" "server/.env" 2>/dev/null; then
+            default_val=$(grep "^${key}=" "server/.env" | head -1 | cut -d '=' -f 2-)
+        else
+            default_val=$(grep "^${key}=" "$ENV_EXAMPLE" | head -1 | cut -d '=' -f 2-)
+        fi
+        
+        printf "  %s [default: %s]: " "$key" "$default_val"
+        # Use bash's 'read -e' so arrow keys and backspace work properly (readline mode)
+        user_val=$(bash -c 'read -e val < /dev/tty && echo "$val"')
+        if [ -z "$user_val" ]; then
+            user_val="$default_val"
+        fi
+        echo "${key}=${user_val}" >> "$TMP_PAYLOAD"
+    done
+fi
+
+if [ -n "$DELETED_KEYS" ]; then
+    echo ""
+    echo "╔══════════════════════════════════════════════════╗"
+    echo "║  🗑️  Deleted environment variables detected!     ║"
+    echo "╚══════════════════════════════════════════════════╝"
+    echo ""
+    echo "$DELETED_KEYS" | while IFS= read -r key; do
+        if [ -z "$key" ]; then continue; fi
+        printf "  Delete '%s' from production server? (y/n) [default: y]: " "$key"
+        user_val=$(bash -c 'read -e val < /dev/tty && echo "$val"')
+        case "$user_val" in
+            [Yy]*|"") echo "__DELETE__${key}=true" >> "$TMP_PAYLOAD" ;;
+        esac
+    done
+fi
+
+# Encrypt the payload with the webhook secret
+openssl enc -aes-256-cbc -pbkdf2 -salt -pass "pass:${LOCAL_SECRET}" -in "$TMP_PAYLOAD" -out "$DEPLOY_FILE" 2>/dev/null
+rm -f "$TMP_PAYLOAD"
+
+# Update the key tracker
+echo "$CURRENT_KEYS" > "$ENV_KEYS_TRACKER"
+
+# Stage the encrypted file and tracker
+git add "$DEPLOY_FILE" "$ENV_KEYS_TRACKER"
+
+echo ""
+echo "  ✅ Encrypted env values saved to $DEPLOY_FILE"
+echo "  ✅ Server will auto-decrypt and merge on deploy."
+echo ""
+
+exit 0

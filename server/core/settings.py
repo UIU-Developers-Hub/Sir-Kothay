@@ -40,11 +40,12 @@ ALLOWED_HOSTS = _csv('ALLOWED_HOSTS', '127.0.0.1,localhost')
 # file:// pages send Origin: null; they are rejected unless we allow all origins in development.
 CORS_ALLOW_CREDENTIALS = False
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 if not DEBUG:
     CORS_ALLOWED_ORIGINS = _csv(
         'CORS_ALLOWED_ORIGINS',
-        'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5500,http://localhost:5500',
+        'https://sir-kothay-tahsinfaiyaz30.web.app,https://sir-kothay-tahsinfaiyaz30.firebaseapp.com,http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5500,http://localhost:5500',
     )
 else:
     CORS_ALLOWED_ORIGINS = []
@@ -64,7 +65,7 @@ CORS_ALLOW_HEADERS = [
 # CSRF Settings for cross-origin requests
 CSRF_TRUSTED_ORIGINS = _csv(
     'CSRF_TRUSTED_ORIGINS',
-    'http://localhost:3000,http://localhost:5173,http://127.0.0.1:5500,http://localhost:5500',
+    'https://sir-kothay-tahsinfaiyaz30.web.app,https://sir-kothay-tahsinfaiyaz30.firebaseapp.com,http://localhost:3000,http://localhost:5173,http://127.0.0.1:5500,http://localhost:5500',
 )
 
 # Application definition
@@ -83,6 +84,9 @@ INSTALLED_APPS = [
     'qrcodeApp',
     'dashboard',
     'broadcast',
+    'messaging',
+    'scheduler',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -146,6 +150,12 @@ else:
         }
     }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'django_cache',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -171,7 +181,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Dhaka'
 
 USE_I18N = True
 
@@ -221,3 +231,17 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
+
+# Email backend — auto-switches to SMTP when EMAIL_HOST_USER is set.
+# For dev (no creds): prints to console. For prod: real SMTP delivery.
+_email_user = os.getenv('EMAIL_HOST_USER', '')
+if _email_user:
+    EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes')
+EMAIL_HOST_USER = _email_user
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', _email_user or 'noreply@sirkothay.com')

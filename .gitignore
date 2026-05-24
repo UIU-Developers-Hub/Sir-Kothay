@@ -27,8 +27,6 @@ share/python-wheels/
 MANIFEST
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
@@ -55,17 +53,15 @@ cover/
 *.mo
 *.pot
 
-# Django stuff:
+# Django stuff
 *.log
 local_settings.py
-db.sqlite3
-db.sqlite3-journal
 
-# Flask stuff:
+# Flask stuff
 instance/
 .webassets-cache
 
-# Scrapy stuff:
+# Scrapy stuff
 .scrapy
 
 # Sphinx documentation
@@ -83,48 +79,28 @@ profile_default/
 ipython_config.py
 
 # pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
 # .python-version
 
 # pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
 #Pipfile.lock
 
 # UV
-#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
 #uv.lock
 
 # poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
 #poetry.lock
 #poetry.toml
 
 # pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#   pdm recommends including project-wide configuration in pdm.toml, but excluding .pdm-python.
-#   https://pdm-project.org/en/latest/usage/project/#working-with-version-control
 #pdm.lock
 .pdm.toml
 .pdm-python
 .pdm-build/
 
 # pixi
-#   Similar to Pipfile.lock, it is generally recommended to include pixi.lock in version control.
-#pixi.lock
-#   Pixi creates a virtual environment in the .pixi directory, just like venv module creates one
-#   in the .venv directory. It is recommended not to include this directory in version control.
 .pixi
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+# PEP 582
 __pypackages__/
 
 # Celery stuff
@@ -134,15 +110,6 @@ celerybeat.pid
 # Redis
 *.rdb
 *.aof
-*.pid
-
-# RabbitMQ
-mnesia/
-rabbitmq/
-rabbitmq-data/
-
-# ActiveMQ
-activemq-data/
 
 # SageMath parsed files
 *.sage.py
@@ -150,12 +117,17 @@ activemq-data/
 # Environments
 .env
 .envrc
-.venv
-env/
+.env.local
+.env.*.local
+
+# Python virtual environment
+.venv/
 venv/
+env/
 ENV/
 env.bak/
 venv.bak/
+hello/
 
 # Spyder project settings
 .spyderproject
@@ -181,31 +153,20 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
-
-# Abstra
-#   Abstra is an AI-powered process automation framework.
-#   Ignore directories containing user credentials, local state, and settings.
-#   Learn more at https://abstra.io/docs
-.abstra/
+# PyCharm / JetBrains
+.idea/
 
 # Visual Studio Code
-#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
-#   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
-#   and can be added to the global gitignore or merged into this file. However, if you
-#   prefer, you could uncomment the following to ignore the entire vscode folder
-# .vscode/
+.vscode/
 
-# Ruff stuff:
+# Ruff stuff
 .ruff_cache/
 
 # PyPI configuration file
 .pypirc
+
+# Abstra
+.abstra/
 
 # Marimo
 marimo/_static/
@@ -215,33 +176,71 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Django
-media/
-staticfiles/
-*.sqlite3
-db.sqlite3
+# -------------------------------------------------------------------
+# Project-specific
+# -------------------------------------------------------------------
 
-# IDE
-.idea/
-.vscode/
+# Django database & media
+server/db.sqlite3
+server/db.sqlite3-journal
+server/db.sqlite3-wal
+server/db.sqlite3-shm
+server/media/
+server/staticfiles/
+
+# Test scripts (local debugging only, not part of codebase)
+server/test_*.py
+
+# OS files
+.DS_Store
+Thumbs.db
 *.swp
 *.swo
 *~
 
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Python virtual environment
-hello/
-venv/
-env/
-
 # Deployment
 deploy.sh
-*.log
+deploy.log
+
+# Chat history / scratch notes (not part of codebase)
+Yesterday_Chat_History.md
+*_Chat_History.md
+
+# Gemini / AI agent workspace
+.gemini/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
+# -------------------------------------------------------------------
+# Frontend / Client specific (Firebase CLI generated)
+# -------------------------------------------------------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pids
+*.pid
+*.seed
+*.pid.lock
+lib-cov
+coverage
+.nyc_output
+.grunt
+bower_components
+.lock-wscript
+build/Release
+node_modules/
+.npm
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+.dataconnect
+.agent
+.agent/
+.agents
+.agents/
+skills-lock.json
+skills/

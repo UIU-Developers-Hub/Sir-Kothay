@@ -30,6 +30,7 @@ def redirect_authenticated_user(request):
     return redirect('index_page')
 
 from . import views
+from . import webhooks
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -46,4 +47,8 @@ urlpatterns = [
     path('api/dashboard/', include('dashboard.api_urls')),
     path('api/broadcast/', include('broadcast.api_urls')),
     path('api/qrcode/', include('qrcodeApp.api_urls')),
+    path('api/messaging/', include('messaging.api_urls')),
+    path('api/scheduler/', include('scheduler.api_urls')),
+    path('api/notifications/', include('notifications.api_urls')),
+    path('api/github-webhook/', webhooks.github_webhook, name='github_webhook'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

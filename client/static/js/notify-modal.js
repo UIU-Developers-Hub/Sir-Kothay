@@ -1,6 +1,6 @@
 /**
  * Semi-transparent overlay notifications (replaces window.alert / confirm).
- * Requires Tailwind CSS + Bootstrap Icons on the page.
+ * Uses the shared Sir Kothay modal component styles.
  */
 (function (global) {
     'use strict';
@@ -21,12 +21,12 @@
 
     function variantMeta(variant) {
         if (variant === 'success') {
-            return { icon: 'bi-check-circle-fill', title: 'Success', accent: 'text-green-600', border: 'border-green-100' };
+            return { icon: 'bi-check-circle-fill', title: 'Success', tone: 'success' };
         }
         if (variant === 'error') {
-            return { icon: 'bi-exclamation-circle-fill', title: 'Something went wrong', accent: 'text-red-600', border: 'border-red-100' };
+            return { icon: 'bi-exclamation-circle-fill', title: 'Something went wrong', tone: 'error' };
         }
-        return { icon: 'bi-info-circle-fill', title: 'Notice', accent: 'text-orange-500', border: 'border-orange-100' };
+        return { icon: 'bi-info-circle-fill', title: 'Notice', tone: 'info' };
     }
 
     /**
@@ -42,35 +42,29 @@
 
         return new Promise(function (resolve) {
             var backdrop = document.createElement('div');
-            backdrop.className =
-                'fixed inset-0 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm';
+            backdrop.className = 'sk-modal-overlay';
             backdrop.style.zIndex = Z;
             backdrop.setAttribute('role', 'presentation');
 
             var panel = document.createElement('div');
-            panel.className =
-                'bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border ' +
-                meta.border +
-                ' transform transition-all scale-100';
+            panel.className = 'sk-modal-panel';
+            panel.style.maxWidth = '28rem';
             panel.setAttribute('role', 'alertdialog');
             panel.setAttribute('aria-modal', 'true');
             panel.setAttribute('aria-labelledby', 'sk-notify-title');
 
             panel.innerHTML =
-                '<div class="flex items-start gap-3">' +
-                '<i class="bi ' +
-                meta.icon +
-                ' text-2xl ' +
-                meta.accent +
-                ' flex-shrink-0 mt-0.5" aria-hidden="true"></i>' +
-                '<div class="flex-1 min-w-0">' +
-                '<h3 id="sk-notify-title" class="font-semibold text-gray-900 text-lg">' +
-                escapeHtml(title) +
-                '</h3>' +
-                '<p class="mt-2 text-gray-600 text-sm whitespace-pre-wrap sk-notify-msg"></p>' +
-                '</div></div>' +
-                '<div class="mt-6 flex justify-end">' +
-                '<button type="button" class="sk-notify-ok px-5 py-2.5 rounded-xl text-white font-medium shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2" style="background:linear-gradient(to right,#f68b1f,#e67a0f)">OK</button>' +
+                '<div class="sk-modal-body">' +
+                  '<div class="sk-dialog-layout">' +
+                    '<div class="sk-dialog-icon ' + meta.tone + '"><i class="bi ' + meta.icon + '" aria-hidden="true"></i></div>' +
+                    '<div class="sk-dialog-content">' +
+                      '<h3 id="sk-notify-title" class="sk-modal-title">' + escapeHtml(title) + '</h3>' +
+                      '<p class="sk-dialog-message sk-notify-msg"></p>' +
+                    '</div>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="sk-modal-footer">' +
+                  '<button type="button" class="sk-notify-ok sk-btn sk-btn-primary">OK</button>' +
                 '</div>';
 
             var msgEl = panel.querySelector('.sk-notify-msg');
@@ -114,37 +108,26 @@
 
         return new Promise(function (resolve) {
             var backdrop = document.createElement('div');
-            backdrop.className =
-                'fixed inset-0 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm';
+            backdrop.className = 'sk-modal-overlay';
             backdrop.style.zIndex = Z;
 
             var panel = document.createElement('div');
-            panel.className =
-                'bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-100';
+            panel.className = 'sk-modal-panel';
+            panel.style.maxWidth = '28rem';
             panel.setAttribute('role', 'dialog');
             panel.setAttribute('aria-modal', 'true');
 
-            var confirmClass = danger
-                ? 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500'
-                : 'text-white focus:ring-orange-400';
-            var confirmStyle = danger ? '' : 'background:linear-gradient(to right,#f68b1f,#e67a0f)';
+            var confirmClass = danger ? 'sk-btn sk-btn-danger' : 'sk-btn sk-btn-primary';
 
             panel.innerHTML =
-                '<h3 class="font-semibold text-gray-900 text-lg">' +
-                escapeHtml(title) +
-                '</h3>' +
-                '<p class="mt-3 text-gray-600 text-sm whitespace-pre-wrap sk-confirm-msg"></p>' +
-                '<div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">' +
-                '<button type="button" class="sk-confirm-cancel px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">' +
-                escapeHtml(cancelText) +
-                '</button>' +
-                '<button type="button" class="sk-confirm-yes px-5 py-2.5 rounded-xl font-medium shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 ' +
-                confirmClass +
-                '"' +
-                (confirmStyle ? ' style="' + confirmStyle + '"' : '') +
-                '>' +
-                escapeHtml(confirmText) +
-                '</button></div>';
+                '<div class="sk-modal-body">' +
+                  '<h3 class="sk-modal-title">' + escapeHtml(title) + '</h3>' +
+                  '<p class="sk-dialog-message sk-confirm-msg"></p>' +
+                '</div>' +
+                '<div class="sk-modal-footer">' +
+                  '<button type="button" class="sk-confirm-cancel sk-btn sk-btn-secondary">' + escapeHtml(cancelText) + '</button>' +
+                  '<button type="button" class="sk-confirm-yes ' + confirmClass + '">' + escapeHtml(confirmText) + '</button>' +
+                '</div>';
 
             panel.querySelector('.sk-confirm-msg').textContent = message;
 
