@@ -244,11 +244,27 @@ class AdminUserManagementViewSet(viewsets.ModelViewSet):
         user.set_password(new_password)
         user.save()
         
-        from notifications.services import send_email_async
+        from notifications.services import auth_login_url, send_email_async
         from django.conf import settings
         subject = "Your Sir Kothay Password has been Reset"
         body = f"Hello {user.username},\n\nAn administrator has reset your password.\n\nYour new password is: {new_password}\n\nPlease log in and change this password from your profile settings as soon as possible.\n\nThanks,\nSir Kothay Team"
-        send_email_async(subject, body, getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@sirkothay.com'), [user.email])
+        send_email_async(
+            subject,
+            body,
+            getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@sirkothay.com'),
+            [user.email],
+            eyebrow='Account access',
+            title='Your password was reset',
+            greeting=user.username,
+            intro=[
+                'An administrator reset the password for your Sir Kothay account.',
+                'Use the temporary password below, then change it from your profile settings.'
+            ],
+            facts=[('Temporary password', new_password)],
+            action_label='Log in',
+            action_url=auth_login_url(),
+            footer_note='Keep this password private and change it after signing in.',
+        )
         
         msg = 'Custom password set' if custom_password else 'Random password generated'
         return Response({'status': 'success', 'message': f'{msg} and emailed to the user.'})
