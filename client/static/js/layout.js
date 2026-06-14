@@ -954,28 +954,28 @@ window.SKLayout = (() => {
     const authLinks = hideAuth ? '' : `
         <div style="height: 1px; background: var(--sk-border); margin: var(--sk-space-4) 0"></div>
         <a href="${getRelativePath('auth/login.html')}" class="sk-sidebar-link ${activePage === 'login' ? 'active' : ''}">
-          <i class="bi bi-box-arrow-in-right"></i><span>Login</span>
+          <i class="bi bi-box-arrow-in-right"></i><span class="sk-sidebar-link-text">Login</span>
         </a>
         <a href="${getRelativePath('auth/register.html')}" class="sk-sidebar-link ${activePage === 'register' ? 'active' : ''}">
-          <i class="bi bi-person-plus"></i><span>Sign Up</span>
+          <i class="bi bi-person-plus"></i><span class="sk-sidebar-link-text">Sign Up</span>
         </a>
       `;
     const manageLink = hideDynamic ? '' : `
         <a href="${getRelativePath('broadcast/manage.html')}" class="sk-sidebar-link ${activePage === 'manage' ? 'active' : ''}">
-          <i class="bi bi-bell-fill"></i><span>Manage Subscriptions</span>
+          <i class="bi bi-bell-fill"></i><span class="sk-sidebar-link-text">Manage Subscriptions</span>
         </a>
       `;
     if (sidebarNav) {
       sidebarNav.innerHTML = `
         <a href="${getRelativePath('index.html')}" class="sk-sidebar-link ${activePage === 'home' ? 'active' : ''}">
-          <i class="bi bi-house"></i><span>Home</span>
+          <i class="bi bi-house"></i><span class="sk-sidebar-link-text">Home</span>
         </a>
         <a href="${getRelativePath('about.html')}" class="sk-sidebar-link ${activePage === 'about' ? 'active' : ''}">
-          <i class="bi bi-info-circle"></i><span>About</span>
+          <i class="bi bi-info-circle"></i><span class="sk-sidebar-link-text">About</span>
         </a>
         ${manageLink}
         <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="sk-sidebar-link">
-          <i class="bi bi-github"></i><span>GitHub</span>
+          <i class="bi bi-github"></i><span class="sk-sidebar-link-text">GitHub</span>
         </a>
         ${authLinks}
       `;

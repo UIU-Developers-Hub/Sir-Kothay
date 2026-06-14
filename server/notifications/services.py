@@ -51,7 +51,7 @@ def reset_password_url(uidb64, token):
     return build_client_url('auth/reset-password.html', {'uidb64': uidb64, 'token': token})
 
 
-def dashboard_url_for_user(user, tab=None, thread_id=None, extra_params=None):
+def dashboard_url_for_user(user, tab=None, thread_id=None, dm_id=None, extra_params=None):
     """Return the right dashboard entry point for a registered account."""
     if getattr(user, 'role', '') == 'STUDENT':
         path = 'dashboard/student.html'
@@ -63,6 +63,8 @@ def dashboard_url_for_user(user, tab=None, thread_id=None, extra_params=None):
     params = {'tab': tab}
     if thread_id:
         params['thread'] = thread_id
+    if dm_id:
+        params['dm'] = dm_id
     if extra_params:
         params.update(extra_params)
     return build_client_url(path, params)
@@ -72,7 +74,7 @@ def chat_thread_url(user, thread_id):
     """Deep-link to a chat thread using the route each dashboard already supports."""
     if getattr(user, 'role', '') == 'STUDENT':
         return dashboard_url_for_user(user, tab='messages', thread_id=thread_id)
-    return build_client_url('dashboard/home.html', {'tab': 'chats', 'thread': thread_id})
+    return dashboard_url_for_user(user, tab='inbox', thread_id=thread_id)
 
 
 def public_broadcast_url(user):

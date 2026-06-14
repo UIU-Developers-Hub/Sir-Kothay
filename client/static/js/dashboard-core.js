@@ -233,24 +233,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // Handle URL params (e.g. ?tab=chats&thread=5)
   var params = new URLSearchParams(window.location.search);
   var tabParam = params.get('tab');
-  var threadParam = params.get('thread');
   var initialTab = normalizeFacultyTab(tabParam);
   activateFacultyTab(initialTab, { updateUrl: false, loadData: false });
   renderFacultyTabSkeleton(initialTab);
   showFacultyDashboardShell();
-
-  if (threadParam && (tabParam === 'chats' || tabParam === 'inbox')) {
-    var attempts = 0;
-    var tryOpen = setInterval(function () {
-        if (typeof _allConvos !== 'undefined' && _allConvos.find(function(x) { return x.type === 'thread' && x.id === parseInt(threadParam); })) {
-            clearInterval(tryOpen);
-            openConversation('thread', parseInt(threadParam));
-        } else if (attempts > 50) {
-            clearInterval(tryOpen);
-        }
-        attempts++;
-    }, 100);
-  }
 });
 
 // --- Profile & Dashboard Load ---

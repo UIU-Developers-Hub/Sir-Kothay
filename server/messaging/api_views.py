@@ -140,7 +140,7 @@ def send_dm(request, user_slug):
     # Send notification email to the faculty
     faculty_email = user_details.user.email
     if faculty_email:
-        inbox_url = dashboard_url_for_user(user_details.user, tab='inbox')
+        inbox_url = dashboard_url_for_user(user_details.user, tab='inbox', dm_id=dm.id)
         fac_subject = f'New Message from {dm.sender_name}'
         fac_body = (
             f'Hi {user_details.user.username},\n\n'
@@ -165,7 +165,7 @@ def send_dm(request, user_slug):
             ],
             quote_label='Message',
             quote=dm.body,
-            action_label='Open inbox',
+            action_label='Open message',
             action_url=inbox_url,
             footer_note='You received this because this message was sent to your Sir Kothay public page.',
         )

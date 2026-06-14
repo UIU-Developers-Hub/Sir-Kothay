@@ -80,6 +80,52 @@ function _inboxTabActive() {
   return !!tab && !tab.classList.contains('hidden') && document.visibilityState !== 'hidden';
 }
 
+var _facultyDeepLinkOpened = '';
+
+function _readFacultyInboxDeepLink() {
+  var params = new URLSearchParams(window.location.search);
+  var tab = params.get('tab');
+  if (tab && ['inbox', 'chats'].indexOf(tab) === -1) return null;
+
+  var threadId = parseInt(params.get('thread'), 10);
+  if (!isNaN(threadId) && threadId > 0) return { type: 'thread', id: threadId };
+
+  var dmId = parseInt(params.get('dm') || params.get('message'), 10);
+  if (!isNaN(dmId) && dmId > 0) return { type: 'dm', id: dmId };
+
+  return null;
+}
+
+function _syncFacultyConversationUrl(type, id) {
+  try {
+    var url = new URL(window.location);
+    url.searchParams.set('tab', 'inbox');
+    url.searchParams.delete('thread');
+    url.searchParams.delete('dm');
+    url.searchParams.delete('message');
+    if (type === 'thread') url.searchParams.set('thread', id);
+    if (type === 'dm') url.searchParams.set('dm', id);
+    history.replaceState(null, '', url);
+  } catch (e) {}
+}
+
+async function _openFacultyDeepLinkedConversation() {
+  var target = _readFacultyInboxDeepLink();
+  if (!target) return false;
+
+  var key = target.type + ':' + target.id;
+  if (_facultyDeepLinkOpened === key) return true;
+
+  var convo = _allConvos.find(function (c) {
+    return c.type === target.type && c.id === target.id;
+  });
+  if (!convo) return false;
+
+  _facultyDeepLinkOpened = key;
+  await openConversation(target.type, target.id);
+  return true;
+}
+
 function _convoListSignature(convos) {
   return (convos || []).map(function (c) {
     return [c.type, c.id, c.status, c.lastTime, c.lastMsg || '', c.unread ? 1 : 0].join(':');
@@ -185,6 +231,7 @@ async function loadUnifiedInbox(options) {
       _initFilterBtns();
     }
     _updateBadge();
+    await _openFacultyDeepLinkedConversation();
 
     if (!_activeConvo && activeIdentity && !options.silent) _backToList();
     return _allConvos;
@@ -249,6 +296,7 @@ async function openConversation(type, id) {
   var c = _allConvos.find(function (x) { return x.type === type && x.id === id; });
   if (!c) return;
   _activeConvo = c;
+  _syncFacultyConversationUrl(type, id);
   if (type === 'thread') _markThreadConvoSeen(c);
   _renderConvoList(); // highlight active
 
