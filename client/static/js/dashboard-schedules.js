@@ -11,6 +11,7 @@ async function loadSchedules() {
   try {
     var res = await apiRequest(API_ENDPOINTS.RECURRING_LIST);
     var data = await res.json();
+    if (typeof _facultyActiveTab === 'function' && _facultyActiveTab() !== 'calendar') return;
     window._recurringSchedules = Array.isArray(data) ? data : (data.results || []);
     renderCombinedSchedules();
     if (typeof renderCalendar === 'function') renderCalendar();

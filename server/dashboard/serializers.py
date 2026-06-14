@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import UserDetails, StudentInterest
 from authApp.models import CustomUser
+from messaging.models import ChatThread
 
 
 class UserDetailsSerializer(serializers.ModelSerializer):
@@ -86,11 +87,12 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 class StudentInterestSerializer(serializers.ModelSerializer):
     faculty_username = serializers.CharField(source='faculty.username', read_only=True)
     faculty_details = serializers.SerializerMethodField()
+    open_chat = serializers.SerializerMethodField()
     student = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = StudentInterest
-        fields = ['id', 'student', 'faculty', 'faculty_username', 'faculty_details', 'notify_preference', 'created_at']
+        fields = ['id', 'student', 'faculty', 'faculty_username', 'faculty_details', 'open_chat', 'notify_preference', 'created_at']
         read_only_fields = ['id', 'created_at']
 
     def get_faculty_details(self, obj):
@@ -99,6 +101,27 @@ class StudentInterestSerializer(serializers.ModelSerializer):
             return UserDetailsSerializer(details).data
         except UserDetails.DoesNotExist:
             return None
+
+    def get_open_chat(self, obj):
+        student_id = obj.student_id or getattr(obj.student, 'id', None)
+        faculty_id = obj.faculty_id or getattr(obj.faculty, 'id', None)
+        if not student_id or not faculty_id:
+            return {'has_thread': False, 'thread_id': None, 'status': None}
+
+        thread = ChatThread.objects.filter(
+            student_id=student_id,
+            faculty_id=faculty_id,
+            deleted_by_student=False,
+        ).exclude(status='CLOSED').order_by('-last_activity_at').first()
+
+        if not thread:
+            return {'has_thread': False, 'thread_id': None, 'status': None}
+
+        return {
+            'has_thread': True,
+            'thread_id': thread.id,
+            'status': thread.status,
+        }
 
 class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Student Dashboard - Sir Kothay</title>
   <meta name="description" content="Student Dashboard - Track faculty availability and messages">
-  <link rel="stylesheet" href="../static/css/style.css?v=ui-dashboard-4">
+  <link rel="stylesheet" href="../static/css/style.css?v=nav-skeleton-1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
@@ -22,12 +22,7 @@
     <!-- Main Content -->
     <main class="sk-main">
       <div class="sk-page">
-        <!-- Loading Skeleton -->
-        <div id="loadingState">
-          <div class="sk-skeleton sk-skeleton-card" style="height:180px;margin-bottom:1.5rem"></div>
-          <div class="sk-skeleton" style="height:48px;border-radius:var(--sk-radius-lg);margin-bottom:1.5rem"></div>
-          <div class="sk-skeleton sk-skeleton-card" style="height:300px"></div>
-        </div>
+        <div id="loadingState" class="hidden"></div>
 
         <div id="mainContent" class="hidden sk-dashboard-layout">
           <!-- Left Sidebar: Profile Summary -->
@@ -61,14 +56,15 @@
           <div class="sk-dashboard-main">
             <!-- Student section switcher, controlled by sidebar and mobile bottom nav -->
             <div id="dashboardTabs" class="sk-nav-proxy" aria-hidden="true">
-                <button class="sk-tab tab-btn active" data-tab="faculties"><i class="bi bi-grid-fill"></i> My Faculties</button>
+                <button class="sk-tab tab-btn" data-tab="faculties"><i class="bi bi-grid-fill"></i> My Faculties</button>
                 <button class="sk-tab tab-btn" data-tab="messages"><i class="bi bi-chat-dots-fill"></i> Messages <span id="chatBadge" class="sk-sidebar-badge" style="display:none">0</span></button>
                 <button class="sk-tab tab-btn" data-tab="feed"><i class="bi bi-bell-fill"></i> Updates <span id="updateCounter" style="background:var(--sk-primary-light);color:var(--sk-primary);padding:0.125rem 0.5rem;border-radius:var(--sk-radius-full);font-size:var(--sk-text-xs);font-weight:600">0</span></button>
                 <button class="sk-tab tab-btn" data-tab="settings"><i class="bi bi-gear-fill"></i> Settings</button>
+                <button class="sk-tab tab-btn" data-tab="profile"><i class="bi bi-person-circle"></i> Profile</button>
             </div>
 
           <!-- Tab: My Faculties -->
-          <section id="tab-faculties" class="tab-content">
+          <section id="tab-faculties" class="tab-content hidden">
             <div class="sk-card">
               <div class="sk-card-header">
                 <h2 style="font-size:var(--sk-text-base);font-weight:700;color:var(--sk-text-primary)"><i class="bi bi-people-fill" style="color:var(--sk-primary);margin-right:0.5rem"></i>My Faculties (<span id="facultiesCount">0</span>)</h2>
@@ -155,6 +151,7 @@
               </div>
             </div>
           </section>
+          <section id="tab-profile" class="tab-content hidden"></section>
           </div>
         </div>
       </div>
@@ -203,15 +200,16 @@
   </div>
 
   <!-- Scripts -->
-  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/api-config.js?v=backend-sync-1"></script>
   <script src="../static/js/utils.js?v=ui-fix-3"></script>
-  <script src="../static/js/theme.js?v=ui-fix-30"></script>
+  <script src="../static/js/theme.js?v=live-status-2"></script>
   <script src="../static/js/components.js"></script>
-  <script src="../static/js/layout.js?v=ui-fix-30"></script>
+  <script src="../static/js/layout.js?v=tab-skeleton-2"></script>
   <script src="../static/js/notify-modal.js?v=ui-fix-5"></script>
   <script src="../static/js/sk-modal.js?v=ui-fix-5"></script>
-  <script src="../static/js/student-dashboard.js?v=ui-fix-13"></script>
-  <script src="../static/js/student-chat.js?v=ui-fix-11"></script>
+  <script src="../static/js/dashboard-profile.js?v=tab-skeleton-2"></script>
+  <script src="../static/js/student-dashboard.js?v=tab-skeleton-2"></script>
+  <script src="../static/js/student-chat.js?v=tab-skeleton-2"></script>
   <script>
     SKLayout.init({
       page: 'dashboard',

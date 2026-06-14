@@ -51,7 +51,7 @@ def reset_password_url(uidb64, token):
     return build_client_url('auth/reset-password.html', {'uidb64': uidb64, 'token': token})
 
 
-def dashboard_url_for_user(user, tab=None, thread_id=None):
+def dashboard_url_for_user(user, tab=None, thread_id=None, extra_params=None):
     """Return the right dashboard entry point for a registered account."""
     if getattr(user, 'role', '') == 'STUDENT':
         path = 'dashboard/student.html'
@@ -63,6 +63,8 @@ def dashboard_url_for_user(user, tab=None, thread_id=None):
     params = {'tab': tab}
     if thread_id:
         params['thread'] = thread_id
+    if extra_params:
+        params.update(extra_params)
     return build_client_url(path, params)
 
 
@@ -271,7 +273,11 @@ def notify_broadcaster_status_change(broadcaster, message_text, new_is_available
             student = interest.student
             subject = f'Update from {broadcaster.username}'
             avail_str = "Available" if new_is_available else "Unavailable"
-            dashboard_link = dashboard_url_for_user(student, tab='feed')
+            dashboard_link = dashboard_url_for_user(
+                student,
+                tab='faculties',
+                extra_params={'faculty': broadcaster.id, 'highlight': 'faculty-update'},
+            )
             profile_url = public_broadcast_url(broadcaster)
 
             body = (

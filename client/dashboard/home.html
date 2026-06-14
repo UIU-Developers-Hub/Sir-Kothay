@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Dashboard - Sir Kothay</title>
   <meta name="description" content="Faculty Dashboard - Manage your broadcast status, schedules, and messages">
-  <link rel="stylesheet" href="../static/css/style.css?v=ui-premium-sidebar-16">
+  <link rel="stylesheet" href="../static/css/style.css?v=nav-skeleton-1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
@@ -24,14 +24,9 @@
     <!-- Main Content -->
     <main class="sk-main">
       <div class="sk-page" id="pageContent">
-        <!-- Loading Skeleton -->
-        <div id="loadingState">
-          <div class="sk-skeleton sk-skeleton-card" style="height:200px;margin-bottom:1.5rem"></div>
-          <div class="sk-skeleton" style="height:48px;border-radius:var(--sk-radius-lg);margin-bottom:1.5rem"></div>
-          <div class="sk-skeleton sk-skeleton-card" style="height:300px"></div>
-        </div>
+        <div id="loadingState" class="hidden"></div>
 
-        <!-- Main Content (hidden until loaded) -->
+        <!-- Main Content (revealed after the requested tab skeleton is selected) -->
         <div id="mainContent" class="hidden sk-dashboard-layout">
           <aside class="sk-dashboard-sidebar">
           <!-- Profile Section (Redesigned) -->
@@ -146,6 +141,7 @@
               <button class="sk-tab tab-btn" data-tab="calendar"><i class="bi bi-calendar3"></i> Calendar</button>
               <button class="sk-tab tab-btn" data-tab="inbox"><i class="bi bi-chat-dots"></i> Messages <span id="unreadBadge" class="sk-sidebar-badge" style="display:none">0</span></button>
               <button class="sk-tab tab-btn" data-tab="fc-settings"><i class="bi bi-gear"></i> Settings</button>
+              <button class="sk-tab tab-btn" data-tab="profile"><i class="bi bi-person-circle"></i> Profile</button>
           </div>
 
           <!-- Tab: Broadcast Messages -->
@@ -368,6 +364,9 @@
               </div>
             </div>
           </section>
+
+          <!-- Tab: Profile -->
+          <section id="tab-profile" class="tab-content hidden"></section>
           </div>
         </div>
       </div>
@@ -381,8 +380,8 @@
 
   <!-- ═══════════════ MODALS ═══════════════ -->
   <!-- Message Modal -->
-  <div id="messageModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('messageModal')">
-    <div class="sk-modal-panel" style="max-width:480px">
+  <div id="messageModal" class="sk-modal-overlay sk-broadcast-modal-overlay hidden" onclick="if(event.target===this)closeModal('messageModal')">
+    <div class="sk-modal-panel sk-broadcast-modal">
       <div class="sk-modal-header">
         <h3 id="messageModalTitle" class="sk-modal-title">Set Broadcast Status</h3>
         <button class="sk-modal-close" onclick="closeModal('messageModal')"><i class="bi bi-x-lg"></i></button>
@@ -394,16 +393,16 @@
         <div class="sk-form-group">
           <textarea id="newMessageText" placeholder="e.g. In Room 405 — available until 3pm" class="sk-textarea" rows="3"></textarea>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem" class="sk-form-group">
+        <div class="sk-form-group sk-broadcast-timing-grid">
           <div>
             <label class="sk-label"><i class="bi bi-clock"></i> Schedule for later</label>
             <input id="newMessageSchedule" type="datetime-local" class="sk-input">
           </div>
           <div>
             <label class="sk-label"><i class="bi bi-hourglass-split"></i> Auto-expire after</label>
-            <div style="display:flex;gap:0.5rem">
-              <input type="number" id="newMessageDuration" placeholder="Time" class="sk-input" style="width:60%" min="1">
-              <select id="newMessageDurationUnit" class="sk-select" style="width:40%">
+            <div class="sk-broadcast-duration-row">
+              <input type="number" id="newMessageDuration" placeholder="Time" class="sk-input" min="1">
+              <select id="newMessageDurationUnit" class="sk-select">
                 <option value="1">Sec</option><option value="60" selected>Min</option><option value="3600">Hrs</option><option value="86400">Days</option>
               </select>
             </div>
@@ -417,7 +416,7 @@
           </select>
         </div>
       </div>
-      <div class="sk-modal-footer">
+      <div class="sk-modal-footer sk-broadcast-modal-footer">
         <button onclick="closeModal('messageModal')" class="sk-btn sk-btn-secondary">Cancel</button>
         <button id="btnSaveOnly" onclick="submitMessage(false)" class="sk-btn sk-btn-secondary"><i class="bi bi-save"></i> Save</button>
         <button id="btnSaveAndGoLive" onclick="submitMessage(true)" class="sk-btn sk-btn-gradient"><i class="bi bi-broadcast"></i> Save & Go Live</button>
@@ -539,18 +538,19 @@
   </div>
 
   <!-- Scripts -->
-  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/api-config.js?v=backend-sync-1"></script>
   <script src="../static/js/utils.js?v=ui-fix-3"></script>
-  <script src="../static/js/theme.js?v=ui-fix-30"></script>
+  <script src="../static/js/theme.js?v=live-status-2"></script>
   <script src="../static/js/components.js"></script>
-  <script src="../static/js/layout.js?v=ui-fix-30"></script>
+  <script src="../static/js/layout.js?v=tab-skeleton-2"></script>
   <script src="../static/js/notify-modal.js?v=ui-fix-5"></script>
   <script src="../static/js/sk-modal.js?v=ui-fix-5"></script>
-  <script src="../static/js/dashboard-core.js?v=ui-premium-sidebar-4"></script>
-  <script src="../static/js/dashboard-templates.js?v=ui-fix-5"></script>
-  <script src="../static/js/dashboard-schedules.js?v=ui-schedules-5"></script>
-  <script src="../static/js/dashboard-calendar.js?v=ui-schedules-7"></script>
-  <script src="../static/js/dashboard-chat.js?v=ui-fix-11"></script>
+  <script src="../static/js/dashboard-profile.js?v=tab-skeleton-2"></script>
+  <script src="../static/js/dashboard-core.js?v=tab-skeleton-2"></script>
+  <script src="../static/js/dashboard-templates.js?v=tab-skeleton-2"></script>
+  <script src="../static/js/dashboard-schedules.js?v=tab-skeleton-2"></script>
+  <script src="../static/js/dashboard-calendar.js?v=tab-skeleton-2"></script>
+  <script src="../static/js/dashboard-chat.js?v=tab-skeleton-2"></script>
   <script>
     // Initialize layout with sidebar
     SKLayout.init({

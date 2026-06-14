@@ -53,7 +53,7 @@ class StudentInterestViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        return StudentInterest.objects.filter(student=self.request.user)
+        return StudentInterest.objects.filter(student=self.request.user).select_related('student', 'faculty')
 
 
     @action(detail=False, methods=['get'])

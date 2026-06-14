@@ -4,10 +4,11 @@ async function loadTemplates() {
   try {
     var res = await apiRequest(API_ENDPOINTS.TEMPLATES_LIST);
     var data = await res.json();
-    window._quickTemplates = Array.isArray(data) ? data : (data.results || []);
+    var items = Array.isArray(data) ? data : (data.results || []);
+    if (typeof _facultyActiveTab === 'function' && _facultyActiveTab() !== 'templates') return items;
+    window._quickTemplates = items;
     var el = document.getElementById('templatesList');
     if (!res.ok) { el.innerHTML = '<div class="sk-empty-state compact" style="grid-column:1/-1"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Failed to load templates</div></div>'; return; }
-    var items = window._quickTemplates;
     if (items.length === 0) {
       el.innerHTML = '<div style="grid-column:1/-1">' +
         (window.SKComponents ? SKComponents.emptyState('lightning-fill', 'Save time with Quick Templates', 'Create reusable status messages you can activate with one click.', '<button onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary">Create Your First Template</button>') :

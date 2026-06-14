@@ -24,6 +24,22 @@ function timeAgo(dateStr) {
   if (diff < 86400) return Math.floor(diff/3600) + 'h ago'; return Math.floor(diff/86400) + 'd ago';
 }
 
+function handleDashboardUnavailable(message, markOffline) {
+  if (markOffline !== false && window.SKBackendStatus && SKBackendStatus.markOffline) {
+    SKBackendStatus.markOffline({ reason: 'dashboard-load' });
+  }
+  if (window.SKLayout && SKLayout.renderOfflineStaticNav) {
+    SKLayout.renderOfflineStaticNav('home', { hideAuth: true });
+  }
+  var main = document.getElementById('mainContent');
+  if (main) main.classList.add('hidden');
+  var loading = document.getElementById('loadingState');
+  if (loading) {
+    loading.classList.remove('hidden');
+    loading.innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-wifi-off"></i></div><div class="sk-empty-title">Backend unavailable</div><div class="sk-empty-subtitle">' + escapeHtml(message || 'You are still signed in. Sir Kothay will reconnect automatically.') + '</div><button type="button" class="sk-btn sk-btn-primary sk-btn-sm" onclick="SKLayout.retryBackend()"><i class="bi bi-arrow-clockwise"></i> Retry</button></div>';
+  }
+}
+
 // --- Global templates cache for interconnection ---
 window._quickTemplates = [];
 
@@ -35,10 +51,11 @@ function updateFacultyShellActive(tab) {
     schedules: { page: 'calendar', title: 'Calendar' },
     calendar: { page: 'calendar', title: 'Calendar' },
     inbox: { page: 'inbox', title: 'Messages' },
-    'fc-settings': { page: 'settings', title: 'Settings' }
+    'fc-settings': { page: 'settings', title: 'Settings' },
+    profile: { page: 'profile', title: 'Profile' }
   };
   var meta = map[tab] || { page: 'dashboard', title: 'Dashboard' };
-  document.querySelectorAll('.sk-sidebar-link.active, .sk-bottom-nav-item.active').forEach(function (el) {
+  document.querySelectorAll('.sk-sidebar-link.active, .sk-bottom-nav-item.active, .sk-sidebar-profile-button.active, .sk-sidebar-settings-button.active').forEach(function (el) {
     el.classList.remove('active');
   });
   document.querySelectorAll('[data-page="' + meta.page + '"]').forEach(function (el) {
@@ -48,28 +65,168 @@ function updateFacultyShellActive(tab) {
   if (title) title.textContent = meta.title;
 }
 
+var _facultyTabLoaded = {};
+
+function renderFacultyTabSkeleton(tab) {
+  if (tab === 'messages') {
+    var messagesList = document.getElementById('messagesList');
+    if (messagesList) {
+      messagesList.innerHTML = '<div style="padding:2rem">' + [1, 2, 3].map(function () {
+        return '<div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
+      }).join('') + '</div>';
+    }
+  } else if (tab === 'templates') {
+    var templatesList = document.getElementById('templatesList');
+    if (templatesList) {
+      templatesList.innerHTML = [1, 2, 3].map(function () {
+        return '<div class="sk-card"><div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div><div class="sk-skeleton sk-skeleton-btn" style="width:100%;margin-top:0.75rem"></div></div>';
+      }).join('');
+    }
+  } else if (tab === 'calendar') {
+    var calendarGrid = document.getElementById('calendarGrid');
+    if (calendarGrid) {
+      calendarGrid.innerHTML = [1, 2, 3, 4, 5, 6, 7].map(function () {
+        return '<div class="sk-skeleton" style="height:1rem;border-radius:var(--sk-radius-sm)"></div>';
+      }).join('') + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(function () {
+        return '<div class="sk-skeleton" style="min-height:5.25rem;border-radius:var(--sk-radius-lg)"></div>';
+      }).join('');
+    }
+    var schedulesList = document.getElementById('schedulesList');
+    if (schedulesList) {
+      schedulesList.innerHTML = [1, 2, 3].map(function () {
+        return '<div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
+      }).join('');
+    }
+  } else if (tab === 'inbox') {
+    var conversationList = document.getElementById('conversationList');
+    if (conversationList) {
+      conversationList.innerHTML = [1, 2, 3, 4].map(function () {
+        return '<div class="sk-skeleton-row" style="padding:0.75rem"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
+      }).join('');
+    }
+  } else if (tab === 'fc-settings') {
+    var settingsTab = document.getElementById('tab-fc-settings');
+    if (settingsTab && !settingsTab.querySelector('[data-tab-load-skeleton]')) {
+      settingsTab.insertAdjacentHTML('afterbegin', '<div data-tab-load-skeleton class="sk-skeleton-row" style="padding:0 0 1rem"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-1/2"></div><div class="sk-skeleton sk-skeleton-text w-1/3"></div></div></div>');
+    }
+  } else if (tab === 'profile') {
+    var profileTab = document.getElementById('tab-profile');
+    if (profileTab && !profileTab.querySelector('[data-tab-load-skeleton]')) {
+      profileTab.innerHTML = '<div data-tab-load-skeleton class="sk-profile-panel"><div class="sk-skeleton sk-skeleton-heading"></div><div class="sk-skeleton sk-skeleton-card" style="height:180px;margin-bottom:1.5rem"></div><div class="sk-profile-grid"><div class="sk-skeleton sk-skeleton-card" style="height:280px"></div><div class="sk-skeleton sk-skeleton-card" style="height:280px"></div></div></div>';
+    }
+  }
+}
+
+function clearFacultyTabSkeleton(tab) {
+  var root = document.getElementById('tab-' + tab);
+  if (!root) return;
+  root.querySelectorAll('[data-tab-load-skeleton]').forEach(function (el) { el.remove(); });
+}
+
+function clearFacultyTabContent(tab) {
+  clearFacultyTabSkeleton(tab);
+  if (tab === 'messages') {
+    var messagesList = document.getElementById('messagesList');
+    if (messagesList) messagesList.innerHTML = '';
+    if (_expiryTimer) { clearTimeout(_expiryTimer); _expiryTimer = null; }
+  } else if (tab === 'templates') {
+    window._quickTemplates = [];
+    var templatesList = document.getElementById('templatesList');
+    if (templatesList) templatesList.innerHTML = '';
+  } else if (tab === 'calendar') {
+    if (typeof calEvents !== 'undefined') calEvents = [];
+    window._recurringSchedules = [];
+    var calendarGrid = document.getElementById('calendarGrid');
+    if (calendarGrid) calendarGrid.innerHTML = '';
+    var schedulesList = document.getElementById('schedulesList');
+    if (schedulesList) schedulesList.innerHTML = '';
+  } else if (tab === 'inbox') {
+    if (typeof clearFacultyInbox === 'function') clearFacultyInbox();
+  } else if (tab === 'profile') {
+    if (window.SKDashboardProfile && SKDashboardProfile.unmount) SKDashboardProfile.unmount();
+  }
+  delete _facultyTabLoaded[tab];
+}
+
+function normalizeFacultyTab(tab) {
+  if (tab === 'chats') return 'inbox';
+  if (tab === 'broadcast') return 'messages';
+  if (tab === 'schedules') return 'calendar';
+  if (tab === 'analytics') return 'messages';
+  if (['messages', 'templates', 'calendar', 'inbox', 'fc-settings', 'profile'].indexOf(tab) !== -1) return tab;
+  return 'messages';
+}
+
+function showFacultyDashboardShell() {
+  var loading = document.getElementById('loadingState');
+  if (loading) loading.classList.add('hidden');
+  var main = document.getElementById('mainContent');
+  if (main) main.classList.remove('hidden');
+}
+
+async function loadFacultyTabContent(tab, options) {
+  options = options || {};
+  var showSkeleton = !options.silent && !_facultyTabLoaded[tab];
+  if (showSkeleton) renderFacultyTabSkeleton(tab);
+
+  if (tab !== 'inbox' && typeof stopFacultyChatLive === 'function') stopFacultyChatLive();
+  if (tab !== 'profile' && window.SKDashboardProfile) SKDashboardProfile.deactivate();
+
+  if (tab === 'messages') {
+    await loadMessages();
+    await refreshSidebarInfo();
+  } else if (tab === 'templates' && typeof loadTemplates === 'function') {
+    await loadTemplates();
+  } else if (tab === 'calendar') {
+    if (typeof loadCalendarEvents === 'function') await loadCalendarEvents();
+  } else if (tab === 'inbox') {
+    if (typeof loadUnifiedInbox === 'function') await loadUnifiedInbox({ silent: !!options.silent });
+    if (typeof startFacultyChatLive === 'function') startFacultyChatLive();
+  } else if (tab === 'profile') {
+    if (window.SKDashboardProfile) await SKDashboardProfile.mount(document.getElementById('tab-profile'), { defaultTab: 'messages', silent: !!options.silent });
+  } else if (tab === 'fc-settings') {
+    await loadFacultySettings();
+    clearFacultyTabSkeleton('fc-settings');
+  }
+
+  if (_facultyActiveTab() !== tab) {
+    clearFacultyTabContent(tab);
+    return tab;
+  }
+
+  _facultyTabLoaded[tab] = true;
+  return tab;
+}
+
+async function activateFacultyTab(tab, options) {
+  options = options || {};
+  var previousTab = _facultyActiveTab();
+  if (previousTab && previousTab !== tab && options.clearPrevious !== false) {
+    clearFacultyTabContent(previousTab);
+  }
+  document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); b.classList.add('text-gray-500'); });
+  var btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
+  if (btn) { btn.classList.add('active'); btn.classList.remove('text-gray-500'); }
+  document.querySelectorAll('.tab-content').forEach(function (c) { c.classList.add('hidden'); });
+  var target = document.getElementById('tab-' + tab);
+  if (target) target.classList.remove('hidden');
+  updateFacultyShellActive(tab);
+
+  if (options.updateUrl !== false) {
+    var url = new URL(window.location);
+    url.searchParams.set('tab', tab);
+    history.replaceState(null, '', url);
+  }
+
+  if (options.loadData === false) return tab;
+  return loadFacultyTabContent(tab, options);
+}
+
 // Tabs
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.tab-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); b.classList.add('text-gray-500'); });
-      btn.classList.add('active'); btn.classList.remove('text-gray-500');
-      document.querySelectorAll('.tab-content').forEach(function (c) { c.classList.add('hidden'); });
-      var target = document.getElementById('tab-' + btn.dataset.tab);
-      if (target) target.classList.remove('hidden');
-      var tab = btn.dataset.tab;
-      updateFacultyShellActive(tab);
-      // Update URL to reflect active tab
-      var url = new URL(window.location);
-      url.searchParams.set('tab', tab);
-      history.replaceState(null, '', url);
-      if (tab === 'templates') loadTemplates();
-      else if (tab === 'calendar') {
-        loadCalendarEvents();
-        loadSchedules();
-      }
-      else if (tab === 'inbox') loadUnifiedInbox();
-      else if (tab === 'fc-settings') loadFacultySettings();
+      activateFacultyTab(btn.dataset.tab);
     });
   });
 
@@ -77,31 +234,22 @@ document.addEventListener('DOMContentLoaded', function () {
   var params = new URLSearchParams(window.location.search);
   var tabParam = params.get('tab');
   var threadParam = params.get('thread');
-  if (tabParam) {
-    // Use a microtask to ensure all scripts have initialized
-    setTimeout(function () {
-      // Map old URL params to the internal section ids.
-      var mappedTab = tabParam === 'chats' ? 'inbox' :
-        (tabParam === 'broadcast' ? 'messages' :
-          (tabParam === 'schedules' ? 'calendar' :
-            (tabParam === 'analytics' ? 'messages' : tabParam)));
-      var tabBtn = document.querySelector('[data-tab="' + mappedTab + '"]');
-      if (tabBtn) tabBtn.click();
-      if (threadParam && (tabParam === 'chats' || tabParam === 'inbox')) {
-        var attempts = 0;
-        var tryOpen = setInterval(function () {
-            if (typeof _allConvos !== 'undefined' && _allConvos.find(function(x) { return x.type === 'thread' && x.id === parseInt(threadParam); })) {
-                clearInterval(tryOpen);
-                openConversation('thread', parseInt(threadParam));
-            } else if (attempts > 50) {
-                clearInterval(tryOpen);
-            }
-            attempts++;
-        }, 100);
-      }
-    }, 0);
-  } else {
-    updateFacultyShellActive('messages');
+  var initialTab = normalizeFacultyTab(tabParam);
+  activateFacultyTab(initialTab, { updateUrl: false, loadData: false });
+  renderFacultyTabSkeleton(initialTab);
+  showFacultyDashboardShell();
+
+  if (threadParam && (tabParam === 'chats' || tabParam === 'inbox')) {
+    var attempts = 0;
+    var tryOpen = setInterval(function () {
+        if (typeof _allConvos !== 'undefined' && _allConvos.find(function(x) { return x.type === 'thread' && x.id === parseInt(threadParam); })) {
+            clearInterval(tryOpen);
+            openConversation('thread', parseInt(threadParam));
+        } else if (attempts > 50) {
+            clearInterval(tryOpen);
+        }
+        attempts++;
+    }, 100);
   }
 });
 
@@ -111,8 +259,24 @@ var userSlug = null;
 async function loadDashboard() {
   if (!checkAuth()) return;
   try {
+    if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() === 'unknown' && SKBackendStatus.check) {
+      await SKBackendStatus.check('faculty-dashboard-load');
+    }
+    if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() !== 'online') {
+      handleDashboardUnavailable();
+      return;
+    }
+
     // Role Check
     var meRes = await fetch(API_BASE_URL + '/api/auth/users/me/', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') } });
+    if (meRes.status === 401 || meRes.status === 403) {
+      logout();
+      return;
+    }
+    if (!meRes.ok) {
+      handleDashboardUnavailable('You are still signed in. Retry in a moment.', [502, 503, 504].indexOf(meRes.status) !== -1);
+      return;
+    }
     if (meRes.ok) {
       var meData = await meRes.json();
       if (meData.role === 'STUDENT') { window.location.href = 'student.html'; return; }
@@ -141,7 +305,7 @@ async function loadDashboard() {
 
     var res = await apiRequest(API_ENDPOINTS.USER_DETAILS);
     var data = await res.json();
-    if (res.ok) {
+      if (res.ok) {
       document.getElementById('userName').textContent = data.user_username || 'User';
       document.getElementById('userEmail').textContent = data.user_email || '';
       document.getElementById('userPhone').textContent = data.phone_number || '';
@@ -153,16 +317,14 @@ async function loadDashboard() {
       if (availEl && data.default_availability !== undefined && data.default_availability !== null) availEl.value = data.default_availability.toString();
       userSlug = data.slug;
       updateAvailabilityUI(data.is_available);
-      document.getElementById('loadingState').classList.add('hidden');
-      document.getElementById('mainContent').classList.remove('hidden');
-      loadQRCode(); loadMessages(); loadUnreadCount();
-      // Pre-fetch templates for the Add Message interconnection
-      prefetchTemplates();
+      showFacultyDashboardShell();
+      loadQRCode();
+      loadUnreadCount();
+      activateFacultyTab(_facultyActiveTab(), { updateUrl: false });
     } else { throw new Error(data.detail || 'Failed to load'); }
   } catch (e) {
     console.error('Dashboard Load Error:', e);
-    await skNotify('Failed to load dashboard. Please login again.', { variant: 'error', title: 'Dashboard error' });
-    logout();
+    handleDashboardUnavailable();
   }
 }
 
@@ -177,7 +339,7 @@ async function saveDefaultSettings() {
     });
     if (res.ok) {
       await skNotify('Fallback settings saved! These take effect when a timed status expires.', { variant: 'success', title: 'Settings' });
-      if (typeof loadMessages === 'function') loadMessages();
+      if (_facultyActiveTab() === 'messages' && typeof loadMessages === 'function') loadMessages();
     }
     else await skNotify('Failed to save settings', { variant: 'error', title: 'Settings' });
   } catch (e) { await skNotify('Error saving settings', { variant: 'error', title: 'Settings' }); }
@@ -265,6 +427,21 @@ function renderTemplateQuickPicks() {
         'class="sk-btn sk-btn-secondary sk-btn-sm">' +
         '<i class="bi ' + escapeHtml(t.icon || 'bi-lightning-fill') + '"></i>' + escapeHtml(t.label) + '</button>';
     }).join('') + '</div></div>';
+}
+
+function renderTemplateQuickPickSkeleton() {
+  var el = document.getElementById('templateQuickPicks');
+  if (!el) return;
+  el.innerHTML = '<div class="sk-template-picks"><p class="sk-template-picks-title">Quick-fill from a template:</p><div class="sk-template-pick-list"><span class="sk-skeleton sk-skeleton-btn"></span><span class="sk-skeleton sk-skeleton-btn"></span></div></div>';
+}
+
+function hydrateTemplateQuickPicks() {
+  if (window._quickTemplates.length) {
+    renderTemplateQuickPicks();
+    return;
+  }
+  renderTemplateQuickPickSkeleton();
+  prefetchTemplates();
 }
 
 function fillFromTemplate(msg) {
@@ -382,6 +559,10 @@ function renderStatusBadge(msg) {
 async function loadMessages() {
   try {
     var res = await apiRequest(API_ENDPOINTS.MESSAGES); var data = await res.json();
+    if (_facultyActiveTab() !== 'messages') {
+      _scheduleExpiryRefresh(data || []);
+      return data;
+    }
     var el = document.getElementById('messagesList');
     if (data && data.length > 0) {
       var hasActive = data.some(function(m) { return m.active; });
@@ -446,10 +627,13 @@ function _scheduleExpiryRefresh(messages) {
     // Add a 2-second buffer to let the backend process the expiry
     _expiryTimer = setTimeout(async function () {
       console.log('[Sir Kothay] Timed status expired — triggering fallback...');
-      // 1. loadMessages hits the backend which runs activate_due_messages()
-      //    → expires the message → calls _revert_to_default() → restores fallback
-      await loadMessages();
-      // 2. Now fetch the updated sidebar state (availability reverted to fallback)
+      // Hit the backend so due-message processing can run, but only render
+      // Broadcast content if the Broadcast tab is still mounted.
+      if (_facultyActiveTab() === 'messages') {
+        await loadMessages();
+      } else {
+        await apiRequest(API_ENDPOINTS.MESSAGES).catch(function () {});
+      }
       await refreshSidebarInfo();
     }, soonest + 2000);
   }
@@ -458,20 +642,66 @@ function _scheduleExpiryRefresh(messages) {
 // --- Periodic background poll (safety net) ---
 // Catches any state changes the smart timer might miss (e.g. scheduled statuses going live)
 var _bgPollTimer = null;
+function _facultyActiveTab() {
+  var active = document.querySelector('.tab-btn.active');
+  return active ? active.dataset.tab : 'messages';
+}
+
+function _facultySettingsEditing() {
+  var settingsTab = document.getElementById('tab-fc-settings');
+  return !!settingsTab && settingsTab.contains(document.activeElement);
+}
+
+async function refreshFacultyActiveTabLive() {
+  if (document.hidden) return;
+  if (window.SKBackendStatus && window.SKBackendStatus.getState && window.SKBackendStatus.getState() === 'offline') return;
+
+  var tab = _facultyActiveTab();
+  if (tab !== 'inbox' && typeof refreshFacultyInboxBadge === 'function') {
+    await refreshFacultyInboxBadge();
+  }
+  if (tab === 'messages') {
+    await loadMessages();
+    await refreshSidebarInfo();
+  } else if (tab === 'templates' && typeof loadTemplates === 'function') {
+    await loadTemplates();
+  } else if (tab === 'calendar') {
+    if (typeof loadCalendarEvents === 'function') await loadCalendarEvents();
+  } else if (tab === 'inbox') {
+    if (typeof loadUnifiedInbox === 'function') await loadUnifiedInbox({ silent: true });
+  } else if (tab === 'fc-settings' && !_facultySettingsEditing()) {
+    await loadFacultySettings();
+  } else if (tab === 'profile' && window.SKDashboardProfile) {
+    await SKDashboardProfile.refreshIfIdle();
+  }
+}
+
 function _startBackgroundPoll() {
   if (_bgPollTimer) return; // Already running
   _bgPollTimer = setInterval(function () {
-    // Only poll if page is visible (don't waste battery/bandwidth in background tabs)
-    if (document.hidden) return;
-    loadMessages();
-    refreshSidebarInfo();
-  }, 30000); // Every 30 seconds
+    refreshFacultyActiveTabLive();
+  }, 10000);
 }
+
+var _facultyReconnectRefreshInFlight = false;
+async function refreshFacultyDashboardAfterReconnect() {
+  if (_facultyReconnectRefreshInFlight) return;
+  _facultyReconnectRefreshInFlight = true;
+  try {
+    await loadDashboard();
+    _startBackgroundPoll();
+  } finally {
+    _facultyReconnectRefreshInFlight = false;
+  }
+}
+window.addEventListener('sk:backend-restored', function () {
+  refreshFacultyDashboardAfterReconnect();
+});
+
 document.addEventListener('visibilitychange', function () {
   // When user switches back to this tab, do an immediate refresh
   if (!document.hidden) {
-    loadMessages();
-    refreshSidebarInfo();
+    refreshFacultyActiveTabLive();
   }
 });
 
@@ -484,6 +714,7 @@ function openNewMessageModal() {
   document.getElementById('newMessageDurationUnit').value = '60';
   document.getElementById('newMessageAvail').value = '';
   openModal('messageModal');
+  hydrateTemplateQuickPicks();
 }
 
 function openEditModal(id, message, scheduledFor, durationSeconds, setAvailability) {
@@ -511,6 +742,7 @@ function openEditModal(id, message, scheduledFor, durationSeconds, setAvailabili
   }
   document.getElementById('newMessageAvail').value = setAvailability || '';
   openModal('messageModal');
+  hydrateTemplateQuickPicks();
 }
 
 async function submitMessage(forceGoLive) {

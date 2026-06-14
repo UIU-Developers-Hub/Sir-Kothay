@@ -67,7 +67,9 @@ class ChatThreadListSerializer(serializers.ModelSerializer):
         if msg:
             return {
                 'body': msg.body[:100],
+                'sender': msg.sender_id,
                 'sender_name': msg.sender.username,
+                'sender_role': msg.sender.role,
                 'created_at': msg.created_at.isoformat(),
             }
         return None

@@ -39,6 +39,11 @@ async function loadCalendarEvents() {
       window._recurringSchedules = Array.isArray(sData) ? sData : (sData.results || []);
     } catch (e) { window._recurringSchedules = []; }
   }
+  if (typeof _facultyActiveTab === 'function' && _facultyActiveTab() !== 'calendar') {
+    calEvents = [];
+    window._recurringSchedules = [];
+    return;
+  }
   renderCalendar();
   if (typeof renderCombinedSchedules === 'function') renderCombinedSchedules();
   

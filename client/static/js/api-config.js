@@ -35,6 +35,8 @@ window.sirKothayContributorsApiUrl = sirKothayContributorsApiUrl;
 
 // API Endpoints
 var API_ENDPOINTS = {
+    HEALTH: API_BASE_URL + '/api/health/',
+
     // Auth
     LOGIN: API_BASE_URL + '/api/auth/users/login/',
     REGISTER: API_BASE_URL + '/api/auth/users/register/',
@@ -82,6 +84,238 @@ var API_ENDPOINTS = {
     CHAT_INITIATE: API_BASE_URL + '/api/messaging/chat/initiate/',
     CHAT_THREADS: API_BASE_URL + '/api/messaging/chat/threads/',
 };
+
+(function () {
+    if (typeof window === 'undefined' || typeof window.fetch !== 'function') return;
+    if (window.SKBackendStatus) return;
+
+    var nativeFetch = window.fetch.bind(window);
+    var state = 'unknown';
+    var lastChangeAt = 0;
+    var pollTimer = null;
+    var checking = false;
+    var checkPromise = null;
+    var failureCount = 0;
+    var healthFailureCount = 0;
+    var lastHealthyAt = 0;
+    var nextDelayOverride = null;
+    var backoffMs = [2000, 5000, 10000, 30000];
+
+    function isBackendUrl(input) {
+        try {
+            var raw = typeof input === 'string' ? input : (input && input.url);
+            if (!raw) return false;
+            var url = new URL(raw, window.location.href);
+            var base = new URL(API_BASE_URL, window.location.href);
+            return url.origin === base.origin && url.pathname.indexOf('/api/') === 0;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function isHealthUrl(input) {
+        try {
+            var raw = typeof input === 'string' ? input : (input && input.url);
+            if (!raw) return false;
+            var url = new URL(raw, window.location.href);
+            return url.href.split('?')[0].replace(/\/$/, '') === API_ENDPOINTS.HEALTH.replace(/\/$/, '');
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function ensureBanner() {
+        if (typeof document === 'undefined' || document.getElementById('skBackendStatus')) return;
+        var banner = document.createElement('div');
+        banner.id = 'skBackendStatus';
+        banner.className = 'sk-backend-status hidden';
+        banner.setAttribute('role', 'status');
+        banner.setAttribute('aria-live', 'polite');
+        banner.innerHTML =
+            '<span class="sk-backend-status-dot"></span>' +
+            '<span class="sk-backend-status-text">Backend unavailable. Trying to reconnect...</span>' +
+            '<button type="button" class="sk-backend-status-retry">Retry</button>';
+        document.body.appendChild(banner);
+        var retry = banner.querySelector('.sk-backend-status-retry');
+        if (retry) {
+            retry.addEventListener('click', function () {
+                checkHealth('manual');
+            });
+        }
+    }
+
+    function renderBanner() {
+        if (typeof document === 'undefined') return;
+        ensureBanner();
+        var banner = document.getElementById('skBackendStatus');
+        if (!banner) return;
+        var text = banner.querySelector('.sk-backend-status-text');
+        var retry = banner.querySelector('.sk-backend-status-retry');
+
+        banner.classList.remove('is-offline', 'is-checking', 'hidden');
+        if (state === 'offline') {
+            banner.classList.add('is-offline');
+            if (text) text.textContent = 'Backend unavailable. Trying to reconnect...';
+            if (retry) {
+                retry.disabled = checking;
+                retry.textContent = checking ? 'Retrying...' : 'Retry';
+            }
+            if (checking) banner.classList.add('is-checking');
+            return;
+        }
+
+        banner.classList.add('hidden');
+    }
+
+    function notify(next, detail) {
+        if (state === next && !detail) {
+            renderBanner();
+            return;
+        }
+        var previous = state;
+        state = next;
+        lastChangeAt = Date.now();
+        if (state === 'online') {
+            failureCount = 0;
+            healthFailureCount = 0;
+            lastHealthyAt = Date.now();
+        }
+        renderBanner();
+        if (typeof window.CustomEvent === 'function') {
+            window.dispatchEvent(new CustomEvent('sk:backend-status', {
+                detail: Object.assign({ status: state, previous: previous }, detail || {})
+            }));
+        }
+    }
+
+    function markOnline(detail) {
+        notify('online', detail);
+    }
+
+    function markOffline(detail) {
+        failureCount += 1;
+        notify('offline', detail);
+    }
+
+    function noteHealthFailure(detail) {
+        healthFailureCount += 1;
+        var recentlyHealthy = lastHealthyAt && Date.now() - lastHealthyAt < 8000;
+        if (state === 'online' && recentlyHealthy && healthFailureCount < 2) {
+            nextDelayOverride = 1500;
+            renderBanner();
+            scheduleNextCheck(1500);
+            return;
+        }
+        markOffline(detail);
+    }
+
+    function noteApiFailure(detail) {
+        var recentlyHealthy = lastHealthyAt && Date.now() - lastHealthyAt < 8000;
+        if (state === 'online' && recentlyHealthy) {
+            healthFailureCount = Math.max(healthFailureCount, 1);
+            nextDelayOverride = 1200;
+            scheduleNextCheck(1200);
+            return;
+        }
+        markOffline(detail);
+    }
+
+    function clearPoll() {
+        if (pollTimer) {
+            window.clearTimeout(pollTimer);
+            pollTimer = null;
+        }
+    }
+
+    function scheduleNextCheck(delayOverride) {
+        clearPoll();
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+        var delay = delayOverride || nextDelayOverride || (state === 'offline'
+            ? backoffMs[Math.min(failureCount - 1, backoffMs.length - 1)]
+            : 15000);
+        nextDelayOverride = null;
+        pollTimer = window.setTimeout(function () {
+            checkHealth('poll');
+        }, delay || 15000);
+    }
+
+    async function checkHealth(reason) {
+        if (checking && checkPromise) return checkPromise;
+        checking = true;
+        checkPromise = (async function () {
+            renderBanner();
+            var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            var timeout = controller ? window.setTimeout(function () { controller.abort(); }, 4500) : null;
+            try {
+                var res = await nativeFetch(API_ENDPOINTS.HEALTH, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: { Accept: 'application/json' },
+                    signal: controller ? controller.signal : undefined
+                });
+                if (res.ok) markOnline({ reason: reason || 'health' });
+                else noteHealthFailure({ reason: reason || 'health', statusCode: res.status });
+            } catch (e) {
+                noteHealthFailure({ reason: reason || 'health', error: e && e.name === 'AbortError' ? 'timeout' : 'network' });
+            } finally {
+                if (timeout) window.clearTimeout(timeout);
+                checking = false;
+                renderBanner();
+                scheduleNextCheck();
+                var result = state;
+                checkPromise = null;
+                return result;
+            }
+        })();
+        return checkPromise;
+    }
+
+    window.fetch = function (input, init) {
+        var backendRequest = isBackendUrl(input);
+        var healthRequest = isHealthUrl(input);
+        return nativeFetch(input, init).then(function (response) {
+            if (backendRequest && !healthRequest) {
+                if ([502, 503, 504].indexOf(response.status) !== -1) {
+                    markOffline({ reason: 'api-response', statusCode: response.status });
+                    scheduleNextCheck();
+                } else {
+                    markOnline({ reason: 'api-response', statusCode: response.status });
+                    scheduleNextCheck();
+                }
+            }
+            return response;
+        }).catch(function (error) {
+            if (backendRequest) {
+                noteApiFailure({ reason: 'api-error', error: error && error.name ? error.name : 'network' });
+            }
+            throw error;
+        });
+    };
+
+    window.SKBackendStatus = {
+        check: checkHealth,
+        getState: function () { return state; },
+        isOnline: function () { return state === 'online'; },
+        markOnline: markOnline,
+        markOffline: markOffline,
+    };
+
+    if (typeof document !== 'undefined') {
+        document.addEventListener('DOMContentLoaded', function () {
+            ensureBanner();
+            checkHealth('load');
+        });
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') checkHealth('visible');
+            else clearPoll();
+        });
+    }
+    window.addEventListener('online', function () { checkHealth('browser-online'); });
+    window.addEventListener('offline', function () {
+        markOffline({ reason: 'browser-offline' });
+        clearPoll();
+    });
+})();
 
 /**
  * Build a public endpoint URL dynamically (e.g. for DM send, subscribe).

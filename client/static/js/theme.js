@@ -112,9 +112,15 @@ window.SKTheme = (() => {
   function renderToggleButton() {
     return `
       <div class="sk-sidebar-theme-group" aria-label="Theme">
-        <button type="button" data-theme-choice="system" onclick="SKTheme.set('system')">System</button>
-        <button type="button" data-theme-choice="light" onclick="SKTheme.set('light')">Light</button>
-        <button type="button" data-theme-choice="dark" onclick="SKTheme.set('dark')">Dark</button>
+        <button type="button" data-theme-choice="system" onclick="SKTheme.set('system')" title="System theme">
+          <i class="bi bi-circle-half"></i><span>System</span>
+        </button>
+        <button type="button" data-theme-choice="light" onclick="SKTheme.set('light')" title="Light theme">
+          <i class="bi bi-sun"></i><span>Light</span>
+        </button>
+        <button type="button" data-theme-choice="dark" onclick="SKTheme.set('dark')" title="Dark theme">
+          <i class="bi bi-moon-stars"></i><span>Dark</span>
+        </button>
       </div>
     `;
   }

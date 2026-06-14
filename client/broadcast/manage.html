@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Manage Notifications - Sir Kothay</title>
     <meta name="description" content="Sir Kothay - Manage your subscriptions and direct messages.">
-    <link rel="stylesheet" href="../static/css/style.css?v=manage-4">
+    <link rel="stylesheet" href="../static/css/style.css?v=nav-skeleton-1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
       .toggle-switch {
@@ -122,6 +122,17 @@
               <h1 class="sk-auth-title" style="margin-bottom: 0.25rem;">Manage Settings</h1>
               <p id="userEmailHero" class="sk-auth-subtitle" style="margin-bottom: 2rem;">Control your Sir Kothay interactions</p>
 
+              <div id="manageBackendState" class="hidden">
+                <div class="sk-empty-state compact">
+                  <div class="sk-empty-icon"><i class="bi bi-wifi-off"></i></div>
+                  <div class="sk-empty-title">Backend unavailable</div>
+                  <div class="sk-empty-subtitle">Sir Kothay will reconnect automatically.</div>
+                  <button type="button" class="sk-btn sk-btn-primary sk-btn-sm" onclick="SKLayout.retryBackend()">
+                    <i class="bi bi-arrow-clockwise"></i> Retry
+                  </button>
+                </div>
+              </div>
+
               <!-- Auth / Email Form -->
               <div id="emailView" class="hidden">
                 <div style="text-align: center; margin-bottom: 1.5rem;">
@@ -156,7 +167,7 @@
                   <div id="dmsList"></div>
                 </div>
 
-                <button class="sk-btn sk-btn-secondary" onclick="window.location.reload()" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                <button class="sk-btn sk-btn-secondary" onclick="resetManageEmailView()" style="width: 100%; justify-content: center; margin-top: 1rem;">
                   <i class="bi bi-arrow-counterclockwise me-2"></i> Manage Different Email
                 </button>
 
@@ -175,11 +186,11 @@
       </nav>
     </div>
 
-    <script src="../static/js/api-config.js"></script>
+    <script src="../static/js/api-config.js?v=backend-sync-1"></script>
     <script src="../static/js/utils.js"></script>
-    <script src="../static/js/theme.js"></script>
+    <script src="../static/js/theme.js?v=live-status-2"></script>
     <script src="../static/js/components.js"></script>
-    <script src="../static/js/layout.js"></script>
+    <script src="../static/js/layout.js?v=nav-skeleton-1"></script>
     <script>
       // Initialize Layout
       document.addEventListener('DOMContentLoaded', () => {
@@ -188,15 +199,60 @@
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
 
-      // Initialize view
-      if (token) {
-        document.getElementById('manageView').classList.remove('hidden');
-        loadData(null, token).catch(e => {
-          document.getElementById('userEmailHero').textContent = 'Error loading settings: ' + e.message;
-          document.getElementById('userEmailHero').style.color = 'var(--sk-error)';
-        });
-      } else {
-        document.getElementById('emailView').classList.remove('hidden');
+      initializeManagePage();
+
+      window.addEventListener('sk:backend-restored', () => {
+        initializeManagePage({ silent: true });
+      });
+      window.addEventListener('sk:backend-status', (event) => {
+        if (event.detail && event.detail.status === 'offline') showManageBackendUnavailable();
+      });
+
+      async function initializeManagePage(options = {}) {
+        const currentToken = new URLSearchParams(window.location.search).get('token');
+        document.getElementById('emailView').classList.add('hidden');
+        document.getElementById('manageView').classList.add('hidden');
+        document.getElementById('manageBackendState').classList.add('hidden');
+        document.getElementById('userEmailHero').textContent = 'Control your Sir Kothay interactions';
+        document.getElementById('userEmailHero').style.color = '';
+
+        if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() === 'unknown' && SKBackendStatus.check) {
+          await SKBackendStatus.check('manage-page-load');
+        }
+        if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() !== 'online') {
+          showManageBackendUnavailable();
+          return;
+        }
+
+        if (currentToken) {
+          document.getElementById('manageView').classList.remove('hidden');
+          try {
+            await loadData(null, currentToken);
+          } catch (e) {
+            if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() !== 'online') {
+              showManageBackendUnavailable();
+              return;
+            }
+            document.getElementById('userEmailHero').textContent = 'Error loading settings: ' + e.message;
+            document.getElementById('userEmailHero').style.color = 'var(--sk-error)';
+          }
+        } else {
+          document.getElementById('emailView').classList.remove('hidden');
+          if (!options.silent) document.getElementById('emailInput').focus();
+        }
+      }
+
+
+      function showManageBackendUnavailable() {
+        if (window.SKBackendStatus && SKBackendStatus.markOffline) {
+          SKBackendStatus.markOffline({ reason: 'manage-page' });
+        }
+        if (window.SKLayout && SKLayout.renderOfflineStaticNav) {
+          SKLayout.renderOfflineStaticNav('home', { hideAuth: true });
+        }
+        document.getElementById('emailView').classList.add('hidden');
+        document.getElementById('manageView').classList.add('hidden');
+        document.getElementById('manageBackendState').classList.remove('hidden');
       }
 
       function showToast(msg) {
@@ -232,10 +288,27 @@
           document.getElementById('emailView').classList.add('hidden');
           document.getElementById('manageView').classList.remove('hidden');
         } catch (e) {
+          if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() !== 'online') {
+            showManageBackendUnavailable();
+            return;
+          }
           el.textContent = e.message || 'An error occurred. Please try again.';
           el.style.color = 'var(--sk-error)';
           el.classList.remove('hidden');
         }
+      }
+
+      function resetManageEmailView() {
+        document.getElementById('manageView').classList.add('hidden');
+        document.getElementById('emailView').classList.remove('hidden');
+        document.getElementById('emailInput').value = '';
+        const result = document.getElementById('emailResult');
+        if (result) result.classList.add('hidden');
+        window._currentEmail = null;
+        window._currentToken = null;
+        const url = new URL(window.location.href);
+        url.searchParams.delete('token');
+        history.replaceState(null, '', url);
       }
 
       async function loadData(email, tokenStr) {

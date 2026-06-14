@@ -4,6 +4,7 @@ import urllib.error
 import urllib.request
 
 from django.http import JsonResponse
+from django.utils import timezone
 
 
 def _contributors_repo():
@@ -79,4 +80,12 @@ def about_view(request):
         'description': 'Leave notes when you\'re away',
         'repository': f'https://github.com/{_contributors_repo()}',
         'contributors': contributors
+    }, status=200)
+
+
+def health_view(request):
+    return JsonResponse({
+        'status': 'ok',
+        'service': 'sir-kothay',
+        'server_time': timezone.now().isoformat(),
     }, status=200)

@@ -1,4 +1,8 @@
 let currentUser = null;
+let studentDashboardLiveTimer = null;
+let studentDashboardLiveInFlight = false;
+const studentTabLoaded = {};
+const STUDENT_DASHBOARD_LIVE_INTERVAL_MS = 10000;
 
 function showNotifyModal(msg, variant) {
     if (typeof skNotify !== 'undefined') {
@@ -8,15 +12,32 @@ function showNotifyModal(msg, variant) {
     }
 }
 
+function showStudentBackendUnavailable(message, markOffline) {
+    if (markOffline !== false && window.SKBackendStatus && SKBackendStatus.markOffline) {
+        SKBackendStatus.markOffline({ reason: 'student-load' });
+    }
+    if (window.SKLayout && SKLayout.renderOfflineStaticNav) {
+        SKLayout.renderOfflineStaticNav('home', { hideAuth: true });
+    }
+    var main = document.getElementById('mainContent');
+    if (main) main.classList.add('hidden');
+    var loading = document.getElementById('loadingState');
+    if (loading) {
+        loading.classList.remove('hidden');
+        loading.innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-wifi-off"></i></div><div class="sk-empty-title">Backend unavailable</div><div class="sk-empty-subtitle">' + escapeHtml(message || 'You are still signed in. Sir Kothay will reconnect automatically.') + '</div><button type="button" class="sk-btn sk-btn-primary sk-btn-sm" onclick="SKLayout.retryBackend()"><i class="bi bi-arrow-clockwise"></i> Retry</button></div>';
+    }
+}
+
 function updateStudentShellActive(tab) {
     var map = {
         faculties: { page: 'faculties', title: 'My Faculties' },
         messages: { page: 'messages', title: 'Messages' },
         feed: { page: 'feed', title: 'Updates' },
-        settings: { page: 'settings', title: 'Settings' }
+        settings: { page: 'settings', title: 'Settings' },
+        profile: { page: 'profile', title: 'Profile' }
     };
     var meta = map[tab] || { page: 'dashboard', title: 'Student Dashboard' };
-    document.querySelectorAll('.sk-sidebar-link.active, .sk-bottom-nav-item.active').forEach(function (el) {
+    document.querySelectorAll('.sk-sidebar-link.active, .sk-bottom-nav-item.active, .sk-sidebar-profile-button.active, .sk-sidebar-settings-button.active').forEach(function (el) {
         el.classList.remove('active');
     });
     document.querySelectorAll('[data-page="' + meta.page + '"]').forEach(function (el) {
@@ -26,66 +47,292 @@ function updateStudentShellActive(tab) {
     if (title) title.textContent = meta.title;
 }
 
+function getActiveStudentTab() {
+    var active = document.querySelector('.tab-btn.active');
+    return active ? active.dataset.tab : 'faculties';
+}
+
+function setStudentTabVisual(tab) {
+    var validTabs = ['faculties', 'messages', 'feed', 'settings', 'profile'];
+    if (validTabs.indexOf(tab) === -1) tab = 'faculties';
+
+    document.querySelectorAll('.tab-btn').forEach(function (button) {
+        var active = button.dataset.tab === tab;
+        button.classList.toggle('active', active);
+        button.classList.toggle('text-gray-800', active);
+        button.classList.toggle('text-gray-500', !active);
+    });
+    document.querySelectorAll('.tab-content').forEach(function (content) {
+        content.classList.toggle('hidden', content.id !== 'tab-' + tab);
+    });
+    updateStudentShellActive(tab);
+    return tab;
+}
+
+function renderStudentTabSkeleton(tab) {
+    if (tab === 'faculties') {
+        var facultiesList = document.getElementById('facultiesList');
+        if (facultiesList) {
+            facultiesList.innerHTML = [1, 2, 3].map(function () {
+                return '<div class="sk-card"><div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div><div class="sk-skeleton sk-skeleton-btn" style="width:100%;margin-top:0.75rem"></div></div>';
+            }).join('');
+        }
+    } else if (tab === 'feed') {
+        var feedList = document.getElementById('feedList');
+        if (feedList) {
+            feedList.innerHTML = [1, 2, 3].map(function () {
+                return '<div class="sk-skeleton-row" style="padding:0.875rem"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-3/4"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
+            }).join('');
+        }
+    } else if (tab === 'messages') {
+        var convoList = document.getElementById('stuConvoList');
+        if (convoList) {
+            convoList.innerHTML = [1, 2, 3, 4].map(function () {
+                return '<div class="sk-skeleton-row" style="padding:0.75rem"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
+            }).join('');
+        }
+    } else if (tab === 'settings') {
+        var settingsTab = document.getElementById('tab-settings');
+        if (settingsTab && !settingsTab.querySelector('[data-tab-load-skeleton]')) {
+            settingsTab.insertAdjacentHTML('afterbegin', '<div data-tab-load-skeleton class="sk-skeleton-row" style="padding:0 0 1rem"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-1/2"></div><div class="sk-skeleton sk-skeleton-text w-1/3"></div></div></div>');
+        }
+    } else if (tab === 'profile') {
+        var profileTab = document.getElementById('tab-profile');
+        if (profileTab && !profileTab.querySelector('[data-tab-load-skeleton]')) {
+            profileTab.innerHTML = '<div data-tab-load-skeleton class="sk-profile-panel"><div class="sk-skeleton sk-skeleton-heading"></div><div class="sk-skeleton sk-skeleton-card" style="height:180px;margin-bottom:1.5rem"></div><div class="sk-profile-grid"><div class="sk-skeleton sk-skeleton-card" style="height:280px"></div><div class="sk-skeleton sk-skeleton-card" style="height:280px"></div></div></div>';
+        }
+    }
+}
+
+function clearStudentTabSkeleton(tab) {
+    var root = document.getElementById('tab-' + tab);
+    if (!root) return;
+    root.querySelectorAll('[data-tab-load-skeleton]').forEach(function (el) { el.remove(); });
+}
+
+function clearStudentTabContent(tab) {
+    clearStudentTabSkeleton(tab);
+    if (tab === 'faculties') {
+        allInterests = [];
+        var facultiesList = document.getElementById('facultiesList');
+        if (facultiesList) facultiesList.innerHTML = '';
+        var facultiesCount = document.getElementById('facultiesCount');
+        if (facultiesCount) facultiesCount.textContent = '0';
+    } else if (tab === 'feed') {
+        currentFeedActivities = [];
+        var feedList = document.getElementById('feedList');
+        if (feedList) feedList.innerHTML = '';
+    } else if (tab === 'messages') {
+        if (typeof clearStudentChatThreads === 'function') clearStudentChatThreads();
+    } else if (tab === 'profile') {
+        if (window.SKDashboardProfile && SKDashboardProfile.unmount) SKDashboardProfile.unmount();
+    }
+    delete studentTabLoaded[tab];
+}
+
+async function loadStudentTabContent(tab, options) {
+    options = options || {};
+    if (options.skipRefresh === true) return tab;
+    var showSkeleton = !options.silent && !studentTabLoaded[tab];
+    if (showSkeleton) renderStudentTabSkeleton(tab);
+
+    if (tab === 'messages') {
+        if (typeof loadChatThreads === 'function') await loadChatThreads({ silent: !!options.silent });
+        studentTabLoaded.messages = true;
+        if (typeof startStudentChatLive === 'function') startStudentChatLive();
+    } else {
+        if (typeof stopStudentChatLive === 'function') stopStudentChatLive();
+        if (tab !== 'profile' && window.SKDashboardProfile) SKDashboardProfile.deactivate();
+        if (tab === 'faculties') {
+            await loadInterests();
+            studentTabLoaded.faculties = true;
+            setTimeout(focusStudentDashboardDeepLink, 120);
+        } else if (tab === 'feed') {
+            await loadFeed();
+            studentTabLoaded.feed = true;
+        } else if (tab === 'settings') {
+            await loadStudentSettings();
+            clearStudentTabSkeleton('settings');
+            studentTabLoaded.settings = true;
+        } else if (tab === 'profile' && window.SKDashboardProfile) {
+            await SKDashboardProfile.mount(document.getElementById('tab-profile'), { defaultTab: 'faculties', silent: !!options.silent });
+            studentTabLoaded.profile = true;
+        }
+    }
+
+    if (getActiveStudentTab() !== tab) {
+        clearStudentTabContent(tab);
+        return tab;
+    }
+
+    if (tab === 'feed' && currentFeedActivities.length) renderFeed(currentFeedActivities);
+    return tab;
+}
+
+async function activateStudentTab(tab, options) {
+    options = options || {};
+    var previousTab = getActiveStudentTab();
+    if (previousTab && previousTab !== tab && options.clearPrevious !== false) {
+        clearStudentTabContent(previousTab);
+    }
+    tab = setStudentTabVisual(tab);
+
+    if (options.updateUrl !== false) {
+        var url = new URL(window.location);
+        url.searchParams.set('tab', tab);
+        history.replaceState(null, '', url);
+    }
+
+    if (options.loadData === false) return tab;
+
+    return loadStudentTabContent(tab, options);
+}
+
+function showStudentDashboardShell() {
+    var loading = document.getElementById('loadingState');
+    if (loading) loading.classList.add('hidden');
+    var main = document.getElementById('mainContent');
+    if (main) main.classList.remove('hidden');
+}
+
+function isStudentSettingsEditing() {
+    var settingsTab = document.getElementById('tab-settings');
+    return !!settingsTab && settingsTab.contains(document.activeElement);
+}
+
+async function refreshStudentDashboardLive() {
+    if (document.visibilityState === 'hidden') return;
+    if (window.SKBackendStatus && window.SKBackendStatus.getState && window.SKBackendStatus.getState() === 'offline') return;
+
+    var tab = getActiveStudentTab();
+    if (tab === 'messages') {
+        if (typeof loadChatThreads === 'function') await loadChatThreads({ silent: true });
+    } else if (typeof refreshStudentChatBadge === 'function') {
+        await refreshStudentChatBadge();
+    }
+
+    if (tab === 'feed') {
+        await loadFeed();
+    } else {
+        await refreshStudentFeedBadge();
+    }
+
+    if (tab === 'faculties') {
+        await loadInterests();
+    } else if (tab === 'settings' && !isStudentSettingsEditing()) {
+        await loadStudentSettings();
+    } else if (tab === 'profile' && window.SKDashboardProfile) {
+        await SKDashboardProfile.refreshIfIdle();
+    }
+}
+
+function scheduleStudentDashboardLive() {
+    if (studentDashboardLiveTimer) window.clearTimeout(studentDashboardLiveTimer);
+    if (document.visibilityState === 'hidden') return;
+    studentDashboardLiveTimer = window.setTimeout(studentDashboardLiveTick, STUDENT_DASHBOARD_LIVE_INTERVAL_MS);
+}
+
+async function studentDashboardLiveTick() {
+    if (studentDashboardLiveInFlight) {
+        scheduleStudentDashboardLive();
+        return;
+    }
+    studentDashboardLiveInFlight = true;
+    try {
+        await refreshStudentDashboardLive();
+    } catch (e) {
+        // Global backend status handles connection failures.
+    } finally {
+        studentDashboardLiveInFlight = false;
+        scheduleStudentDashboardLive();
+    }
+}
+
+function startStudentDashboardLive() {
+    scheduleStudentDashboardLive();
+}
+
+function stopStudentDashboardLive() {
+    if (studentDashboardLiveTimer) window.clearTimeout(studentDashboardLiveTimer);
+    studentDashboardLiveTimer = null;
+}
+
+let studentReconnectRefreshInFlight = false;
+async function refreshStudentDashboardAfterReconnect() {
+    if (studentReconnectRefreshInFlight) return;
+    studentReconnectRefreshInFlight = true;
+    try {
+        const activeTab = getActiveStudentTab();
+        const loaded = await loadStudentData();
+        if (!loaded) return;
+        await activateStudentTab(activeTab, { updateUrl: false, silent: true, clearPrevious: false });
+        if (activeTab === 'faculties') setTimeout(focusStudentDashboardDeepLink, 120);
+        startStudentDashboardLive();
+    } finally {
+        studentReconnectRefreshInFlight = false;
+    }
+}
+
+window.addEventListener('sk:backend-restored', function () {
+    refreshStudentDashboardAfterReconnect();
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('access_token');
     if (!token) {
         window.location.href = '../auth/login.html';
         return;
     }
+
+    readStudentDashboardDeepLink();
+    var params = new URLSearchParams(window.location.search);
+    var tabParam = params.get('tab');
+    var threadParam = params.get('thread');
+    var initialTab = getDeepLinkedFacultyId() && tabParam !== 'messages'
+        ? 'faculties'
+        : (tabParam || 'faculties');
+    initialTab = await activateStudentTab(initialTab, { updateUrl: false, loadData: false });
+    renderStudentTabSkeleton(initialTab);
+    showStudentDashboardShell();
     
     // Setup tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-gray-800'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('text-gray-500'));
-            e.currentTarget.classList.remove('text-gray-500');
-            e.currentTarget.classList.add('active', 'text-gray-800');
-            
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`tab-${e.currentTarget.dataset.tab}`).classList.remove('hidden');
-
-            // Lazy-load tab data
-            var tab = e.currentTarget.dataset.tab;
-            updateStudentShellActive(tab);
-            // Update URL to reflect active tab
-            var url = new URL(window.location);
-            url.searchParams.set('tab', tab);
-            history.replaceState(null, '', url);
-            if (tab === 'messages') loadChatThreads();
-            if (tab === 'settings') loadStudentSettings();
+            activateStudentTab(e.currentTarget.dataset.tab);
         });
     });
 
-    await loadStudentData();
-    await loadInterests();
+    var studentLoaded = await loadStudentData();
+    if (!studentLoaded) return;
+    await activateStudentTab(initialTab, { updateUrl: false });
+    if (threadParam && initialTab === 'messages') setTimeout(function () { stuOpenThread(parseInt(threadParam)); }, 500);
 
-    // Handle URL params (e.g. ?tab=messages&thread=5)
-    var params = new URLSearchParams(window.location.search);
-    var tabParam = params.get('tab');
-    var threadParam = params.get('thread');
-    if (tabParam) {
-        var tabBtn = document.querySelector('[data-tab="' + tabParam + '"]');
-        if (tabBtn) tabBtn.click();
-        if (threadParam && tabParam === 'messages') {
-            setTimeout(function () { stuOpenThread(parseInt(threadParam)); }, 500);
-        }
-    } else {
-        updateStudentShellActive('faculties');
-    }
+    setTimeout(focusStudentDashboardDeepLink, 250);
+    startStudentDashboardLive();
 });
 
 async function loadStudentData() {
     try {
+        if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() === 'unknown' && SKBackendStatus.check) {
+            await SKBackendStatus.check('student-dashboard-load');
+        }
+        if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() !== 'online') {
+            showStudentBackendUnavailable();
+            return false;
+        }
+
         const response = await fetch(`${API_BASE_URL}/api/auth/users/me/`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
         });
         
         if (!response.ok) {
-            if (response.status === 401) {
+            if (response.status === 401 || response.status === 403) {
                 localStorage.removeItem('access_token');
                 window.location.href = '../auth/login.html';
+                return false;
             }
-            throw new Error('Failed to load profile');
+            showStudentBackendUnavailable('You are still signed in. Retry in a moment.', [502, 503, 504].indexOf(response.status) !== -1);
+            return false;
         }
         
         currentUser = await response.json();
@@ -94,11 +341,7 @@ async function loadStudentData() {
         document.getElementById('userEmail').textContent = currentUser.email || '';
         document.getElementById('studentIdDisplay').textContent = `ID: ${currentUser.student_id || 'N/A'}`;
         
-        document.getElementById('loadingState').classList.add('hidden');
-        document.getElementById('mainContent').classList.remove('hidden');
-
-        // Load notification settings into toggles
-        loadStudentSettings();
+        showStudentDashboardShell();
 
         // If user is admin (is_staff), inject Admin Panel link into navbar
         if (currentUser.is_staff) {
@@ -126,9 +369,11 @@ async function loadStudentData() {
             document.getElementById('mainContent').classList.add('hidden');
             document.getElementById('studentIdModal').classList.remove('hidden');
         }
+        return true;
     } catch (error) {
         console.error('Error loading student data:', error);
-        showNotifyModal('Error loading profile', 'error');
+        showStudentBackendUnavailable();
+        return false;
     }
 }
 
@@ -170,6 +415,145 @@ async function submitStudentId() {
 }
 let feedHidden = false;
 let allInterests = [];
+let currentFeedActivities = [];
+let studentOpenChatByFaculty = {};
+let studentDashboardDeepLink = {
+    facultyId: null,
+    highlight: ''
+};
+
+function studentSeenStorageKey(kind) {
+    var userId = currentUser && currentUser.id ? currentUser.id : 'guest';
+    return 'sk_student_' + kind + '_seen_' + userId;
+}
+
+function readStudentSeenList(kind) {
+    try {
+        var value = JSON.parse(localStorage.getItem(studentSeenStorageKey(kind)) || '[]');
+        return Array.isArray(value) ? value.map(String) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function writeStudentSeenList(kind, values) {
+    localStorage.setItem(studentSeenStorageKey(kind), JSON.stringify(Array.from(new Set(values.map(String)))));
+}
+
+function setStudentCounterVisual(el, count) {
+    if (!el) return;
+    el.textContent = count > 99 ? '99+' : String(count);
+    el.style.display = count > 0 ? '' : 'none';
+    if (count > 0) {
+        el.classList.remove('bg-gray-100', 'text-gray-500');
+        el.classList.add('bg-orange-100', 'text-orange-600');
+    } else {
+        el.classList.remove('bg-orange-100', 'text-orange-600');
+        el.classList.add('bg-gray-100', 'text-gray-500');
+    }
+}
+
+function updateStudentFeedBadge(visibleActivities) {
+    var visibleIds = (visibleActivities || []).map(function (act) { return String(act.id); });
+    var seen = readStudentSeenList('feed');
+    var activeFeed = getActiveStudentTab() === 'feed';
+    if (activeFeed) {
+        seen = seen.concat(visibleIds);
+        writeStudentSeenList('feed', seen);
+    }
+    var seenSet = new Set(seen);
+    var unseenCount = activeFeed ? 0 : visibleIds.filter(function (id) { return !seenSet.has(id); }).length;
+    setStudentCounterVisual(document.getElementById('updateCounter'), unseenCount);
+    if (window.SKLayout && SKLayout.setNavBadge) SKLayout.setNavBadge('feed', unseenCount);
+    return unseenCount;
+}
+
+function readStudentDashboardDeepLink() {
+    const params = new URLSearchParams(window.location.search);
+    const rawFacultyId = params.get('faculty') || params.get('faculty_id');
+    const facultyId = parseInt(rawFacultyId || '', 10);
+
+    studentDashboardDeepLink = {
+        facultyId: Number.isFinite(facultyId) ? facultyId : null,
+        highlight: params.get('highlight') || ''
+    };
+}
+
+function getDeepLinkedFacultyId() {
+    return studentDashboardDeepLink.facultyId;
+}
+
+function getInterestByFacultyId(facultyId) {
+    const id = parseInt(facultyId, 10);
+    return allInterests.find(function (interest) {
+        return parseInt(interest.faculty, 10) === id;
+    });
+}
+
+function getOpenChatForFaculty(facultyId) {
+    const interest = getInterestByFacultyId(facultyId);
+    if (interest && interest.open_chat && interest.open_chat.has_thread) return interest.open_chat;
+    var cached = studentOpenChatByFaculty[String(facultyId)];
+    return cached && cached.has_thread ? cached : null;
+}
+
+function getChatButtonMeta(facultyId) {
+    const openChat = getOpenChatForFaculty(facultyId);
+    if (openChat) {
+        return {
+            label: 'Open Chat',
+            icon: 'bi-chat-dots',
+            title: 'Open existing chat'
+        };
+    }
+
+    return {
+        label: 'New Chat',
+        icon: 'bi-chat-text',
+        title: 'Start a new chat'
+    };
+}
+
+function updateFacultyOpenChat(facultyId, chatData) {
+    const interest = getInterestByFacultyId(facultyId);
+    var normalized = chatData && chatData.has_thread
+        ? {
+            has_thread: true,
+            thread_id: chatData.thread_id || chatData.id || null,
+            status: chatData.status || null
+        }
+        : { has_thread: false, thread_id: null, status: null };
+
+    studentOpenChatByFaculty[String(facultyId)] = normalized;
+    if (interest) interest.open_chat = normalized;
+
+    var activeTab = getActiveStudentTab();
+    if (activeTab === 'faculties' && allInterests.length) filterFaculties();
+    if (activeTab === 'feed' && currentFeedActivities.length) renderFeed(currentFeedActivities);
+}
+
+function focusStudentDashboardDeepLink() {
+    const facultyId = getDeepLinkedFacultyId();
+    if (!facultyId) return;
+
+    const target = document.querySelector('[data-faculty-card-id="' + facultyId + '"]');
+    if (!target) return;
+
+    target.classList.add('sk-deep-highlight');
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    window.setTimeout(function () {
+        target.classList.remove('sk-deep-highlight');
+    }, 7000);
+}
+
+function clearFacultyFiltersForDeepLink() {
+    if (!getDeepLinkedFacultyId()) return;
+
+    const nameInput = document.getElementById('filterName');
+    const availabilitySelect = document.getElementById('filterAvailability');
+    if (nameInput) nameInput.value = '';
+    if (availabilitySelect) availabilitySelect.value = 'all';
+}
 
 function resolveApiMediaUrl(url) {
     if (!url) return '';
@@ -232,9 +616,7 @@ function clearFeed() {
     }
     
     document.getElementById('feedList').innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-check-circle"></i></div><h3>All caught up</h3></div>';
-    document.getElementById('updateCounter').textContent = '0';
-    document.getElementById('updateCounter').classList.replace('bg-orange-100', 'bg-gray-100');
-    document.getElementById('updateCounter').classList.replace('text-orange-600', 'text-gray-500');
+    updateStudentFeedBadge([]);
 }
 
 async function loadInterests() {
@@ -247,13 +629,22 @@ async function loadInterests() {
         
         const interests = await response.json();
         allInterests = interests;
+        studentOpenChatByFaculty = {};
+        allInterests.forEach(function (interest) {
+            if (interest && interest.open_chat) {
+                studentOpenChatByFaculty[String(interest.faculty)] = interest.open_chat;
+            }
+        });
         
         
         // Update stats
         document.getElementById('statAvailableFaculties').textContent = interests.filter(i => i.faculty_details && i.faculty_details.is_available).length;
+
+        if (getActiveStudentTab() !== 'faculties') return interests;
         
+        clearFacultyFiltersForDeepLink();
         filterFaculties();
-        loadFeed();
+        return interests;
     } catch (error) {
         console.error(error);
         document.getElementById('facultiesList').innerHTML = '<div class="sk-empty-state compact" style="grid-column:1/-1"><div class="sk-empty-icon"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Failed to load faculties</div><div class="sk-empty-subtitle">Please refresh or try again in a moment.</div></div>';
@@ -301,9 +692,10 @@ function renderFaculties(interests) {
         const escapedName = inlineJsString(displayName);
         const escapedSlug = inlineJsString(fac.slug || '');
         const statusMessage = getFacultyDisplayStatus(fac);
+        const chatMeta = getChatButtonMeta(interest.faculty);
         
         return `
-            <div class="sk-faculty-card">
+            <div class="sk-faculty-card" data-faculty-card-id="${interest.faculty}">
                 <div class="sk-faculty-card-top">
                     <button onclick="viewFacultyProfile(${interest.faculty})" class="sk-faculty-person" type="button">
                         <span class="sk-faculty-avatar-wrap">
@@ -327,8 +719,8 @@ function renderFaculties(interests) {
                 </div>
                 
                 <div class="sk-faculty-footer">
-                    <button onclick="initiateNewChat(${interest.faculty}, '${escapedSlug}', '${escapedName}')" class="sk-btn sk-btn-primary sk-btn-sm" style="flex:1">
-                        <i class="bi bi-chat-text"></i> Chat
+                    <button onclick="initiateNewChat(${interest.faculty}, '${escapedSlug}', '${escapedName}')" class="sk-btn sk-btn-primary sk-btn-sm" style="flex:1" title="${chatMeta.title}">
+                        <i class="bi ${chatMeta.icon}"></i> ${chatMeta.label}
                     </button>
                     ${renderBellMenu(interest, 'card')}
                 </div>
@@ -349,6 +741,7 @@ function viewFacultyProfile(facultyId) {
     const inlineName = inlineJsString(rawName);
     const inlineSlug = inlineJsString(fac.slug || '');
     const statusMessage = getFacultyDisplayStatus(fac);
+    const chatMeta = getChatButtonMeta(interest.faculty);
     const publicHref = '../broadcast/message.html?user=' + encodeURIComponent(fac.slug || '');
     const contactRows = [
         fac.user_email ? `<div class="sk-contact-row"><div class="sk-contact-icon"><i class="bi bi-envelope"></i></div><span>${escapeHtml(fac.user_email)}</span></div>` : '',
@@ -376,7 +769,7 @@ function viewFacultyProfile(facultyId) {
             ${contactRows ? `<div class="sk-contact-list">${contactRows}</div>` : ''}
 
             <div class="sk-faculty-detail-actions">
-                <button onclick="initiateNewChat(${interest.faculty}, '${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-primary"><i class="bi bi-chat-text"></i> Chat</button>
+                <button onclick="initiateNewChat(${interest.faculty}, '${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-primary" title="${chatMeta.title}"><i class="bi ${chatMeta.icon}"></i> ${chatMeta.label}</button>
                 ${renderBellMenu(interest, 'modal')}
                 <a href="${publicHref}" target="_blank" class="sk-btn sk-btn-secondary sk-btn-icon" title="Open Public Profile" aria-label="Open Public Profile">
                     <i class="bi bi-box-arrow-up-right"></i>
@@ -428,8 +821,6 @@ function formatRelativeTime(dateString) {
     return Math.floor(diffInSeconds / 86400) + 'd ago';
 }
 
-let currentFeedActivities = [];
-
 function dismissFeedItem(id) {
     const dismissed = JSON.parse(localStorage.getItem('sk_dismissed_feed_items') || '[]');
     if (!dismissed.includes(id)) {
@@ -439,14 +830,36 @@ function dismissFeedItem(id) {
     renderFeed(currentFeedActivities);
 }
 
-async function loadFeed() {
+async function fetchFeedActivities() {
+    const response = await fetch(`${API_BASE_URL}/api/dashboard/student-interests/feed/`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+    });
+    if (!response.ok) throw new Error('Failed to load feed');
+    return response.json();
+}
+
+async function refreshStudentFeedBadge() {
     if (feedHidden) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/api/dashboard/student-interests/feed/`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
-        });
-        if (!response.ok) throw new Error('Failed to load feed');
-        currentFeedActivities = await response.json();
+        const activities = await fetchFeedActivities();
+        const dismissed = JSON.parse(localStorage.getItem('sk_dismissed_feed_items') || '[]');
+        updateStudentFeedBadge(activities.filter(act => !dismissed.includes(act.id)));
+    } catch (error) {
+        console.error('Error refreshing feed badge:', error);
+    }
+}
+
+async function loadFeed(options) {
+    options = options || {};
+    if (feedHidden) return;
+    try {
+        const activities = await fetchFeedActivities();
+        if (options.badgeOnly || getActiveStudentTab() !== 'feed') {
+            const dismissed = JSON.parse(localStorage.getItem('sk_dismissed_feed_items') || '[]');
+            updateStudentFeedBadge(activities.filter(act => !dismissed.includes(act.id)));
+            return activities;
+        }
+        currentFeedActivities = activities;
         renderFeed(currentFeedActivities);
     } catch (error) {
         console.error('Error loading feed:', error);
@@ -459,23 +872,18 @@ function renderFeed(activities) {
     
     const dismissed = JSON.parse(localStorage.getItem('sk_dismissed_feed_items') || '[]');
     const visibleActivities = activities.filter(act => !dismissed.includes(act.id));
-    
-    document.getElementById('updateCounter').textContent = visibleActivities.length;
+    updateStudentFeedBadge(visibleActivities);
     
     if (!visibleActivities.length) {
         list.innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-inbox"></i></div><h3>No recent updates</h3></div>';
-        document.getElementById('updateCounter').classList.replace('bg-orange-100', 'bg-gray-100');
-        document.getElementById('updateCounter').classList.replace('text-orange-600', 'text-gray-500');
         return;
     }
-    
-    document.getElementById('updateCounter').classList.replace('bg-gray-100', 'bg-orange-100');
-    document.getElementById('updateCounter').classList.replace('text-gray-500', 'text-orange-600');
-    
+
     list.innerHTML = visibleActivities.map(act => {
         const rawName = act.faculty_username || 'Faculty';
         const inlineName = inlineJsString(rawName);
         const inlineSlug = inlineJsString(act.slug || '');
+        const chatMeta = getChatButtonMeta(act.faculty_id);
         
         // title logic: "Now Available", "Now Unavailable", "New Status"
         let statusMsg = '';
@@ -488,7 +896,7 @@ function renderFeed(activities) {
         }
         
         return `
-            <div class="sk-feed-item">
+            <div class="sk-feed-item" data-feed-faculty-id="${act.faculty_id}">
                 <div class="sk-feed-avatar">
                     <img src="${resolveProfileImage(act.profile_image_url)}" alt="${escapeHtml(rawName)}">
                     <span class="sk-presence-dot ${act.is_available ? 'available' : ''}"></span>
@@ -499,7 +907,7 @@ function renderFeed(activities) {
                     <p class="sk-feed-time"><i class="bi bi-clock"></i> ${formatRelativeTime(act.created_at)}</p>
                 </div>
                 <div style="display:flex; gap:0.25rem;">
-                    <button onclick="initiateNewChat(${act.faculty_id}, '${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Start chat" title="Message"><i class="bi bi-chat-text"></i></button>
+                    <button onclick="initiateNewChat(${act.faculty_id}, '${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="${chatMeta.label}" title="${chatMeta.label}"><i class="bi ${chatMeta.icon}"></i></button>
                     <button onclick="dismissFeedItem(${act.id})" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Dismiss" title="Dismiss update"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
@@ -646,7 +1054,8 @@ async function setNotifyPref(interestId, pref) {
         if (!response.ok) throw new Error('Failed to update');
         var labels = { all: 'All updates', available: 'When available', none: 'Off' };
         showNotifyModal('Notifications: ' + labels[pref], 'success');
-        loadInterests();
+        if (getActiveStudentTab() === 'faculties') loadInterests();
+        else if (getActiveStudentTab() === 'feed') loadFeed();
     } catch (error) {
         showNotifyModal(error.message, 'error');
     }
@@ -694,3 +1103,12 @@ function logout() {
     localStorage.removeItem('refresh_token');
     window.location.href = '../auth/login.html';
 }
+
+document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') {
+        startStudentDashboardLive();
+        refreshStudentDashboardLive();
+    } else {
+        stopStudentDashboardLive();
+    }
+});

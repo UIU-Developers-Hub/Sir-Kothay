@@ -2,6 +2,54 @@
 var _allConvos = [];
 var _chatFilter = 'all';
 var _activeConvo = null;
+var _chatLiveTimer = null;
+var _chatLiveInFlight = false;
+var _chatListSignature = '';
+var _activeConvoSignature = '';
+var FACULTY_CHAT_LIVE_INTERVAL_MS = 3000;
+
+function _chatCurrentUserId() {
+  var user = window.SKLayout && SKLayout.getUser ? SKLayout.getUser() : null;
+  return user && user.id ? user.id : null;
+}
+
+function _chatSeenStorageKey() {
+  return 'sk_faculty_chat_seen_' + (_chatCurrentUserId() || 'guest');
+}
+
+function _chatReadSeenMap() {
+  try {
+    var value = JSON.parse(localStorage.getItem(_chatSeenStorageKey()) || '{}');
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function _chatWriteSeenMap(map) {
+  localStorage.setItem(_chatSeenStorageKey(), JSON.stringify(map || {}));
+}
+
+function _chatConvoSignature(c) {
+  return [c.type, c.id, c.lastMessageAt || '', c.lastSender || '', c.lastMsg || ''].join(':');
+}
+
+function _chatThreadUnread(c, seenMap) {
+  if (c.type !== 'thread' || !c.lastSender) return false;
+  if (c.lastSenderRole === 'FACULTY') return false;
+  var userId = _chatCurrentUserId();
+  if (userId && parseInt(c.lastSender, 10) === parseInt(userId, 10)) return false;
+  return seenMap[c.type + ':' + c.id] !== _chatConvoSignature(c);
+}
+
+function _markThreadConvoSeen(c) {
+  if (!c || c.type !== 'thread') return;
+  var seen = _chatReadSeenMap();
+  seen[c.type + ':' + c.id] = _chatConvoSignature(c);
+  _chatWriteSeenMap(seen);
+  c.unread = false;
+  _updateBadge();
+}
 
 function _convoAvatar(src, name, variant) {
   var initial = (name || '?').charAt(0).toUpperCase();
@@ -27,44 +75,123 @@ function _statusDot(status) {
   return '<span class="sk-convo-dot" title="Closed"></span>';
 }
 
-async function loadUnifiedInbox() {
-  var threads = [], dms = [];
-  try {
-    var [tRes, dRes] = await Promise.all([
-      apiRequest(API_BASE_URL + '/api/messaging/chat/threads/'),
-      apiRequest(API_BASE_URL + '/api/messaging/inbox/')
-    ]);
-    if (tRes.ok) threads = await tRes.json();
-    if (dRes.ok) dms = await dRes.json();
-  } catch (e) { console.error(e); }
+function _inboxTabActive() {
+  var tab = document.getElementById('tab-inbox');
+  return !!tab && !tab.classList.contains('hidden') && document.visibilityState !== 'hidden';
+}
 
-  _allConvos = [];
-  threads.forEach(function (t) {
+function _convoListSignature(convos) {
+  return (convos || []).map(function (c) {
+    return [c.type, c.id, c.status, c.lastTime, c.lastMsg || '', c.unread ? 1 : 0].join(':');
+  }).join('|');
+}
+
+function _threadDetailSignature(thread) {
+  return [
+    'thread',
+    thread.id,
+    thread.status,
+    thread.closed_by_name || '',
+    thread.last_activity_at || '',
+    (thread.messages || []).map(function (m) {
+      return [m.id, m.sender, m.body, m.created_at].join(':');
+    }).join('|')
+  ].join('::');
+}
+
+function _dmDetailSignature(dm) {
+  return [
+    'dm',
+    dm.id,
+    dm.is_closed ? 1 : 0,
+    dm.is_read ? 1 : 0,
+    dm.replied_at || '',
+    dm.body || '',
+    dm.reply_body || ''
+  ].join('::');
+}
+
+async function _fetchUnifiedInboxData() {
+  var threads = [], dms = [];
+  var [tRes, dRes] = await Promise.all([
+    apiRequest(API_BASE_URL + '/api/messaging/chat/threads/'),
+    apiRequest(API_BASE_URL + '/api/messaging/inbox/')
+  ]);
+  if (tRes.ok) threads = await tRes.json();
+  if (dRes.ok) dms = await dRes.json();
+  return { threads: threads, dms: dms };
+}
+
+function _buildUnifiedConvos(data) {
+  var convos = [];
+  (data.threads || []).forEach(function (t) {
     var info = t.student_info || {};
-    _allConvos.push({
+    var last = t.last_message || {};
+    convos.push({
       type: 'thread', id: t.id, name: info.username || 'Student',
       email: info.email || '', avatar: resolveProfileImage(info.profile_image_url),
       subject: t.subject, status: t.status, studentId: info.student_id || '',
-      lastMsg: t.last_message ? t.last_message.body : '',
+      lastMsg: last.body || '',
+      lastSender: last.sender || null,
+      lastSenderRole: last.sender_role || null,
+      lastMessageAt: last.created_at || null,
       lastTime: t.last_activity_at || t.created_at,
       unread: false, raw: t
     });
   });
-  dms.forEach(function (d) {
+  (data.dms || []).forEach(function (d) {
     var replies = _parseReplies(d.reply_body);
-    _allConvos.push({
+    convos.push({
       type: 'dm', id: d.id, name: d.sender_name, email: d.sender_email,
       avatar: '', subject: d.subject || 'Direct Message', status: d.is_closed ? 'CLOSED' : 'OPEN',
       studentId: d.sender_student_id || '', isRegistered: d.sender_is_registered,
       lastMsg: replies.length ? replies[replies.length - 1].body : d.body,
+      lastSender: null,
+      lastSenderRole: null,
+      lastMessageAt: d.replied_at || d.created_at,
       lastTime: d.replied_at || d.created_at, unread: !d.is_read, raw: d
     });
   });
+  var seen = _chatReadSeenMap();
+  convos.forEach(function (c) {
+    if (c.type === 'thread') c.unread = _chatThreadUnread(c, seen);
+  });
+  convos.sort(function (a, b) { return new Date(b.lastTime) - new Date(a.lastTime); });
+  return convos;
+}
 
-  _allConvos.sort(function (a, b) { return new Date(b.lastTime) - new Date(a.lastTime); });
-  _renderConvoList();
-  _initFilterBtns();
-  _updateBadge();
+async function loadUnifiedInbox(options) {
+  options = options || {};
+  try {
+    var nextConvos = _buildUnifiedConvos(await _fetchUnifiedInboxData());
+    if (options.badgeOnly || !_inboxTabActive()) {
+      var badgeCount = nextConvos.filter(function (c) { return c.unread; }).length;
+      _setInboxBadge(badgeCount);
+      return nextConvos;
+    }
+    var nextSignature = _convoListSignature(nextConvos);
+    var activeIdentity = _activeConvo ? { type: _activeConvo.type, id: _activeConvo.id } : null;
+
+    _allConvos = nextConvos;
+    if (activeIdentity) {
+      _activeConvo = _allConvos.find(function (c) {
+        return c.type === activeIdentity.type && c.id === activeIdentity.id;
+      }) || null;
+    }
+
+    if (nextSignature !== _chatListSignature || !options.silent) {
+      _chatListSignature = nextSignature;
+      _renderConvoList();
+      _initFilterBtns();
+    }
+    _updateBadge();
+
+    if (!_activeConvo && activeIdentity && !options.silent) _backToList();
+    return _allConvos;
+  } catch (e) {
+    if (!options.silent) console.error(e);
+    return _allConvos;
+  }
 }
 
 function _initFilterBtns() {
@@ -122,6 +249,7 @@ async function openConversation(type, id) {
   var c = _allConvos.find(function (x) { return x.type === type && x.id === id; });
   if (!c) return;
   _activeConvo = c;
+  if (type === 'thread') _markThreadConvoSeen(c);
   _renderConvoList(); // highlight active
 
   // On mobile, detail replaces the list. On desktop, keep the split view visible.
@@ -143,15 +271,31 @@ async function openConversation(type, id) {
 }
 
 /* ---- Thread conversation ---- */
-async function _renderThreadConvo(c) {
+async function _renderThreadConvo(c, options) {
+  options = options || {};
   try {
     var res = await apiRequest(API_BASE_URL + '/api/messaging/chat/' + c.id + '/');
     if (!res.ok) return;
     var thread = await res.json();
+    var signature = _threadDetailSignature(thread);
+    if (options.onlyIfChanged && signature === _activeConvoSignature) return;
+    _activeConvoSignature = signature;
     c.raw = thread; // update raw
+    c.status = thread.status;
+    c.lastTime = thread.last_activity_at || thread.created_at;
+    c.lastMsg = thread.last_message ? thread.last_message.body : c.lastMsg;
+    c.lastSender = thread.last_message ? thread.last_message.sender : c.lastSender;
+    c.lastSenderRole = thread.last_message ? thread.last_message.sender_role : c.lastSenderRole;
+    c.lastMessageAt = thread.last_message ? thread.last_message.created_at : c.lastMessageAt;
+    _markThreadConvoSeen(c);
     var stu = thread.student_info || {};
     var stuAvatarUrl = resolveProfileImage(stu.profile_image_url);
     var verified = stu.student_id ? ' <i class="bi bi-patch-check-fill" style="color:var(--sk-primary)"></i>' : '';
+    var oldInput = document.getElementById('replyInput');
+    var oldValue = oldInput && options.preserveReply ? oldInput.value : '';
+    var hadFocus = oldInput && document.activeElement === oldInput;
+    var msgBox = document.getElementById('chatConvoMessages');
+    var shouldStick = !msgBox || (msgBox.scrollHeight - msgBox.scrollTop - msgBox.clientHeight < 96);
 
     // Header
     var headerHtml =
@@ -186,19 +330,38 @@ async function _renderThreadConvo(c) {
           '<input type="text" id="replyInput" placeholder="Type a reply..." class="sk-input" onkeydown="if(event.key===\'Enter\')_sendThreadReply(' + thread.id + ')">' +
           '<button onclick="_sendThreadReply(' + thread.id + ')" class="sk-btn sk-btn-primary"><i class="bi bi-send"></i></button>' +
         '</div>';
+      if (oldValue) {
+        var nextInput = document.getElementById('replyInput');
+        if (nextInput) {
+          nextInput.value = oldValue;
+          if (hadFocus) {
+            nextInput.focus();
+            nextInput.setSelectionRange(nextInput.value.length, nextInput.value.length);
+          }
+        }
+      }
     } else if (thread.status === 'PENDING') {
       document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta" style="text-align:center">Accept this chat to reply.</p>';
     } else {
       document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta" style="text-align:center">This conversation is closed.</p>';
     }
-    _scrollMsgs();
+    if (shouldStick || options.forceScroll) _scrollMsgs();
   } catch (e) { console.error(e); }
 }
 
 /* ---- DM conversation ---- */
-function _renderDmConvo(c) {
+function _renderDmConvo(c, options) {
+  options = options || {};
   var dm = c.raw;
+  var signature = _dmDetailSignature(dm);
+  if (options.onlyIfChanged && signature === _activeConvoSignature) return;
+  _activeConvoSignature = signature;
   var verified = c.isRegistered ? ' <i class="bi bi-patch-check-fill" style="color:var(--sk-primary)"></i>' : '';
+  var oldInput = document.getElementById('replyInput');
+  var oldValue = oldInput && options.preserveReply ? oldInput.value : '';
+  var hadFocus = oldInput && document.activeElement === oldInput;
+  var msgBox = document.getElementById('chatConvoMessages');
+  var shouldStick = !msgBox || (msgBox.scrollHeight - msgBox.scrollTop - msgBox.clientHeight < 96);
 
   // Mark as read
   if (!dm.is_read) {
@@ -213,7 +376,7 @@ function _renderDmConvo(c) {
     _chatHeaderAvatar('', c.name, c.isRegistered ? '' : 'visitor') +
     '<div class="sk-chat-header-main">' +
       '<p class="sk-chat-header-title">' + escapeHtml(c.name) + verified + (!c.isRegistered ? ' <span class="sk-convo-type visitor">Visitor</span>' : '') + '</p>' +
-      '<p class="sk-chat-header-meta">' + escapeHtml(c.email) + (c.subject ? ' · ' + escapeHtml(c.subject) : '') + '</p>' +
+      '<p class="sk-chat-header-meta wrap">' + escapeHtml(c.email) + (c.subject ? ' · ' + escapeHtml(c.subject) : '') + '</p>' +
     '</div>' +
     '<div class="sk-chat-header-actions">' +
       (c.isRegistered ? '<button onclick="_viewProfile(' + JSON.stringify(JSON.stringify({username:c.name,email:c.email,student_id:c.studentId})).replace(/"/g,'&quot;') + ')" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-person-circle"></i> Profile</button>' : '') +
@@ -236,10 +399,20 @@ function _renderDmConvo(c) {
         '<input type="text" id="replyInput" placeholder="Type a reply..." class="sk-input" onkeydown="if(event.key===\'Enter\')_sendDmReply(' + dm.id + ')">' +
         '<button onclick="_sendDmReply(' + dm.id + ')" class="sk-btn sk-btn-primary"><i class="bi bi-send"></i></button>' +
       '</div>';
+    if (oldValue) {
+      var nextInput = document.getElementById('replyInput');
+      if (nextInput) {
+        nextInput.value = oldValue;
+        if (hadFocus) {
+          nextInput.focus();
+          nextInput.setSelectionRange(nextInput.value.length, nextInput.value.length);
+        }
+      }
+    }
   } else {
     document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta" style="text-align:center">This conversation is closed.</p>';
   }
-  _scrollMsgs();
+  if (shouldStick || options.forceScroll) _scrollMsgs();
 }
 
 /* ---- Actions ---- */
@@ -255,6 +428,61 @@ async function _sendThreadReply(threadId) {
     if (res.ok) { await loadUnifiedInbox(); openConversation('thread', threadId); }
     else { var e = await res.json(); await skNotify(e.error || 'Failed', { variant: 'error' }); input.disabled = false; }
   } catch (e) { input.disabled = false; }
+}
+
+function _scheduleFacultyChatLiveTick() {
+  if (_chatLiveTimer) clearTimeout(_chatLiveTimer);
+  if (!_inboxTabActive()) return;
+  _chatLiveTimer = setTimeout(_facultyChatLiveTick, FACULTY_CHAT_LIVE_INTERVAL_MS);
+}
+
+async function _refreshActiveConvoLive() {
+  if (!_activeConvo || !_inboxTabActive()) return;
+  if (_activeConvo.type === 'thread') {
+    await _renderThreadConvo(_activeConvo, { onlyIfChanged: true, preserveReply: true });
+  } else {
+    _renderDmConvo(_activeConvo, { onlyIfChanged: true, preserveReply: true });
+  }
+}
+
+async function _facultyChatLiveTick() {
+  if (!_inboxTabActive()) {
+    stopFacultyChatLive();
+    return;
+  }
+  if (window.SKBackendStatus && window.SKBackendStatus.getState && window.SKBackendStatus.getState() === 'offline') {
+    _scheduleFacultyChatLiveTick();
+    return;
+  }
+  if (_chatLiveInFlight) {
+    _scheduleFacultyChatLiveTick();
+    return;
+  }
+  _chatLiveInFlight = true;
+  try {
+    var previousActive = _activeConvo ? { type: _activeConvo.type, id: _activeConvo.id } : null;
+    await loadUnifiedInbox({ silent: true });
+    if (previousActive && !_activeConvo) {
+      _backToList();
+    } else {
+      await _refreshActiveConvoLive();
+    }
+  } catch (e) {
+    // The global backend banner handles visible connection failures.
+  } finally {
+    _chatLiveInFlight = false;
+    _scheduleFacultyChatLiveTick();
+  }
+}
+
+function startFacultyChatLive() {
+  if (!_inboxTabActive()) return;
+  _scheduleFacultyChatLiveTick();
+}
+
+function stopFacultyChatLive() {
+  if (_chatLiveTimer) clearTimeout(_chatLiveTimer);
+  _chatLiveTimer = null;
 }
 
 async function _sendDmReply(dmId) {
@@ -398,21 +626,66 @@ function _parseReplies(replyBody) {
     var parsed = JSON.parse(replyBody);
     if (Array.isArray(parsed)) return parsed;
   } catch (e) {}
-  return [{ body: replyBody, by: 'broadcaster', at: null }];
+  return String(replyBody).split(/\n---REPLY_SEP---\n/g).map(function (entry) {
+    var trimmed = entry.trim();
+    var match = trimmed.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
+    return {
+      body: match ? match[2].trim() : trimmed,
+      by: 'broadcaster',
+      at: match ? match[1] : null
+    };
+  }).filter(function (entry) {
+    return entry.body;
+  });
 }
 
 function _updateBadge() {
   var count = _allConvos.filter(function (c) { return c.unread; }).length;
+  _setInboxBadge(count);
+}
+
+function _setInboxBadge(count) {
   var el = document.getElementById('unreadBadge');
   if (el) {
-    el.textContent = count;
+    el.textContent = count > 99 ? '99+' : String(count);
     if (count > 0) el.classList.remove('hidden');
     else el.classList.add('hidden');
   }
   var dmEl = document.getElementById('unreadDmCount');
-  if (dmEl) dmEl.textContent = count;
+  if (dmEl) dmEl.textContent = count > 99 ? '99+' : String(count);
+  if (window.SKLayout && SKLayout.setNavBadge) SKLayout.setNavBadge('inbox', count);
 }
 
 // Keep old function name for compatibility with analytics click
 function loadInbox() { loadUnifiedInbox(); }
-function loadUnreadCount() { _updateBadge(); }
+async function refreshFacultyInboxBadge() {
+  try {
+    var convos = _buildUnifiedConvos(await _fetchUnifiedInboxData());
+    var count = convos.filter(function (c) { return c.unread; }).length;
+    _setInboxBadge(count);
+  } catch (e) {}
+}
+function loadUnreadCount() { return refreshFacultyInboxBadge(); }
+
+function clearFacultyInbox() {
+  stopFacultyChatLive();
+  _allConvos = [];
+  _activeConvo = null;
+  _chatListSignature = '';
+  _activeConvoSignature = '';
+  var list = document.getElementById('conversationList');
+  if (list) list.innerHTML = '';
+  var empty = document.getElementById('chatEmptyState');
+  if (empty) empty.style.display = 'flex';
+  var active = document.getElementById('chatActiveConvo');
+  if (active) active.style.display = 'none';
+  ['chatConvoHeader', 'chatConvoMessages', 'chatReplyBar'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+}
+
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible') startFacultyChatLive();
+  else stopFacultyChatLive();
+});
