@@ -4,6 +4,42 @@ let studentDashboardLiveInFlight = false;
 const studentTabLoaded = {};
 const STUDENT_DASHBOARD_LIVE_INTERVAL_MS = 10000;
 
+function updateStudentSummaryProfile(details) {
+    var image = document.getElementById('userImage');
+    if (!image) return;
+
+    var imagePath = (details && (details.profile_image_url || details.profile_image)) ||
+        (currentUser && (currentUser.profile_image_url || currentUser.profile_image)) ||
+        '';
+    var fallback = '../static/images/image.png';
+    image.alt = (currentUser && (currentUser.username || currentUser.email)) || 'User';
+    image.onerror = function () {
+        image.onerror = null;
+        image.src = fallback;
+    };
+    image.src = resolveProfileImage(imagePath, fallback);
+}
+
+function updateStudentAvailableCount(count) {
+    var el = document.getElementById('statAvailableFaculties');
+    if (!el) return;
+    var safeCount = parseInt(count, 10);
+    el.textContent = Number.isFinite(safeCount) ? String(safeCount) : '0';
+}
+
+async function refreshStudentAvailableCount() {
+    try {
+        var res = await apiRequest(API_ENDPOINTS.STUDENT_AVAILABLE_COUNT);
+        if (!res.ok) throw new Error('Failed to load available count');
+        var data = await res.json();
+        updateStudentAvailableCount(data.available_count);
+        return data.available_count;
+    } catch (e) {
+        console.warn('Student available count unavailable:', e);
+        return null;
+    }
+}
+
 function showNotifyModal(msg, variant) {
     if (typeof skNotify !== 'undefined') {
         skNotify(msg, { variant: variant });
@@ -219,7 +255,11 @@ async function refreshStudentDashboardLive() {
 
     if (tab === 'faculties') {
         await loadInterests();
-    } else if (tab === 'settings' && !isStudentSettingsEditing()) {
+    } else {
+        await refreshStudentAvailableCount();
+    }
+
+    if (tab === 'settings' && !isStudentSettingsEditing()) {
         await loadStudentSettings();
     } else if (tab === 'profile' && window.SKDashboardProfile) {
         await SKDashboardProfile.refreshIfIdle();
@@ -340,6 +380,16 @@ async function loadStudentData() {
         document.getElementById('userName').textContent = currentUser.username || 'Student';
         document.getElementById('userEmail').textContent = currentUser.email || '';
         document.getElementById('studentIdDisplay').textContent = `ID: ${currentUser.student_id || 'N/A'}`;
+
+        var userDetails = null;
+        try {
+            var detailsResponse = await apiRequest(API_ENDPOINTS.USER_DETAILS);
+            if (detailsResponse.ok) userDetails = await detailsResponse.json();
+        } catch (detailsError) {
+            console.warn('Student profile image details unavailable:', detailsError);
+        }
+        updateStudentSummaryProfile(userDetails);
+        await refreshStudentAvailableCount();
         
         showStudentDashboardShell();
 
@@ -637,8 +687,7 @@ async function loadInterests() {
         });
         
         
-        // Update stats
-        document.getElementById('statAvailableFaculties').textContent = interests.filter(i => i.faculty_details && i.faculty_details.is_available).length;
+        updateStudentAvailableCount(interests.filter(i => i.faculty_details && i.faculty_details.is_available).length);
 
         if (getActiveStudentTab() !== 'faculties') return interests;
         

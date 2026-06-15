@@ -57,6 +57,12 @@ class StudentInterestViewSet(viewsets.ModelViewSet):
 
 
     @action(detail=False, methods=['get'])
+    def available_count(self, request):
+        """Return a lightweight count of followed faculties that are currently available."""
+        count = self.get_queryset().filter(faculty__details__is_available=True).count()
+        return Response({'available_count': count})
+
+    @action(detail=False, methods=['get'])
     def feed(self, request):
         """Get chronological status updates of interested faculties"""
         from .models import FacultyActivity

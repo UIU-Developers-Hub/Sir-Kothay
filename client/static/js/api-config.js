@@ -46,6 +46,7 @@ var API_ENDPOINTS = {
     // Dashboard
     USER_DETAILS: API_BASE_URL + '/api/dashboard/user-details/my_details/',
     UPDATE_USER_DETAILS: API_BASE_URL + '/api/dashboard/user-details/update_my_details/',
+    STUDENT_AVAILABLE_COUNT: API_BASE_URL + '/api/dashboard/student-interests/available_count/',
 
     // QR
     MY_QRCODE: API_BASE_URL + '/api/qrcode/qrcodes/my_qrcode/',
