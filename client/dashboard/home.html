@@ -30,7 +30,7 @@
         <div id="mainContent" class="hidden sk-dashboard-layout">
           <aside class="sk-dashboard-sidebar">
           <!-- Profile Section (Redesigned) -->
-          <section class="sk-card sk-fc-header-card" style="margin-bottom:1.5rem;position:relative;overflow:hidden">
+          <section class="sk-card sk-fc-header-card sk-ex-5256a0c7">
             <div class="sk-card-accent"></div>
             
             <div class="sk-fc-header-grid">
@@ -45,35 +45,11 @@
                   <p class="sk-fc-header-meta"><span id="userPhone"></span> <span class="sk-dot-sep">•</span> <span id="userOrg"></span></p>
                 </div>
               </div>
-
-              <style>
-                .sk-fc-force-uniform {
-                  height: 38px !important;
-                  min-height: 38px !important;
-                  font-size: 14px !important;
-                  padding-top: 0 !important;
-                  padding-bottom: 0 !important;
-                  display: inline-flex !important;
-                  align-items: center !important;
-                  box-sizing: border-box !important;
-                }
-                .sk-fc-force-uniform-btn {
-                  height: 36px !important;
-                  min-height: 36px !important;
-                  font-size: 13px !important;
-                  padding-top: 0 !important;
-                  padding-bottom: 0 !important;
-                  display: inline-flex !important;
-                  align-items: center !important;
-                  justify-content: center !important;
-                  box-sizing: border-box !important;
-                }
-              </style>
               <!-- Middle: Management -->
               <div class="sk-fc-header-management">
                 <div class="sk-fc-manage-live">
                   <div class="sk-fc-manage-label">Live Status <span class="sk-fc-hint">(Subscribers notified)</span></div>
-                  <button id="availabilityToggle" onclick="toggleAvailability()" class="sk-status-toggle">
+                  <button type="button" id="availabilityToggle" onclick="toggleAvailability()" class="sk-status-toggle">
                     <span id="availDot" class="sk-status-dot"></span>
                     <span id="availLabel">Unavailable</span>
                   </button>
@@ -82,13 +58,13 @@
                 <div class="sk-fc-manage-fallback">
                   <div class="sk-fc-manage-label">Default Fallback</div>
                   <div class="sk-fc-fallback-form">
-                    <input id="defaultStatusInput" type="text" placeholder="e.g. Away from desk" class="sk-input sk-fc-force-uniform" style="padding-left: 0.875rem;">
-                    <div style="display: flex; gap: 0.5rem; width: 100%">
-                      <select id="defaultAvailInput" class="sk-select sk-fc-force-uniform" style="padding-left: 0.875rem;">
+                    <input id="defaultStatusInput" type="text" placeholder="e.g. Away from desk" class="sk-input sk-fc-force-uniform sk-ex-f7cf5ce3">
+                    <div class="sk-ex-5bc8098d">
+                      <select id="defaultAvailInput" class="sk-select sk-fc-force-uniform sk-ex-f7cf5ce3" aria-label="Default availability" title="Default availability">
                         <option value="false">Unavailable</option>
                         <option value="true">Available</option>
                       </select>
-                      <button onclick="saveDefaultSettings()" class="sk-btn sk-btn-primary sk-fc-force-uniform" style="justify-content: center;"><i class="bi bi-check2"></i> Save</button>
+                      <button type="button" onclick="saveDefaultSettings()" class="sk-btn sk-btn-primary sk-fc-force-uniform sk-ex-c1780db6"><i class="bi bi-check2"></i> Save</button>
                     </div>
                   </div>
                 </div>
@@ -99,15 +75,15 @@
                 <div class="sk-fc-qr-container">
                   <img id="qrCode" src="../static/images/logo_placeholder.jpg" alt="QR Code">
                 </div>
-                <div class="sk-fc-action-btns" style="flex-direction: column; max-width: 100%;">
-                  <div style="display: flex; gap: 0.5rem; width: 100%;">
-                    <button id="qrActionBtn" onclick="handleQRAction()" class="sk-btn sk-btn-success sk-fc-force-uniform-btn" style="flex: 1"><i class="bi bi-qr-code-scan"></i> Generate</button>
-                    <button id="broadcastBtn" onclick="viewBroadcastPage()" class="sk-btn sk-btn-primary sk-fc-force-uniform-btn" style="flex: 1"><i class="bi bi-broadcast"></i> View</button>
+                <div class="sk-fc-action-btns sk-ex-c00934c2">
+                  <div class="sk-ex-5bc8098d">
+                    <button type="button" id="qrActionBtn" onclick="handleQRAction()" class="sk-btn sk-btn-success sk-fc-force-uniform-btn sk-ex-634a28be"><i class="bi bi-qr-code-scan"></i> Generate</button>
+                    <button type="button" id="broadcastBtn" onclick="viewBroadcastPage()" class="sk-btn sk-btn-primary sk-fc-force-uniform-btn sk-ex-634a28be"><i class="bi bi-broadcast"></i> View</button>
                   </div>
-                  <button id="qrRegenerateBtn" onclick="confirmRegenerateQR()" class="sk-btn sk-btn-secondary sk-fc-force-uniform-btn" style="width: 100%; display:none;"><i class="bi bi-arrow-clockwise"></i> Regenerate QR</button>
+                  <button type="button" id="qrRegenerateBtn" onclick="confirmRegenerateQR()" class="sk-btn sk-btn-secondary sk-fc-force-uniform-btn sk-ex-0ed37043"><i class="bi bi-arrow-clockwise"></i> Regenerate QR</button>
                 </div>
                 <!-- Mobile only trigger -->
-                <button class="sk-fc-mobile-qr-trigger" onclick="document.getElementById('qrSheet').classList.add('open')">
+                <button type="button" class="sk-fc-mobile-qr-trigger" onclick="document.getElementById('qrSheet').classList.add('open')">
                   <i class="bi bi-qr-code"></i> View QR Code
                 </button>
               </div>
@@ -121,14 +97,14 @@
               <h3 class="sk-sheet-title">Your QR Code</h3>
               <p class="sk-sheet-subtitle">Scan to view your broadcast page</p>
               <div class="sk-sheet-qr"><img id="qrCodeSheet" src="../static/images/logo_placeholder.jpg" alt="QR"></div>
-              <div class="sk-sheet-btns" style="display: flex; flex-direction: column; gap: 0.5rem;">
-                <div style="display: flex; gap: 0.5rem; width: 100%;">
-                  <button onclick="handleQRAction()" class="sk-btn sk-btn-success sk-sheet-btn" style="flex: 1; font-size: 14px !important; padding: 0.75rem !important;"><i class="bi bi-download"></i> Download</button>
-                  <button onclick="viewBroadcastPage()" class="sk-btn sk-btn-primary sk-sheet-btn" style="flex: 1; font-size: 14px !important; padding: 0.75rem !important;"><i class="bi bi-broadcast"></i> View</button>
+              <div class="sk-sheet-btns sk-ex-8878728a">
+                <div class="sk-ex-5bc8098d">
+                  <button type="button" onclick="handleQRAction()" class="sk-btn sk-btn-success sk-sheet-btn sk-ex-11551663"><i class="bi bi-download"></i> Download</button>
+                  <button type="button" onclick="viewBroadcastPage()" class="sk-btn sk-btn-primary sk-sheet-btn sk-ex-11551663"><i class="bi bi-broadcast"></i> View</button>
                 </div>
-                <button onclick="confirmRegenerateQR()" class="sk-btn sk-btn-secondary sk-sheet-btn" style="width: 100%; font-size: 14px !important; padding: 0.75rem !important;"><i class="bi bi-arrow-clockwise"></i> Regenerate QR</button>
+                <button type="button" onclick="confirmRegenerateQR()" class="sk-btn sk-btn-secondary sk-sheet-btn sk-ex-dfafcd5b"><i class="bi bi-arrow-clockwise"></i> Regenerate QR</button>
               </div>
-              <button class="sk-sheet-close" onclick="document.getElementById('qrSheet').classList.remove('open')">Close</button>
+              <button type="button" class="sk-sheet-close" onclick="document.getElementById('qrSheet').classList.remove('open')">Close</button>
             </div>
           </div>
 
@@ -136,12 +112,12 @@
           <div class="sk-dashboard-main">
           <!-- Dashboard section switcher, controlled by sidebar and mobile bottom nav -->
           <div id="dashboardTabs" class="sk-nav-proxy" aria-hidden="true">
-              <button class="sk-tab tab-btn active" data-tab="messages"><i class="bi bi-broadcast"></i> Broadcast</button>
-              <button class="sk-tab tab-btn" data-tab="templates"><i class="bi bi-lightning"></i> Quick Status</button>
-              <button class="sk-tab tab-btn" data-tab="calendar"><i class="bi bi-calendar3"></i> Calendar</button>
-              <button class="sk-tab tab-btn" data-tab="inbox"><i class="bi bi-chat-dots"></i> Messages <span id="unreadBadge" class="sk-sidebar-badge" style="display:none">0</span></button>
-              <button class="sk-tab tab-btn" data-tab="fc-settings"><i class="bi bi-gear"></i> Settings</button>
-              <button class="sk-tab tab-btn" data-tab="profile"><i class="bi bi-person-circle"></i> Profile</button>
+              <button type="button" class="sk-tab tab-btn active" data-tab="messages"><i class="bi bi-broadcast"></i> Broadcast</button>
+              <button type="button" class="sk-tab tab-btn" data-tab="templates"><i class="bi bi-lightning"></i> Quick Status</button>
+              <button type="button" class="sk-tab tab-btn" data-tab="calendar"><i class="bi bi-calendar3"></i> Calendar</button>
+              <button type="button" class="sk-tab tab-btn" data-tab="inbox"><i class="bi bi-chat-dots"></i> Messages <span id="unreadBadge" class="sk-sidebar-badge sk-ex-6b99de8b">0</span></button>
+              <button type="button" class="sk-tab tab-btn" data-tab="fc-settings"><i class="bi bi-gear"></i> Settings</button>
+              <button type="button" class="sk-tab tab-btn" data-tab="profile"><i class="bi bi-person-circle"></i> Profile</button>
           </div>
 
           <!-- Tab: Broadcast Messages -->
@@ -152,27 +128,27 @@
                   <div class="sk-card-title">Live Broadcast Status</div>
                   <div class="sk-card-subtitle">Your current status visible on your broadcast page and QR code</div>
                 </div>
-                <button onclick="openNewMessageModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Status</button>
+                <button type="button" onclick="openNewMessageModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Status</button>
               </div>
               <div id="messagesList">
-                <div style="padding:2rem">
+                <div class="sk-ex-42aa6d9c">
                   <div class="sk-skeleton-row">
                     <div class="sk-skeleton sk-skeleton-avatar"></div>
-                    <div style="flex:1">
+                    <div class="sk-ex-97445a8d">
                       <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
                       <div class="sk-skeleton sk-skeleton-text w-1/2"></div>
                     </div>
                   </div>
                   <div class="sk-skeleton-row">
                     <div class="sk-skeleton sk-skeleton-avatar"></div>
-                    <div style="flex:1">
+                    <div class="sk-ex-97445a8d">
                       <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
                       <div class="sk-skeleton sk-skeleton-text w-1/2"></div>
                     </div>
                   </div>
                   <div class="sk-skeleton-row">
                     <div class="sk-skeleton sk-skeleton-avatar"></div>
-                    <div style="flex:1">
+                    <div class="sk-ex-97445a8d">
                       <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
                       <div class="sk-skeleton sk-skeleton-text w-1/2"></div>
                     </div>
@@ -187,7 +163,7 @@
             <div class="sk-card">
               <div class="sk-card-header">
                 <div class="sk-card-title">Quick Status Templates</div>
-                <button onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Template</button>
+                <button type="button" onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Template</button>
               </div>
               <div id="templatesList" class="sk-grid sk-grid-3"></div>
             </div>
@@ -198,14 +174,14 @@
             <div class="sk-dashboard-stack">
               <div class="sk-card">
                 <div class="sk-card-header">
-                  <div style="display:flex;align-items:center;gap:0.75rem">
-                    <button onclick="calNavMonth(-1)" class="sk-btn sk-btn-ghost sk-btn-icon" title="Previous month"><i class="bi bi-chevron-left"></i></button>
+                  <div class="sk-ex-8a3d7429">
+                    <button type="button" onclick="calNavMonth(-1)" class="sk-btn sk-btn-ghost sk-btn-icon" title="Previous month"><i class="bi bi-chevron-left"></i></button>
                     <h2 id="calMonthLabel" class="sk-card-title">May 2026</h2>
-                    <button onclick="calNavMonth(1)" class="sk-btn sk-btn-ghost sk-btn-icon" title="Next month"><i class="bi bi-chevron-right"></i></button>
+                    <button type="button" onclick="calNavMonth(1)" class="sk-btn sk-btn-ghost sk-btn-icon" title="Next month"><i class="bi bi-chevron-right"></i></button>
                   </div>
                   <div class="sk-card-actions">
-                    <button onclick="openNewScheduleModal()" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-arrow-repeat"></i> New Schedule</button>
-                    <button onclick="openNewEventModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Event</button>
+                    <button type="button" onclick="openNewScheduleModal()" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-arrow-repeat"></i> New Schedule</button>
+                    <button type="button" onclick="openNewEventModal()" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-plus-lg"></i> New Event</button>
                   </div>
                 </div>
                 <div id="calendarGrid" class="sk-calendar-grid"></div>
@@ -215,23 +191,23 @@
                 </div>
               </div>
               <div class="sk-card">
-                <div class="sk-card-header" style="flex-wrap: wrap; gap: 0.5rem;">
-                  <div style="flex: 1 1 100%;">
+                <div class="sk-card-header sk-ex-fa9046b1">
+                  <div class="sk-ex-acc96ca6">
                     <div class="sk-card-title">Schedules</div>
                     <div class="sk-card-subtitle">Calendar events and recurring rules</div>
                   </div>
-                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <select id="scheduleTypeFilter" class="sk-select" style="width: auto; padding: 0.25rem 2rem 0.25rem 0.75rem; font-size: 0.875rem;" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
+                  <div class="sk-ex-9cdc00f8">
+                    <select id="scheduleTypeFilter" class="sk-select sk-ex-8ec4259c" aria-label="Filter schedules by type" title="Filter schedules by type" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
                       <option value="all" selected>All Types</option>
                       <option value="calendar">Calendar Only</option>
                       <option value="recurring">Recurring Only</option>
                     </select>
-                    <select id="scheduleStatusFilter" class="sk-select" style="width: auto; padding: 0.25rem 2rem 0.25rem 0.75rem; font-size: 0.875rem;" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
+                    <select id="scheduleStatusFilter" class="sk-select sk-ex-8ec4259c" aria-label="Filter schedules by status" title="Filter schedules by status" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
                       <option value="all" selected>All Statuses</option>
                       <option value="active">Active Only</option>
                       <option value="paused">Paused Only</option>
                     </select>
-                    <select id="scheduleTimeFilter" class="sk-select" style="width: auto; padding: 0.25rem 2rem 0.25rem 0.75rem; font-size: 0.875rem;" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
+                    <select id="scheduleTimeFilter" class="sk-select sk-ex-8ec4259c" aria-label="Filter schedules by time" title="Filter schedules by time" onchange="if(typeof renderCombinedSchedules === 'function') renderCombinedSchedules()">
                       <option value="upcoming7" selected>Upcoming 7 Days</option>
                       <option value="upcoming30">Upcoming 30 Days</option>
                       <option value="upcoming">Upcoming All</option>
@@ -252,33 +228,33 @@
             <div class="sk-split sk-chat-shell">
               <!-- Left: Conversation List -->
               <div id="chatListPanel" class="sk-split-left sk-chat-rail">
-                <div class="sk-split-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap">
-                  <h2 style="font-size:var(--sk-text-sm);font-weight:700;color:var(--sk-text-primary)"><i class="bi bi-chat-dots" style="color:var(--sk-primary);margin-right:0.25rem"></i>Messages</h2>
-                  <div style="display:flex;gap:0.25rem;align-items:center;flex-wrap:wrap">
-                    <button onclick="_setChatFilter('all')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm" data-filter="all" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs)">All</button>
-                    <button onclick="_setChatFilter('threads')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm" data-filter="threads" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs)">Students</button>
-                    <button onclick="_setChatFilter('dms')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm" data-filter="dms" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs)">Visitors</button>
-                    <button onclick="_closeAndDeleteAll()" class="sk-btn sk-btn-ghost sk-btn-sm" style="padding:0.25rem 0.5rem;font-size:var(--sk-text-xs);color:var(--sk-text-placeholder)"><i class="bi bi-trash3"></i></button>
+                <div class="sk-split-header sk-ex-e63065cc">
+                  <h2 class="sk-ex-e13d02bd"><i class="bi bi-chat-dots sk-ex-e040445a"></i>Messages</h2>
+                  <div class="sk-ex-f6b09b88">
+                    <button type="button" onclick="_setChatFilter('all')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm sk-ex-c1c58557" data-filter="all">All</button>
+                    <button type="button" onclick="_setChatFilter('threads')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm sk-ex-c1c58557" data-filter="threads">Students</button>
+                    <button type="button" onclick="_setChatFilter('dms')" class="chat-filter-btn sk-btn sk-btn-ghost sk-btn-sm sk-ex-c1c58557" data-filter="dms">Visitors</button>
+                    <button type="button" onclick="_closeAndDeleteAll()" class="sk-btn sk-btn-ghost sk-btn-sm sk-ex-9875bd31" aria-label="Close and delete all conversations" title="Close and delete all conversations"><i class="bi bi-trash3"></i></button>
                   </div>
                 </div>
-                <div style="padding:0.5rem 0.75rem;border-bottom:1px solid var(--sk-border)">
+                <div class="sk-ex-0c6f17df">
                   <div class="sk-search">
-                    <i class="bi bi-search sk-search-icon" style="font-size:0.75rem"></i>
-                    <input type="text" id="chatSearchInput" placeholder="Search conversations..." class="sk-input" style="padding-left:2rem;padding-top:0.375rem;padding-bottom:0.375rem;font-size:var(--sk-text-xs)" oninput="_filterConversations()">
+                    <i class="bi bi-search sk-search-icon sk-ex-8113a013"></i>
+                    <input type="text" id="chatSearchInput" placeholder="Search conversations..." class="sk-input sk-ex-f8385043" oninput="_filterConversations()">
                   </div>
                 </div>
-                <div id="conversationList" class="sk-split-body" style="padding:0"></div>
+                <div id="conversationList" class="sk-split-body sk-ex-41d7d7e2"></div>
               </div>
               <!-- Right: Conversation Detail -->
               <div id="chatDetailPanel" class="sk-split-right sk-chat-stage hidden-mobile">
-                <div id="chatEmptyState" class="sk-split-body sk-chat-empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--sk-text-placeholder)">
-                  <i class="bi bi-chat-square-text" style="font-size:3rem;margin-bottom:0.75rem"></i>
-                  <p style="font-size:var(--sk-text-sm);font-weight:500">Select a conversation</p>
-                  <p style="font-size:var(--sk-text-xs);margin-top:0.25rem">Choose from the list to view messages</p>
+                <div id="chatEmptyState" class="sk-split-body sk-chat-empty-state sk-ex-bd3c151a">
+                  <i class="bi bi-chat-square-text sk-ex-5734e3c8"></i>
+                  <p class="sk-ex-840c5f3a">Select a conversation</p>
+                  <p class="sk-ex-273158d8">Choose from the list to view messages</p>
                 </div>
-                <div id="chatActiveConvo" class="sk-chat-active" style="display:none">
-                  <div id="chatConvoHeader" class="sk-split-header sk-chat-thread-header" style="display:flex;align-items:center;gap:0.75rem"></div>
-                  <div id="chatConvoMessages" class="sk-split-body sk-chat-messages" style="display:flex;flex-direction:column;gap:0.375rem"></div>
+                <div id="chatActiveConvo" class="sk-chat-active sk-ex-6b99de8b">
+                  <div id="chatConvoHeader" class="sk-split-header sk-chat-thread-header sk-ex-8a3d7429"></div>
+                  <div id="chatConvoMessages" class="sk-split-body sk-chat-messages sk-ex-bdaf253f"></div>
                   <div id="chatReplyBar" class="sk-split-footer sk-chat-composer"></div>
                 </div>
               </div>
@@ -288,30 +264,30 @@
           <!-- Tab: Settings -->
           <section id="tab-fc-settings" class="tab-content hidden">
             <div class="sk-card">
-              <div class="sk-card-header" style="margin-bottom:1.5rem">
+              <div class="sk-card-header sk-ex-561f378b">
                 <div>
-                  <div class="sk-card-title"><i class="bi bi-gear" style="color:var(--sk-text-tertiary);margin-right:0.5rem"></i>Chat & Notification Settings</div>
+                  <div class="sk-card-title"><i class="bi bi-gear sk-ex-692da33b"></i>Chat & Notification Settings</div>
                   <div class="sk-card-subtitle">Configure how you receive notifications and manage chat behavior</div>
                 </div>
               </div>
-              <div style="display:flex;flex-direction:column;gap:1.5rem">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
-                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">New chat notifications</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Email me when a student starts a new chat thread.</p></div>
-                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyNew" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+              <div class="sk-ex-7ead7293">
+                <div class="sk-ex-cc757d7c">
+                  <div><p class="sk-ex-fc4723b0">New chat notifications</p><p class="sk-ex-b437390b">Email me when a student starts a new chat thread.</p></div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyNew" aria-label="New chat notifications" title="New chat notifications" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
                 </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
-                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Reply notifications</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Email me when a student sends a reply in active threads.</p></div>
-                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyReplies" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                <div class="sk-ex-cc757d7c">
+                  <div><p class="sk-ex-fc4723b0">Reply notifications</p><p class="sk-ex-b437390b">Email me when a student sends a reply in active threads.</p></div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyReplies" aria-label="Reply notifications" title="Reply notifications" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
                 </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
-                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Chat closed notifications</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Email me when a chat thread is closed.</p></div>
-                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyClosed" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                <div class="sk-ex-cc757d7c">
+                  <div><p class="sk-ex-fc4723b0">Chat closed notifications</p><p class="sk-ex-b437390b">Email me when a chat thread is closed.</p></div>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingNotifyClosed" aria-label="Chat closed notifications" title="Chat closed notifications" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
                 </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
-                  <div><p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Auto-close inactive chats</p><p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Automatically close threads after a period of inactivity.</p></div>
-                  <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <input type="number" id="fcSettingAutoCloseValue" class="sk-input" style="width: 70px; padding: 0.35rem 0.5rem; text-align: right;" min="1" onchange="saveFacultySettings()">
-                    <select id="fcSettingAutoCloseUnit" class="sk-select" style="width: 105px; padding: 0.35rem 0.5rem;" onchange="saveFacultySettings()">
+                <div class="sk-ex-cc757d7c">
+                  <div><p class="sk-ex-fc4723b0">Auto-close inactive chats</p><p class="sk-ex-b437390b">Automatically close threads after a period of inactivity.</p></div>
+                  <div class="sk-ex-e65b4bf1">
+                    <input type="number" id="fcSettingAutoCloseValue" class="sk-input sk-ex-5cd27110" aria-label="Auto-close duration" title="Auto-close duration" min="1" onchange="saveFacultySettings()">
+                    <select id="fcSettingAutoCloseUnit" class="sk-select sk-ex-4455e220" aria-label="Auto-close duration unit" title="Auto-close duration unit" onchange="saveFacultySettings()">
                       <option value="1">Seconds</option>
                       <option value="60">Minutes</option>
                       <option value="3600">Hours</option>
@@ -319,21 +295,21 @@
                       <option value="2592000">Months</option>
                       <option value="31536000">Years</option>
                     </select>
-                    <label class="sk-toggle" title="Enable Auto-close" style="margin-left: 0.5rem;">
-                      <input type="checkbox" id="fcSettingAutoCloseEnabled" onchange="toggleAutoDeleteVisibility(); saveFacultySettings();">
+                    <label class="sk-toggle sk-ex-b87ae904" title="Enable Auto-close">
+                      <input type="checkbox" id="fcSettingAutoCloseEnabled" aria-label="Enable auto-close inactive chats" title="Enable auto-close inactive chats" onchange="toggleAutoDeleteVisibility(); saveFacultySettings();">
                       <div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div>
                     </label>
                   </div>
                 </div>
-                <div id="fcSettingAutoDeleteWrapper" style="display:flex;align-items:center;justify-content:space-between;gap:1rem; padding-left: 1.5rem;">
-                  <div style="display:flex; gap:0.5rem;">
-                    <i class="bi bi-arrow-return-right" style="color: var(--sk-text-tertiary); font-size: 1.1rem; margin-top: -2px;"></i>
+                <div id="fcSettingAutoDeleteWrapper" class="sk-ex-35c14976">
+                  <div class="sk-ex-306a4cf9">
+                    <i class="bi bi-arrow-return-right sk-ex-4012503f"></i>
                     <div>
-                      <p style="font-size:var(--sk-text-sm);font-weight:600;color:var(--sk-text-primary)">Delete auto-closed chats</p>
-                      <p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)">Permanently delete threads instead of just closing them.</p>
+                      <p class="sk-ex-fc4723b0">Delete auto-closed chats</p>
+                      <p class="sk-ex-b437390b">Permanently delete threads instead of just closing them.</p>
                     </div>
                   </div>
-                  <label class="sk-toggle"><input type="checkbox" id="fcSettingAutoDelete" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
+                  <label class="sk-toggle"><input type="checkbox" id="fcSettingAutoDelete" aria-label="Delete auto-closed chats" title="Delete auto-closed chats" onchange="saveFacultySettings()"><div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div></label>
                 </div>
                 
                 <script>
@@ -384,66 +360,66 @@
     <div class="sk-modal-panel sk-broadcast-modal">
       <div class="sk-modal-header">
         <h3 id="messageModalTitle" class="sk-modal-title">Set Broadcast Status</h3>
-        <button class="sk-modal-close" onclick="closeModal('messageModal')"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="sk-modal-close" onclick="closeModal('messageModal')" aria-label="Close status dialog" title="Close status dialog"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="sk-modal-body">
         <input type="hidden" id="messageId" value="">
-        <p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary);margin-bottom:0.75rem">This is what visitors see on your page and QR code.</p>
-        <div id="templateQuickPicks" style="margin-bottom:0.75rem"></div>
+        <p class="sk-ex-df4ac0ca">This is what visitors see on your page and QR code.</p>
+        <div id="templateQuickPicks" class="sk-ex-c05a3c6e"></div>
         <div class="sk-form-group">
           <textarea id="newMessageText" placeholder="e.g. In Room 405 — available until 3pm" class="sk-textarea" rows="3"></textarea>
         </div>
         <div class="sk-form-group sk-broadcast-timing-grid">
           <div>
             <label class="sk-label"><i class="bi bi-clock"></i> Schedule for later</label>
-            <input id="newMessageSchedule" type="datetime-local" class="sk-input">
+            <input id="newMessageSchedule" type="datetime-local" class="sk-input" aria-label="Schedule status for later" title="Schedule status for later">
           </div>
           <div>
             <label class="sk-label"><i class="bi bi-hourglass-split"></i> Auto-expire after</label>
             <div class="sk-broadcast-duration-row">
               <input type="number" id="newMessageDuration" placeholder="Time" class="sk-input" min="1">
-              <select id="newMessageDurationUnit" class="sk-select">
+              <select id="newMessageDurationUnit" class="sk-select" aria-label="Status duration unit" title="Status duration unit">
                 <option value="1">Sec</option><option value="60" selected>Min</option><option value="3600">Hrs</option><option value="86400">Days</option>
               </select>
             </div>
           </div>
         </div>
-        <p style="font-size:var(--sk-text-xs);color:var(--sk-text-placeholder);margin-bottom:0.75rem"><i class="bi bi-info-circle"></i> When a timed status expires, your <strong>default status</strong> will be restored.</p>
+        <p class="sk-ex-482147cb"><i class="bi bi-info-circle"></i> When a timed status expires, your <strong>default status</strong> will be restored.</p>
         <div class="sk-form-group">
           <label class="sk-label">Also set availability to:</label>
-          <select id="newMessageAvail" class="sk-select">
+          <select id="newMessageAvail" class="sk-select" aria-label="Status availability" title="Status availability">
             <option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option>
           </select>
         </div>
       </div>
       <div class="sk-modal-footer sk-broadcast-modal-footer">
-        <button onclick="closeModal('messageModal')" class="sk-btn sk-btn-secondary">Cancel</button>
-        <button id="btnSaveOnly" onclick="submitMessage(false)" class="sk-btn sk-btn-secondary"><i class="bi bi-save"></i> Save</button>
-        <button id="btnSaveAndGoLive" onclick="submitMessage(true)" class="sk-btn sk-btn-gradient"><i class="bi bi-broadcast"></i> Save & Go Live</button>
+        <button type="button" onclick="closeModal('messageModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button type="button" id="btnSaveOnly" onclick="submitMessage(false)" class="sk-btn sk-btn-secondary"><i class="bi bi-save"></i> Save</button>
+        <button type="button" id="btnSaveAndGoLive" onclick="submitMessage(true)" class="sk-btn sk-btn-gradient"><i class="bi bi-broadcast"></i> Save & Go Live</button>
       </div>
     </div>
   </div>
 
   <!-- Download Modal -->
-  <div id="downloadModal" class="sk-modal-overlay hidden" style="z-index: 10001;" onclick="if(event.target===this)closeModal('downloadModal')">
-    <div class="sk-modal-panel" style="max-width:360px">
+  <div id="downloadModal" class="sk-modal-overlay hidden sk-ex-1ffff242" onclick="if(event.target===this)closeModal('downloadModal')">
+    <div class="sk-modal-panel sk-ex-4a724ce7">
       <div class="sk-modal-header">
         <h3 class="sk-modal-title">Download Options</h3>
-        <button class="sk-modal-close" onclick="closeModal('downloadModal')"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="sk-modal-close" onclick="closeModal('downloadModal')" aria-label="Close download dialog" title="Close download dialog"><i class="bi bi-x-lg"></i></button>
       </div>
-      <div class="sk-modal-body" style="display:flex;flex-direction:column;gap:0.75rem">
-        <button onclick="downloadQROnly()" class="sk-btn sk-btn-primary" style="width:100%"><i class="bi bi-qr-code"></i> Download QR Code Only</button>
-        <button onclick="downloadQRWithInfo()" class="sk-btn sk-btn-success" style="width:100%"><i class="bi bi-image"></i> Download QR with User Info</button>
+      <div class="sk-modal-body sk-ex-f921ae95">
+        <button type="button" onclick="downloadQROnly()" class="sk-btn sk-btn-primary sk-ex-0466783d"><i class="bi bi-qr-code"></i> Download QR Code Only</button>
+        <button type="button" onclick="downloadQRWithInfo()" class="sk-btn sk-btn-success sk-ex-0466783d"><i class="bi bi-image"></i> Download QR with User Info</button>
       </div>
     </div>
   </div>
 
   <!-- Template Modal -->
   <div id="addTemplateModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('addTemplateModal')">
-    <div class="sk-modal-panel" style="max-width:420px">
+    <div class="sk-modal-panel sk-ex-0fd8744d">
       <div class="sk-modal-header">
         <h3 id="templateModalTitle" class="sk-modal-title">New Quick Status</h3>
-        <button class="sk-modal-close" onclick="closeModal('addTemplateModal')"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="sk-modal-close" onclick="closeModal('addTemplateModal')" aria-label="Close template dialog" title="Close template dialog"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="sk-modal-body">
         <input type="hidden" id="tplId">
@@ -451,88 +427,88 @@
         <div class="sk-form-group"><label class="sk-label">Message</label><textarea id="tplMessage" placeholder="Broadcast message text..." class="sk-textarea"></textarea></div>
         <div class="sk-form-group">
           <label class="sk-label">When activated, set availability to:</label>
-          <select id="tplAvail" class="sk-select"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
+          <select id="tplAvail" class="sk-select" aria-label="Template availability" title="Template availability"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
         </div>
       </div>
       <div class="sk-modal-footer">
-        <button onclick="closeModal('addTemplateModal')" class="sk-btn sk-btn-secondary">Cancel</button>
-        <button id="templateModalSubmit" onclick="submitTemplate()" class="sk-btn sk-btn-primary">Save</button>
+        <button type="button" onclick="closeModal('addTemplateModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button type="button" id="templateModalSubmit" onclick="submitTemplate()" class="sk-btn sk-btn-primary">Save</button>
       </div>
     </div>
   </div>
 
   <!-- Schedule Modal -->
-  <div id="addScheduleModal" class="sk-modal-overlay hidden" style="z-index: 1000;" onclick="if(event.target===this)closeModal('addScheduleModal')">
-    <div class="sk-modal-panel" style="max-width:420px">
+  <div id="addScheduleModal" class="sk-modal-overlay hidden sk-ex-7b0b5176" onclick="if(event.target===this)closeModal('addScheduleModal')">
+    <div class="sk-modal-panel sk-ex-0fd8744d">
       <div class="sk-modal-header">
         <h3 id="scheduleModalTitle" class="sk-modal-title">New Recurring Schedule</h3>
-        <button class="sk-modal-close" onclick="closeModal('addScheduleModal')"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="sk-modal-close" onclick="closeModal('addScheduleModal')" aria-label="Close schedule dialog" title="Close schedule dialog"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="sk-modal-body">
         <input type="hidden" id="schedId">
-        <div class="sk-form-group"><label class="sk-label">Day</label><select id="schedDay" class="sk-select"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></div>
-        <div class="sk-form-group"><label class="sk-label">Time</label><input id="schedTime" type="time" class="sk-input"></div>
+        <div class="sk-form-group"><label class="sk-label">Day</label><select id="schedDay" class="sk-select" aria-label="Schedule day" title="Schedule day"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></div>
+        <div class="sk-form-group"><label class="sk-label">Time</label><input id="schedTime" type="time" class="sk-input" aria-label="Schedule time" title="Schedule time"></div>
         <div class="sk-form-group"><label class="sk-label">Broadcast Message</label><textarea id="schedMessage" placeholder="Broadcast message..." class="sk-textarea"></textarea></div>
         <div class="sk-form-group">
           <label class="sk-label">Duration</label>
-          <div style="display:flex;gap:0.5rem">
-            <input type="number" id="schedDuration" placeholder="Blank = never" class="sk-input" style="width:65%" min="1">
-            <select id="schedDurationUnit" class="sk-select" style="width:35%"><option value="1">Sec</option><option value="60" selected>Min</option><option value="3600">Hrs</option><option value="86400">Days</option></select>
+          <div class="sk-ex-306a4cf9">
+            <input type="number" id="schedDuration" placeholder="Blank = never" class="sk-input sk-ex-8d750a56" min="1">
+            <select id="schedDurationUnit" class="sk-select sk-ex-67098520" aria-label="Schedule duration unit" title="Schedule duration unit"><option value="1">Sec</option><option value="60" selected>Min</option><option value="3600">Hrs</option><option value="86400">Days</option></select>
           </div>
         </div>
         <div class="sk-form-group">
           <label class="sk-label">When triggered, set availability to:</label>
-          <select id="schedAvail" class="sk-select"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
+          <select id="schedAvail" class="sk-select" aria-label="Schedule availability" title="Schedule availability"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
         </div>
       </div>
       <div class="sk-modal-footer">
-        <button onclick="closeModal('addScheduleModal')" class="sk-btn sk-btn-secondary">Cancel</button>
-        <button id="scheduleModalSubmit" onclick="submitSchedule()" class="sk-btn sk-btn-primary">Save</button>
+        <button type="button" onclick="closeModal('addScheduleModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button type="button" id="scheduleModalSubmit" onclick="submitSchedule()" class="sk-btn sk-btn-primary">Save</button>
       </div>
     </div>
   </div>
 
   <!-- Event Modal -->
-  <div id="addEventModal" class="sk-modal-overlay hidden" style="z-index: 1000;" onclick="if(event.target===this)closeModal('addEventModal')">
-    <div class="sk-modal-panel" style="max-width:420px">
+  <div id="addEventModal" class="sk-modal-overlay hidden sk-ex-7b0b5176" onclick="if(event.target===this)closeModal('addEventModal')">
+    <div class="sk-modal-panel sk-ex-0fd8744d">
       <div class="sk-modal-header">
         <h3 id="eventModalTitle" class="sk-modal-title">New Scheduled Broadcast</h3>
-        <button class="sk-modal-close" onclick="closeModal('addEventModal')"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="sk-modal-close" onclick="closeModal('addEventModal')" aria-label="Close event dialog" title="Close event dialog"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="sk-modal-body">
         <input type="hidden" id="evtId">
         <div class="sk-form-group"><label class="sk-label">Message</label><input id="evtTitle" type="text" placeholder="e.g. In a meeting" class="sk-input"></div>
-        <div class="sk-form-group"><label class="sk-label">Start</label><input id="evtStart" type="datetime-local" class="sk-input"></div>
-        <div class="sk-form-group"><label class="sk-label">End</label><input id="evtEnd" type="datetime-local" class="sk-input"></div>
+        <div class="sk-form-group"><label class="sk-label">Start</label><input id="evtStart" type="datetime-local" class="sk-input" aria-label="Event start" title="Event start"></div>
+        <div class="sk-form-group"><label class="sk-label">End</label><input id="evtEnd" type="datetime-local" class="sk-input" aria-label="Event end" title="Event end"></div>
         <div class="sk-form-group">
           <label class="sk-label">Color</label>
-          <input id="evtColor" type="color" value="#f68b1f" class="sk-color-picker" style="-webkit-appearance: none; appearance: none; width: 100%; height: 42px; background: var(--sk-input-bg); border: 1.5px solid var(--sk-input-border); border-radius: var(--sk-radius-lg); cursor: pointer; padding: 4px;">
+          <input id="evtColor" type="color" aria-label="Event color" title="Event color" value="#f68b1f" class="sk-color-picker sk-ex-c5b791d8">
         </div>
         <div class="sk-form-group">
           <label class="sk-label">During event, set availability to:</label>
-          <select id="evtAvail" class="sk-select"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
+          <select id="evtAvail" class="sk-select" aria-label="Event availability" title="Event availability"><option value="">Don't change</option><option value="true">Available</option><option value="false">Unavailable</option></select>
         </div>
       </div>
-      <div class="sk-modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; width: 100%;">
-        <button id="eventModalDelete" type="button" onclick="deleteEvent()" class="sk-btn sk-btn-ghost" style="color:var(--sk-error); display:none; margin-right:auto;"><i class="bi bi-trash"></i> Delete</button>
-        <button onclick="closeModal('addEventModal')" class="sk-btn sk-btn-secondary">Cancel</button>
-        <button id="eventModalSubmit" onclick="submitEvent()" class="sk-btn sk-btn-primary">Save</button>
+      <div class="sk-modal-footer sk-ex-4030cadd">
+        <button id="eventModalDelete" type="button" onclick="deleteEvent()" class="sk-btn sk-btn-ghost sk-ex-d6ab37fd"><i class="bi bi-trash"></i> Delete</button>
+        <button type="button" onclick="closeModal('addEventModal')" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button type="button" id="eventModalSubmit" onclick="submitEvent()" class="sk-btn sk-btn-primary">Save</button>
       </div>
     </div>
   </div>
 
   <!-- Day View Modal -->
   <div id="dayViewModal" class="sk-modal-overlay hidden" onclick="if(event.target===this)closeModal('dayViewModal')">
-    <div class="sk-modal-panel" style="max-width:500px">
+    <div class="sk-modal-panel sk-ex-4294bfa9">
       <div class="sk-modal-header">
         <h3 id="dayViewModalTitle" class="sk-modal-title">Events</h3>
-        <button class="sk-modal-close" onclick="closeModal('dayViewModal')"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="sk-modal-close" onclick="closeModal('dayViewModal')" aria-label="Close day view dialog" title="Close day view dialog"><i class="bi bi-x-lg"></i></button>
       </div>
-      <div class="sk-modal-body" style="padding: 1rem; max-height: 60vh; overflow-y: auto;">
+      <div class="sk-modal-body sk-ex-5cffe1bc">
         <div id="dayViewList" class="sk-schedule-list"></div>
       </div>
       <div class="sk-modal-footer">
-        <button onclick="closeModal('dayViewModal')" class="sk-btn sk-btn-secondary">Close</button>
+        <button type="button" onclick="closeModal('dayViewModal')" class="sk-btn sk-btn-secondary">Close</button>
       </div>
     </div>
   </div>

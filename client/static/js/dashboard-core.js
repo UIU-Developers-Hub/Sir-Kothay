@@ -71,48 +71,48 @@ function renderFacultyTabSkeleton(tab) {
   if (tab === 'messages') {
     var messagesList = document.getElementById('messagesList');
     if (messagesList) {
-      messagesList.innerHTML = '<div style="padding:2rem">' + [1, 2, 3].map(function () {
-        return '<div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
+      messagesList.innerHTML = '<div class="sk-ex-42aa6d9c">' + [1, 2, 3].map(function () {
+        return '<div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div class="sk-ex-7f784dd1"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
       }).join('') + '</div>';
     }
   } else if (tab === 'templates') {
     var templatesList = document.getElementById('templatesList');
     if (templatesList) {
       templatesList.innerHTML = [1, 2, 3].map(function () {
-        return '<div class="sk-card"><div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div><div class="sk-skeleton sk-skeleton-btn" style="width:100%;margin-top:0.75rem"></div></div>';
+        return '<div class="sk-card"><div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div class="sk-ex-7f784dd1"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div><div class="sk-skeleton sk-skeleton-btn sk-ex-6e9dcc63"></div></div>';
       }).join('');
     }
   } else if (tab === 'calendar') {
     var calendarGrid = document.getElementById('calendarGrid');
     if (calendarGrid) {
       calendarGrid.innerHTML = [1, 2, 3, 4, 5, 6, 7].map(function () {
-        return '<div class="sk-skeleton" style="height:1rem;border-radius:var(--sk-radius-sm)"></div>';
+        return '<div class="sk-skeleton sk-ex-bf606eb0"></div>';
       }).join('') + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(function () {
-        return '<div class="sk-skeleton" style="min-height:5.25rem;border-radius:var(--sk-radius-lg)"></div>';
+        return '<div class="sk-skeleton sk-ex-139a6985"></div>';
       }).join('');
     }
     var schedulesList = document.getElementById('schedulesList');
     if (schedulesList) {
       schedulesList.innerHTML = [1, 2, 3].map(function () {
-        return '<div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
+        return '<div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div class="sk-ex-7f784dd1"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
       }).join('');
     }
   } else if (tab === 'inbox') {
     var conversationList = document.getElementById('conversationList');
     if (conversationList) {
       conversationList.innerHTML = [1, 2, 3, 4].map(function () {
-        return '<div class="sk-skeleton-row" style="padding:0.75rem"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
+        return '<div class="sk-skeleton-row sk-ex-a5c5a87d"><span class="sk-skeleton sk-skeleton-avatar"></span><div class="sk-ex-7f784dd1"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
       }).join('');
     }
   } else if (tab === 'fc-settings') {
     var settingsTab = document.getElementById('tab-fc-settings');
     if (settingsTab && !settingsTab.querySelector('[data-tab-load-skeleton]')) {
-      settingsTab.insertAdjacentHTML('afterbegin', '<div data-tab-load-skeleton class="sk-skeleton-row" style="padding:0 0 1rem"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-1/2"></div><div class="sk-skeleton sk-skeleton-text w-1/3"></div></div></div>');
+      settingsTab.insertAdjacentHTML('afterbegin', '<div data-tab-load-skeleton class="sk-skeleton-row sk-ex-81670f29"><span class="sk-skeleton sk-skeleton-avatar"></span><div class="sk-ex-7f784dd1"><div class="sk-skeleton sk-skeleton-text w-1/2"></div><div class="sk-skeleton sk-skeleton-text w-1/3"></div></div></div>');
     }
   } else if (tab === 'profile') {
     var profileTab = document.getElementById('tab-profile');
     if (profileTab && !profileTab.querySelector('[data-tab-load-skeleton]')) {
-      profileTab.innerHTML = '<div data-tab-load-skeleton class="sk-profile-panel"><div class="sk-skeleton sk-skeleton-heading"></div><div class="sk-skeleton sk-skeleton-card" style="height:180px;margin-bottom:1.5rem"></div><div class="sk-profile-grid"><div class="sk-skeleton sk-skeleton-card" style="height:280px"></div><div class="sk-skeleton sk-skeleton-card" style="height:280px"></div></div></div>';
+      profileTab.innerHTML = '<div data-tab-load-skeleton class="sk-profile-panel"><div class="sk-skeleton sk-skeleton-heading"></div><div class="sk-skeleton sk-skeleton-card sk-ex-9aea3de2"></div><div class="sk-profile-grid"><div class="sk-skeleton sk-skeleton-card sk-ex-417a4feb"></div><div class="sk-skeleton sk-skeleton-card sk-ex-417a4feb"></div></div></div>';
     }
   }
 }
@@ -409,7 +409,7 @@ function renderTemplateQuickPicks() {
   }
   el.innerHTML = '<div class="sk-template-picks"><p class="sk-template-picks-title">Quick-fill from a template:</p><div class="sk-template-pick-list">' +
     window._quickTemplates.map(function (t) {
-      return '<button onclick="fillFromTemplate(\'' + escapeHtml(t.message).replace(/'/g, "\\'") + '\')" ' +
+      return '<button type="button" onclick="fillFromTemplate(\'' + escapeHtml(t.message).replace(/'/g, "\\'") + '\')" ' +
         'class="sk-btn sk-btn-secondary sk-btn-sm">' +
         '<i class="bi ' + escapeHtml(t.icon || 'bi-lightning-fill') + '"></i>' + escapeHtml(t.label) + '</button>';
     }).join('') + '</div></div>';
@@ -555,7 +555,7 @@ async function loadMessages() {
       var fallbackText = document.getElementById('defaultStatusInput') ? document.getElementById('defaultStatusInput').value.trim() : '';
       var fallbackHtml = '';
       if (!hasActive && fallbackText) {
-        fallbackHtml = '<div class="sk-card" style="margin-bottom: 1rem; border-color: var(--sk-primary); background: rgba(109, 40, 217, 0.05);"><div style="padding: 1rem; display: flex; align-items: center; gap: 1rem;"><div style="background: var(--sk-primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-arrow-return-right"></i></div><div style="flex: 1"><h4 style="margin: 0; font-size: 0.875rem; color: var(--sk-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Fallback Status Live</h4><p style="margin: 0; font-size: 1rem; color: var(--sk-text-primary); font-weight: 500;">' + escapeHtml(fallbackText) + '</p></div></div></div>';
+        fallbackHtml = '<div class="sk-card sk-ex-197ca223"><div class="sk-ex-1ba7f2e7"><div class="sk-ex-a525f07f"><i class="bi bi-arrow-return-right"></i></div><div class="sk-ex-634a28be"><h4 class="sk-ex-1fef9869">Fallback Status Live</h4><p class="sk-ex-12d00521">' + escapeHtml(fallbackText) + '</p></div></div></div>';
       }
       
       el.innerHTML = fallbackHtml + '<div class="sk-broadcast-list">' + data.map(function (msg) {
@@ -565,20 +565,20 @@ async function loadMessages() {
           '<div class="sk-broadcast-meta">' + renderStatusBadge(msg) +
           '<span class="sk-inline-note"><i class="bi bi-hourglass-split"></i> ' + durLabel + '</span></div></div>' +
           '<div class="sk-broadcast-actions">' +
-          '<button onclick="toggleMsg(' + msg.id + ',' + msg.active + ')" class="sk-btn ' + (msg.active ? 'sk-btn-danger' : 'sk-btn-success') + ' sk-btn-sm">' + (msg.active ? '<i class="bi bi-pause-fill"></i> Stop' : '<i class="bi bi-play-fill"></i> Go Live') + '</button>' +
-          '<button onclick="openEditModal(' + msg.id + ',\'' + escapeHtml(msg.message).replace(/'/g, "\\'") + '\',' + (msg.scheduled_for ? "'" + msg.scheduled_for + "'" : 'null') + ',' + (msg.duration_seconds || 'null') + ',\'' + (msg.set_availability || '') + '\')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Edit status"><i class="bi bi-pencil"></i></button>' +
-          '<button onclick="confirmDeleteMsg(' + msg.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" aria-label="Delete status"><i class="bi bi-trash"></i></button>' +
+          '<button type="button" onclick="toggleMsg(' + msg.id + ',' + msg.active + ')" class="sk-btn ' + (msg.active ? 'sk-btn-danger' : 'sk-btn-success') + ' sk-btn-sm">' + (msg.active ? '<i class="bi bi-pause-fill"></i> Stop' : '<i class="bi bi-play-fill"></i> Go Live') + '</button>' +
+          '<button type="button" onclick="openEditModal(' + msg.id + ',\'' + escapeHtml(msg.message).replace(/'/g, "\\'") + '\',' + (msg.scheduled_for ? "'" + msg.scheduled_for + "'" : 'null') + ',' + (msg.duration_seconds || 'null') + ',\'' + (msg.set_availability || '') + '\')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Edit status" title="Edit status"><i class="bi bi-pencil"></i></button>' +
+          '<button type="button" onclick="confirmDeleteMsg(' + msg.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" aria-label="Delete status" title="Delete status"><i class="bi bi-trash"></i></button>' +
           '</div></div>';
       }).join('') + '</div>';
     } else {
       var fallbackText = document.getElementById('defaultStatusInput') ? document.getElementById('defaultStatusInput').value.trim() : '';
       var fallbackHtml = '';
       if (fallbackText) {
-        fallbackHtml = '<div class="sk-card" style="margin-bottom: 1rem; border-color: var(--sk-primary); background: rgba(109, 40, 217, 0.05);"><div style="padding: 1rem; display: flex; align-items: center; gap: 1rem;"><div style="background: var(--sk-primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-arrow-return-right"></i></div><div style="flex: 1"><h4 style="margin: 0; font-size: 0.875rem; color: var(--sk-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Fallback Status Live</h4><p style="margin: 0; font-size: 1rem; color: var(--sk-text-primary); font-weight: 500;">' + escapeHtml(fallbackText) + '</p></div></div></div>';
+        fallbackHtml = '<div class="sk-card sk-ex-197ca223"><div class="sk-ex-1ba7f2e7"><div class="sk-ex-a525f07f"><i class="bi bi-arrow-return-right"></i></div><div class="sk-ex-634a28be"><h4 class="sk-ex-1fef9869">Fallback Status Live</h4><p class="sk-ex-12d00521">' + escapeHtml(fallbackText) + '</p></div></div></div>';
       }
       
-      el.innerHTML = fallbackHtml + (window.SKComponents ? SKComponents.emptyState('broadcast', 'No broadcast status yet', 'Create your first status to let people know where you are.', '<button onclick="openNewMessageModal()" class="sk-btn sk-btn-primary">Create Your First Status</button>') :
-        '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-broadcast"></i></div><div class="sk-empty-title">No broadcast status yet</div><div class="sk-empty-subtitle">Create your first status to let people know where you are.</div><button onclick="openNewMessageModal()" class="sk-btn sk-btn-primary">Create Your First Status</button></div>');
+      el.innerHTML = fallbackHtml + (window.SKComponents ? SKComponents.emptyState('broadcast', 'No broadcast status yet', 'Create your first status to let people know where you are.', '<button type="button" onclick="openNewMessageModal()" class="sk-btn sk-btn-primary">Create Your First Status</button>') :
+        '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-broadcast"></i></div><div class="sk-empty-title">No broadcast status yet</div><div class="sk-empty-subtitle">Create your first status to let people know where you are.</div><button type="button" onclick="openNewMessageModal()" class="sk-btn sk-btn-primary">Create Your First Status</button></div>');
     }
     // Schedule auto-refresh when any active timed status expires
     _scheduleExpiryRefresh(data || []);
@@ -873,7 +873,7 @@ async function loadFooterContributors() {
     var el = document.getElementById('contributorAvatars');
     if (!el) return;
     var res = await fetch(window.sirKothayContributorsApiUrl()); var data = await res.json();
-    if (el) el.innerHTML = data.slice(0, 6).map(function (c) { return '<a href="' + c.html_url + '" target="_blank"><img src="' + c.avatar_url + '" class="h-8 w-8 rounded-full" alt="' + c.login + '"></a>'; }).join('');
+    if (el) el.innerHTML = data.slice(0, 6).map(function (c) { return '<a href="' + c.html_url + '" target="_blank" rel="noopener"><img src="' + c.avatar_url + '" class="h-8 w-8 rounded-full" alt="' + c.login + '"></a>'; }).join('');
   } catch (e) {}
 }
 document.addEventListener('DOMContentLoaded', function () {

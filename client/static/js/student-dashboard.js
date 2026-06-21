@@ -110,32 +110,32 @@ function renderStudentTabSkeleton(tab) {
         var facultiesList = document.getElementById('facultiesList');
         if (facultiesList) {
             facultiesList.innerHTML = [1, 2, 3].map(function () {
-                return '<div class="sk-card"><div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div><div class="sk-skeleton sk-skeleton-btn" style="width:100%;margin-top:0.75rem"></div></div>';
+                return '<div class="sk-card"><div class="sk-skeleton-row"><span class="sk-skeleton sk-skeleton-avatar"></span><div class="sk-ex-7f784dd1"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div><div class="sk-skeleton sk-skeleton-btn sk-ex-6e9dcc63"></div></div>';
             }).join('');
         }
     } else if (tab === 'feed') {
         var feedList = document.getElementById('feedList');
         if (feedList) {
             feedList.innerHTML = [1, 2, 3].map(function () {
-                return '<div class="sk-skeleton-row" style="padding:0.875rem"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-3/4"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
+                return '<div class="sk-skeleton-row sk-ex-cf4bafaf"><span class="sk-skeleton sk-skeleton-avatar"></span><div class="sk-ex-7f784dd1"><div class="sk-skeleton sk-skeleton-text w-3/4"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
             }).join('');
         }
     } else if (tab === 'messages') {
         var convoList = document.getElementById('stuConvoList');
         if (convoList) {
             convoList.innerHTML = [1, 2, 3, 4].map(function () {
-                return '<div class="sk-skeleton-row" style="padding:0.75rem"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
+                return '<div class="sk-skeleton-row sk-ex-a5c5a87d"><span class="sk-skeleton sk-skeleton-avatar"></span><div class="sk-ex-7f784dd1"><div class="sk-skeleton sk-skeleton-text w-2/3"></div><div class="sk-skeleton sk-skeleton-text w-1/2"></div></div></div>';
             }).join('');
         }
     } else if (tab === 'settings') {
         var settingsTab = document.getElementById('tab-settings');
         if (settingsTab && !settingsTab.querySelector('[data-tab-load-skeleton]')) {
-            settingsTab.insertAdjacentHTML('afterbegin', '<div data-tab-load-skeleton class="sk-skeleton-row" style="padding:0 0 1rem"><span class="sk-skeleton sk-skeleton-avatar"></span><div style="flex:1;min-width:0"><div class="sk-skeleton sk-skeleton-text w-1/2"></div><div class="sk-skeleton sk-skeleton-text w-1/3"></div></div></div>');
+            settingsTab.insertAdjacentHTML('afterbegin', '<div data-tab-load-skeleton class="sk-skeleton-row sk-ex-81670f29"><span class="sk-skeleton sk-skeleton-avatar"></span><div class="sk-ex-7f784dd1"><div class="sk-skeleton sk-skeleton-text w-1/2"></div><div class="sk-skeleton sk-skeleton-text w-1/3"></div></div></div>');
         }
     } else if (tab === 'profile') {
         var profileTab = document.getElementById('tab-profile');
         if (profileTab && !profileTab.querySelector('[data-tab-load-skeleton]')) {
-            profileTab.innerHTML = '<div data-tab-load-skeleton class="sk-profile-panel"><div class="sk-skeleton sk-skeleton-heading"></div><div class="sk-skeleton sk-skeleton-card" style="height:180px;margin-bottom:1.5rem"></div><div class="sk-profile-grid"><div class="sk-skeleton sk-skeleton-card" style="height:280px"></div><div class="sk-skeleton sk-skeleton-card" style="height:280px"></div></div></div>';
+            profileTab.innerHTML = '<div data-tab-load-skeleton class="sk-profile-panel"><div class="sk-skeleton sk-skeleton-heading"></div><div class="sk-skeleton sk-skeleton-card sk-ex-9aea3de2"></div><div class="sk-profile-grid"><div class="sk-skeleton sk-skeleton-card sk-ex-417a4feb"></div><div class="sk-skeleton sk-skeleton-card sk-ex-417a4feb"></div></div></div>';
         }
     }
 }
@@ -635,18 +635,18 @@ function renderBellMenu(interest, scope) {
         : 'sk-btn sk-btn-secondary sk-btn-sm';
     return `
         <div class="sk-bell-menu" id="${wrapId}">
-            <button onclick="event.stopPropagation(); toggleBellDropdown(${interest.id}, '${safeScope}')" class="${buttonClass}" title="${_bellTitle(interest.notify_preference)}" aria-label="${_bellTitle(interest.notify_preference)}">
+            <button type="button" onclick="event.stopPropagation(); toggleBellDropdown(${interest.id}, '${safeScope}')" class="${buttonClass}" title="${_bellTitle(interest.notify_preference)}" aria-label="${_bellTitle(interest.notify_preference)}">
                 <i class="bi ${_bellIcon(interest.notify_preference)}"></i>
             </button>
             <div id="${dropId}" class="sk-bell-dropdown hidden" data-bell-drop>
                 <p class="sk-bell-dropdown-label">Notifications</p>
-                <button onclick="event.stopPropagation(); setNotifyPref(${interest.id}, 'all')" class="${interest.notify_preference === 'all' ? 'active' : ''}">
+                <button type="button" onclick="event.stopPropagation(); setNotifyPref(${interest.id}, 'all')" class="${interest.notify_preference === 'all' ? 'active' : ''}">
                     <i class="bi bi-bell-fill"></i> All updates
                 </button>
-                <button onclick="event.stopPropagation(); setNotifyPref(${interest.id}, 'available')" class="${interest.notify_preference === 'available' ? 'active' : ''}">
+                <button type="button" onclick="event.stopPropagation(); setNotifyPref(${interest.id}, 'available')" class="${interest.notify_preference === 'available' ? 'active' : ''}">
                     <i class="bi bi-bell"></i> When available
                 </button>
-                <button onclick="event.stopPropagation(); setNotifyPref(${interest.id}, 'none')" class="${interest.notify_preference === 'none' ? 'active' : ''}">
+                <button type="button" onclick="event.stopPropagation(); setNotifyPref(${interest.id}, 'none')" class="${interest.notify_preference === 'none' ? 'active' : ''}">
                     <i class="bi bi-bell-slash"></i> Off
                 </button>
             </div>
@@ -696,7 +696,7 @@ async function loadInterests() {
         return interests;
     } catch (error) {
         console.error(error);
-        document.getElementById('facultiesList').innerHTML = '<div class="sk-empty-state compact" style="grid-column:1/-1"><div class="sk-empty-icon"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Failed to load faculties</div><div class="sk-empty-subtitle">Please refresh or try again in a moment.</div></div>';
+        document.getElementById('facultiesList').innerHTML = '<div class="sk-empty-state compact sk-ex-068a8ddc"><div class="sk-empty-icon"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Failed to load faculties</div><div class="sk-empty-subtitle">Please refresh or try again in a moment.</div></div>';
     }
 }
 
@@ -725,10 +725,10 @@ function renderFaculties(interests) {
     const list = document.getElementById('facultiesList');
     if (!interests.length) {
         list.innerHTML = `
-            <div class="sk-empty-state compact" style="grid-column:1/-1">
+            <div class="sk-empty-state compact sk-ex-068a8ddc">
                 <div class="sk-empty-icon"><i class="bi bi-person-x"></i></div>
                 <h3>No faculties found</h3>
-                <button onclick="document.getElementById('addFacultyModal').classList.remove('hidden')" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-person-plus"></i> Find Faculty</button>
+                <button type="button" onclick="document.getElementById('addFacultyModal').classList.remove('hidden')" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-person-plus"></i> Find Faculty</button>
             </div>`;
         return;
     }
@@ -751,24 +751,24 @@ function renderFaculties(interests) {
                             <img src="${resolveProfileImage(fac.profile_image_url)}" class="sk-faculty-avatar" alt="${escapeHtml(displayName)}">
                             <span class="sk-presence-dot ${isAvail ? 'available' : ''}"></span>
                         </span>
-                        <span style="min-width:0">
+                        <span class="sk-ex-3922d326">
                             <span class="sk-faculty-name" title="${escapeHtml(displayName)}">${escapeHtml(displayName)}</span>
                             <span class="sk-faculty-meta">${escapeHtml(fac.designation || 'Faculty')} · ${escapeHtml(fac.organization || 'UIU')}</span>
-                            ${statusMessage ? `<span class="sk-faculty-status"><i class="bi ${fac.active_message ? 'bi-broadcast-pin' : 'bi-chat-quote'}" style="margin-right:0.25rem"></i>${escapeHtml(statusMessage)}</span>` : ''}
+                            ${statusMessage ? `<span class="sk-faculty-status"><i class="bi ${fac.active_message ? 'bi-broadcast-pin' : 'bi-chat-quote'} sk-ex-9b7040ae"></i>${escapeHtml(statusMessage)}</span>` : ''}
                         </span>
                     </button>
                     <div class="sk-faculty-actions">
-                        <button onclick="event.stopPropagation(); shareProfile('${escapedSlug}', '${escapedName}')" class="sk-btn sk-btn-ghost sk-btn-icon" title="Share QR / Link">
+                        <button type="button" onclick="event.stopPropagation(); shareProfile('${escapedSlug}', '${escapedName}')" class="sk-btn sk-btn-ghost sk-btn-icon" title="Share QR / Link">
                             <i class="bi bi-share"></i>
                         </button>
-                        <button onclick="event.stopPropagation(); removeFaculty(${interest.id})" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Remove">
+                        <button type="button" onclick="event.stopPropagation(); removeFaculty(${interest.id})" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Remove">
                             <i class="bi bi-trash3"></i>
                         </button>
                     </div>
                 </div>
                 
                 <div class="sk-faculty-footer">
-                    <button onclick="initiateNewChat(${interest.faculty}, '${escapedSlug}', '${escapedName}')" class="sk-btn sk-btn-primary sk-btn-sm" style="flex:1" title="${chatMeta.title}">
+                    <button type="button" onclick="initiateNewChat(${interest.faculty}, '${escapedSlug}', '${escapedName}')" class="sk-btn sk-btn-primary sk-btn-sm sk-ex-97445a8d" title="${chatMeta.title}">
                         <i class="bi ${chatMeta.icon}"></i> ${chatMeta.label}
                     </button>
                     ${renderBellMenu(interest, 'card')}
@@ -818,12 +818,12 @@ function viewFacultyProfile(facultyId) {
             ${contactRows ? `<div class="sk-contact-list">${contactRows}</div>` : ''}
 
             <div class="sk-faculty-detail-actions">
-                <button onclick="initiateNewChat(${interest.faculty}, '${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-primary" title="${chatMeta.title}"><i class="bi ${chatMeta.icon}"></i> ${chatMeta.label}</button>
+                <button type="button" onclick="initiateNewChat(${interest.faculty}, '${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-primary" title="${chatMeta.title}"><i class="bi ${chatMeta.icon}"></i> ${chatMeta.label}</button>
                 ${renderBellMenu(interest, 'modal')}
-                <a href="${publicHref}" target="_blank" class="sk-btn sk-btn-secondary sk-btn-icon" title="Open Public Profile" aria-label="Open Public Profile">
+                <a href="${publicHref}" target="_blank" rel="noopener" class="sk-btn sk-btn-secondary sk-btn-icon" title="Open Public Profile" aria-label="Open Public Profile">
                     <i class="bi bi-box-arrow-up-right"></i>
                 </a>
-                <button onclick="shareProfile('${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-secondary sk-btn-icon" title="Share QR Code" aria-label="Share QR Code">
+                <button type="button" onclick="shareProfile('${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-secondary sk-btn-icon" title="Share QR Code" aria-label="Share QR Code">
                     <i class="bi bi-qr-code"></i>
                 </button>
             </div>
@@ -848,10 +848,10 @@ function shareProfile(slug, name) {
             <p>Scan QR to view <strong>${escapeHtml(name)}</strong>'s live profile.</p>
             <img src="${escapeHtml(qrUrl)}" class="sk-share-qr" alt="Share QR" onerror="this.onerror=null;this.src='${inlineGeneratedQrUrl}'">
             <div class="sk-share-url">
-                <input type="text" readonly value="${safeFullUrl}" class="sk-input" id="shareUrlInput">
-                <button onclick="navigator.clipboard.writeText('${inlineFullUrl}'); showNotifyModal('Link copied!', 'success');" class="sk-btn sk-btn-secondary sk-btn-sm">Copy</button>
+                <input type="text" readonly value="${safeFullUrl}" class="sk-input" id="shareUrlInput" aria-label="Profile share URL" title="Profile share URL">
+                <button type="button" onclick="navigator.clipboard.writeText('${inlineFullUrl}'); showNotifyModal('Link copied!', 'success');" class="sk-btn sk-btn-secondary sk-btn-sm">Copy</button>
             </div>
-            <a href="${safeFullUrl}" target="_blank" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-box-arrow-up-right"></i> Open Profile</a>
+            <a href="${safeFullUrl}" target="_blank" rel="noopener" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-box-arrow-up-right"></i> Open Profile</a>
         </div>
     `;
     
@@ -955,9 +955,9 @@ function renderFeed(activities) {
                     ${act.details ? `<p class="sk-feed-status">"${escapeHtml(act.details)}"</p>` : ''}
                     <p class="sk-feed-time"><i class="bi bi-clock"></i> ${formatRelativeTime(act.created_at)}</p>
                 </div>
-                <div style="display:flex; gap:0.25rem;">
-                    <button onclick="initiateNewChat(${act.faculty_id}, '${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="${chatMeta.label}" title="${chatMeta.label}"><i class="bi ${chatMeta.icon}"></i></button>
-                    <button onclick="dismissFeedItem(${act.id})" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Dismiss" title="Dismiss update"><i class="bi bi-x-lg"></i></button>
+                <div class="sk-ex-7f526431">
+                    <button type="button" onclick="initiateNewChat(${act.faculty_id}, '${inlineSlug}', '${inlineName}')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="${chatMeta.label}" title="${chatMeta.label}"><i class="bi ${chatMeta.icon}"></i></button>
+                    <button type="button" onclick="dismissFeedItem(${act.id})" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Dismiss" title="Dismiss update"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
         `;
@@ -996,7 +996,7 @@ async function searchFaculties() {
                         <p class="sk-search-result-meta">${escapeHtml(u.designation || 'Faculty')}</p>
                     </div>
                 </div>
-                <button onclick="addFaculty(${u.user})" class="sk-btn sk-btn-primary sk-btn-sm">Add</button>
+                <button type="button" onclick="addFaculty(${u.user})" class="sk-btn sk-btn-primary sk-btn-sm">Add</button>
             </div>
         `).join('');
     } catch (e) {

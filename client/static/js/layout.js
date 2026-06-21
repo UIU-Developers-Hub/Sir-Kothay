@@ -226,7 +226,7 @@ window.SKLayout = (() => {
     const displayName = user.username || user.email;
     const profileTag = options.staticProfile ? 'div' : 'a';
     const profileHref = options.staticProfile ? '' : ` href="${profileHrefForRole(role)}"`;
-    const profileStyle = options.staticProfile ? ' style="cursor:default; pointer-events:none;"' : '';
+    const profileStaticClass = options.staticProfile ? ' ' + SKDynamicStyles.classFor('cursor:default; pointer-events:none') : '';
     const settingsHref = settingsHrefForRole(role);
     const hasSettings = !!settingsHref;
     const profileActive = options.activePage === 'profile' || _currentPage === 'profile';
@@ -235,14 +235,14 @@ window.SKLayout = (() => {
     return `
       ${renderThemeGroup()}
       <div class="sk-sidebar-account-row ${hasSettings ? '' : 'no-settings'}">
-        <${profileTag}${profileHref} class="sk-sidebar-profile-button ${profileActive ? 'active' : ''}" data-page="profile"${profileStyle} title="Profile">
+        <${profileTag}${profileHref} class="sk-sidebar-profile-button ${profileActive ? 'active' : ''}${profileStaticClass}" data-page="profile" title="Profile">
           ${SKComponents.avatar(avatarSrc, displayName, 'sm')}
           <span>${SKUtils.escapeHtml(displayName)}</span>
         </${profileTag}>
         ${hasSettings ? `<a href="${settingsHref}" class="sk-sidebar-settings-button ${settingsActive ? 'active' : ''}" data-page="settings" title="Settings" aria-label="Settings">
           <i class="bi bi-gear"></i>
         </a>` : ''}
-        <button class="sk-sidebar-signout-button" onclick="SKLayout.logout()" title="Sign out" aria-label="Sign out">
+        <button type="button" class="sk-sidebar-signout-button" onclick="SKLayout.logout()" title="Sign out" aria-label="Sign out">
           <i class="bi bi-box-arrow-right"></i>
         </button>
       </div>
@@ -268,7 +268,7 @@ window.SKLayout = (() => {
             ${[72, 84, 68, 78].map(width => `
               <div class="sk-nav-skeleton-link">
                 <span class="sk-nav-skeleton-icon sk-skeleton"></span>
-                <span class="sk-nav-skeleton-text sk-skeleton" style="width:${width}%"></span>
+                <span class="sk-nav-skeleton-text sk-skeleton ${SKDynamicStyles.classFor('width:' + width + '%')}"></span>
               </div>
             `).join('')}
           </div>
@@ -279,7 +279,7 @@ window.SKLayout = (() => {
               ${[62, 54, 66].map(width => `
                 <div class="sk-nav-skeleton-link compact">
                   <span class="sk-nav-skeleton-icon sk-skeleton"></span>
-                  <span class="sk-nav-skeleton-text sk-skeleton" style="width:${width}%"></span>
+                  <span class="sk-nav-skeleton-text sk-skeleton ${SKDynamicStyles.classFor('width:' + width + '%')}"></span>
                 </div>
               `).join('')}
             </div>
@@ -311,7 +311,7 @@ window.SKLayout = (() => {
       bottomNavItems.innerHTML = [64, 72, 58, 66].map(width => `
         <span class="sk-bottom-nav-skeleton-item" data-nav-skeleton aria-hidden="true">
           <span class="sk-bottom-nav-skeleton-icon sk-skeleton"></span>
-          <span class="sk-bottom-nav-skeleton-label sk-skeleton" style="width:${width}%"></span>
+          <span class="sk-bottom-nav-skeleton-label sk-skeleton ${SKDynamicStyles.classFor('width:' + width + '%')}"></span>
         </span>
       `).join('');
     }
@@ -716,10 +716,10 @@ window.SKLayout = (() => {
 
     if (mobileNav) {
       mobileNav.innerHTML = `
-        <button id="menuToggle" class="sk-bottom-nav-item sk-bottom-nav-menu" onclick="SKLayout.toggleSidebar()">
+        <button type="button" id="menuToggle" class="sk-bottom-nav-item sk-bottom-nav-menu" onclick="SKLayout.toggleSidebar()">
           <i class="bi bi-list"></i><span>Menu</span>
         </button>
-        <button onclick="SKLayout.logout()" class="sk-bottom-nav-item danger">
+        <button type="button" onclick="SKLayout.logout()" class="sk-bottom-nav-item danger">
           <i class="bi bi-box-arrow-right"></i><span>Sign Out</span>
         </button>
       `;
@@ -803,7 +803,7 @@ window.SKLayout = (() => {
         <a href="${getRelativePath('dashboard/home.html')}" class="sk-bottom-nav-item ${activePage === 'dashboard' ? 'active' : ''}">
           <i class="bi bi-speedometer2"></i><span>Dashboard</span>
         </a>
-        <button onclick="SKLayout.logout()" class="sk-bottom-nav-item danger">
+        <button type="button" onclick="SKLayout.logout()" class="sk-bottom-nav-item danger">
           <i class="bi bi-box-arrow-right"></i><span>Logout</span>
         </button>
       `;
@@ -952,7 +952,7 @@ window.SKLayout = (() => {
     const hideAuth = !!options.hideAuth;
     const hideDynamic = options.hideDynamic !== false;
     const authLinks = hideAuth ? '' : `
-        <div style="height: 1px; background: var(--sk-border); margin: var(--sk-space-4) 0"></div>
+        <div class="sk-ex-0f30005c"></div>
         <a href="${getRelativePath('auth/login.html')}" class="sk-sidebar-link ${activePage === 'login' ? 'active' : ''}">
           <i class="bi bi-box-arrow-in-right"></i><span class="sk-sidebar-link-text">Login</span>
         </a>
@@ -974,7 +974,7 @@ window.SKLayout = (() => {
           <i class="bi bi-info-circle"></i><span class="sk-sidebar-link-text">About</span>
         </a>
         ${manageLink}
-        <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" class="sk-sidebar-link">
+        <a href="https://github.com/UIU-Developers-Hub/Sir-Kothay" target="_blank" rel="noopener" class="sk-sidebar-link">
           <i class="bi bi-github"></i><span class="sk-sidebar-link-text">GitHub</span>
         </a>
         ${authLinks}
@@ -994,7 +994,7 @@ window.SKLayout = (() => {
           <i class="bi bi-box-arrow-in-right"></i><span>Login</span>
         </a>`;
       mobileNav.innerHTML = `
-        <button id="menuToggle" class="sk-bottom-nav-item sk-bottom-nav-menu" onclick="SKLayout.toggleSidebar()">
+        <button type="button" id="menuToggle" class="sk-bottom-nav-item sk-bottom-nav-menu" onclick="SKLayout.toggleSidebar()">
           <i class="bi bi-list"></i><span>Menu</span>
         </button>
         <a href="${getRelativePath('index.html')}" class="sk-bottom-nav-item ${activePage === 'home' ? 'active' : ''}">
@@ -1019,8 +1019,8 @@ window.SKLayout = (() => {
         if (!Array.isArray(contributors)) return;
         grid.innerHTML = contributors.slice(0, 6).map(c => `
           <a href="${c.html_url}" target="_blank" rel="noopener" title="${SKUtils.escapeHtml(c.login)}" 
-             style="display:inline-block;width:28px;height:28px;border-radius:50%;overflow:hidden;border:1.5px solid var(--sk-border);transition:transform 0.15s">
-            <img src="${c.avatar_url}" alt="${SKUtils.escapeHtml(c.login)}" style="width:100%;height:100%;object-fit:cover">
+             class="sk-ex-6b9a3682">
+            <img src="${c.avatar_url}" alt="${SKUtils.escapeHtml(c.login)}" class="sk-ex-3b1d0762">
           </a>
         `).join('');
       })

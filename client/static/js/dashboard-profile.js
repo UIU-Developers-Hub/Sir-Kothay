@@ -45,12 +45,12 @@ window.SKDashboardProfile = (() => {
 
   function roleBadge(role) {
     if (role === 'STUDENT') {
-      return '<span class="sk-badge" style="background:var(--sk-primary-light);color:var(--sk-primary);"><i class="bi bi-mortarboard-fill me-1"></i>Student</span>';
+      return '<span class="sk-badge sk-ex-d4d873f3"><i class="bi bi-mortarboard-fill me-1"></i>Student</span>';
     }
     if (role === 'FACULTY') {
-      return '<span class="sk-badge" style="background:var(--sk-success-bg);color:var(--sk-success);"><i class="bi bi-person-workspace me-1"></i>Faculty</span>';
+      return '<span class="sk-badge sk-ex-ff55c2e2"><i class="bi bi-person-workspace me-1"></i>Faculty</span>';
     }
-    return '<span class="sk-badge" style="background:var(--sk-bg-muted);color:var(--sk-text-secondary);"><i class="bi bi-shield-lock me-1"></i>Admin</span>';
+    return '<span class="sk-badge sk-ex-4b7f3130"><i class="bi bi-shield-lock me-1"></i>Admin</span>';
   }
 
   function render() {
@@ -80,7 +80,7 @@ window.SKDashboardProfile = (() => {
         </div>
 
         <form data-profile-form="details" enctype="multipart/form-data">
-          <input type="file" data-profile-field="profileImageInput" name="profile_image" accept="image/*" class="hidden">
+          <input type="file" data-profile-field="profileImageInput" name="profile_image" accept="image/*" class="hidden" aria-label="Profile image" title="Profile image">
 
           <div class="sk-profile-grid">
             <div class="sk-profile-form-section">
@@ -98,7 +98,7 @@ window.SKDashboardProfile = (() => {
               <div class="sk-form-group hidden" data-profile-field="studentIdGroup">
                 <label class="sk-label">Student ID</label>
                 <input type="text" data-profile-field="studentId" name="student_id" class="sk-input" placeholder="e.g. 011242111">
-                <p class="sk-help-text text-primary" style="margin-top:0.25rem;font-size:0.75rem;"><i class="bi bi-info-circle me-1"></i>Your Student ID must be unique.</p>
+                <p class="sk-help-text text-primary sk-ex-388c7749"><i class="bi bi-info-circle me-1"></i>Your Student ID must be unique.</p>
               </div>
               <div class="sk-form-group">
                 <label class="sk-label">Phone Number (Optional)</label>
@@ -121,7 +121,7 @@ window.SKDashboardProfile = (() => {
             </div>
           </div>
 
-          <div class="sk-profile-form-section" style="margin-top:1.5rem;">
+          <div class="sk-profile-form-section sk-ex-fc511f0c">
             <div class="sk-section-title">
               <i class="bi bi-chat-quote text-primary"></i> About You
             </div>
@@ -140,7 +140,7 @@ window.SKDashboardProfile = (() => {
         </form>
 
         <form data-profile-form="password">
-          <div class="sk-profile-form-section" style="margin-top:1.5rem;margin-bottom:3rem;">
+          <div class="sk-profile-form-section sk-ex-a20192ee">
             <div class="sk-section-title">
               <i class="bi bi-shield-lock text-primary"></i> Security (Change Password)
             </div>
@@ -150,21 +150,21 @@ window.SKDashboardProfile = (() => {
                 <label class="sk-label">Current Password</label>
                 <div class="sk-password-input-wrap">
                   <input type="password" data-profile-field="oldPassword" class="sk-input" placeholder="Enter current password" required>
-                  <button type="button" data-profile-toggle="oldPassword" aria-label="Show current password"><i class="bi bi-eye"></i></button>
+                  <button type="button" data-profile-toggle="oldPassword" aria-label="Show current password" title="Show current password"><i class="bi bi-eye"></i></button>
                 </div>
               </div>
               <div class="sk-form-group">
                 <label class="sk-label">New Password</label>
                 <div class="sk-password-input-wrap">
                   <input type="password" data-profile-field="newPassword" class="sk-input" placeholder="Enter new password" required>
-                  <button type="button" data-profile-toggle="newPassword" aria-label="Show new password"><i class="bi bi-eye"></i></button>
+                  <button type="button" data-profile-toggle="newPassword" aria-label="Show new password" title="Show new password"><i class="bi bi-eye"></i></button>
                 </div>
               </div>
               <div class="sk-form-group">
                 <label class="sk-label">Confirm New Password</label>
                 <div class="sk-password-input-wrap">
                   <input type="password" data-profile-field="confirmPassword" class="sk-input" placeholder="Confirm new password" required>
-                  <button type="button" data-profile-toggle="confirmPassword" aria-label="Show confirmed password"><i class="bi bi-eye"></i></button>
+                  <button type="button" data-profile-toggle="confirmPassword" aria-label="Show confirmed password" title="Show confirmed password"><i class="bi bi-eye"></i></button>
                 </div>
               </div>
             </div>

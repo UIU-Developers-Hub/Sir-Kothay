@@ -82,10 +82,6 @@
   margin: var(--sk-space-2) var(--sk-space-3);
 }
 
-.sk-sidebar-site-links {
-  /* Always visible — shows website links below dashboard nav on all sizes */
-}
-
 .sk-sidebar-site-links .sk-sidebar-link {
   color: var(--sk-text-tertiary);
   font-size: var(--sk-text-xs);
@@ -1016,11 +1012,6 @@
    ============================================================ */
 .sk-public {
   min-height: 100vh;
-}
-
-/* Public main content */
-.sk-public-main {
-  /* topbar removed, now relies on layout system */
 }
 
 /* Public footer */

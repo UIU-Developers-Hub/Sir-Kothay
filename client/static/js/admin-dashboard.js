@@ -67,8 +67,8 @@ function _statusBadge(u) {
   else if (!u.is_active) bHtml += '<span class="sk-admin-badge status-deactivated"><i class="bi bi-pause-circle-fill"></i>Deactivated</span>';
   else bHtml += '<span class="sk-admin-badge status-active"><i class="bi bi-check-circle-fill"></i>Active</span>';
   
-  if (u.is_email_verified) bHtml += '<span class="sk-admin-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b; margin-left:6px;"><i class="bi bi-envelope-check-fill"></i>Verified</span>';
-  else bHtml += '<span class="sk-admin-badge" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; margin-left:6px;"><i class="bi bi-envelope-x-fill"></i>Unverified</span>';
+  if (u.is_email_verified) bHtml += '<span class="sk-admin-badge sk-ex-e5ff12e7"><i class="bi bi-envelope-check-fill"></i>Verified</span>';
+  else bHtml += '<span class="sk-admin-badge sk-ex-02cf285b"><i class="bi bi-envelope-x-fill"></i>Unverified</span>';
   
   return bHtml;
 }
@@ -335,7 +335,7 @@ function renderAdminUsers() {
 
   tbody.innerHTML = filtered.map(function(u) {
     var isSelf = currentAdminUser && u.id === currentAdminUser.id;
-    var actions = '<button onclick="event.stopPropagation(); showUserDetail(' + u.id + ')" class="sk-btn sk-btn-secondary sk-btn-sm" title="Manage User"><i class="bi bi-sliders" style="margin-right:4px;"></i> Manage</button>';
+    var actions = '<button type="button" onclick="event.stopPropagation(); showUserDetail(' + u.id + ')" class="sk-btn sk-btn-secondary sk-btn-sm" title="Manage User"><i class="bi bi-sliders sk-ex-c6b76b85"></i> Manage</button>';
 
     return '<tr ondblclick="showUserDetail(' + u.id + ')">' +
       '<td>' + u.id + '</td>' +
@@ -525,7 +525,7 @@ function changeRole(userId) {
   var html = '';
   options.forEach(function(opt, i) {
     html += '<label class="sk-role-option">' +
-      '<input type="radio" name="crRole" value="' + opt.value + '"' + (i === 0 ? ' checked' : '') +
+      '<input type="radio" name="crRole" value="' + opt.value + '" aria-label="' + opt.label + '" title="' + opt.label + '"' + (i === 0 ? ' checked' : '') +
       ' onchange="_setStudentIdGroupVisible(this.value === \'STUDENT\')">' +
       '<i class="bi ' + opt.icon + '"></i>' +
       '<div><span class="sk-role-option-title">' + opt.label + '</span>' +
@@ -619,27 +619,27 @@ function showUserDetail(userId) {
   });
   html += '</div>';
 
-  html += '<div class="sk-admin-detail-actions" style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-top:1.5rem; border-top:1px solid var(--sk-border); padding-top:1.5rem;">' +
-    '<h4 class="sk-admin-action-title" style="grid-column:span 2; margin-bottom:0.5rem;">Actions</h4>';
+  html += '<div class="sk-admin-detail-actions sk-ex-b212337a">' +
+    '<h4 class="sk-admin-action-title sk-ex-b4441db5">Actions</h4>';
 
-  html += '<button onclick="changeRole(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-arrow-left-right"></i>Change Role</button>';
-  html += '<button onclick="toggleAdmin(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-shield-lock"></i>' + (user.is_staff ? 'Remove Admin' : 'Grant Admin') + '</button>';
+  html += '<button type="button" onclick="changeRole(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-arrow-left-right"></i>Change Role</button>';
+  html += '<button type="button" onclick="toggleAdmin(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-shield-lock"></i>' + (user.is_staff ? 'Remove Admin' : 'Grant Admin') + '</button>';
 
-  html += '<button onclick="toggleVerify(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-envelope"></i>' + (user.is_email_verified ? 'Mark Unverified' : 'Mark Verified') + '</button>';
-  html += '<button onclick="resetUserPassword(' + user.id + ')" class="sk-btn sk-btn-warning"><i class="bi bi-key"></i>Reset Password</button>';
+  html += '<button type="button" onclick="toggleVerify(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-envelope"></i>' + (user.is_email_verified ? 'Mark Unverified' : 'Mark Verified') + '</button>';
+  html += '<button type="button" onclick="resetUserPassword(' + user.id + ')" class="sk-btn sk-btn-warning"><i class="bi bi-key"></i>Reset Password</button>';
 
   if (user.is_banned) {
-    html += '<button onclick="unbanUser(' + user.id + ')" class="sk-btn sk-btn-success" style="grid-column:span 2;"><i class="bi bi-unlock"></i>Unban User</button>';
+    html += '<button type="button" onclick="unbanUser(' + user.id + ')" class="sk-btn sk-btn-success sk-ex-94a5b462"><i class="bi bi-unlock"></i>Unban User</button>';
   } else {
     if (user.is_active) {
-      html += '<button onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-pause-circle"></i>Deactivate</button>';
+      html += '<button type="button" onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-pause-circle"></i>Deactivate</button>';
     } else {
-      html += '<button onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-success"><i class="bi bi-check-circle"></i>Activate</button>';
+      html += '<button type="button" onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-success"><i class="bi bi-check-circle"></i>Activate</button>';
     }
-    html += '<button onclick="banUser(' + user.id + ')" class="sk-btn sk-btn-danger"><i class="bi bi-slash-circle"></i>Ban User</button>';
+    html += '<button type="button" onclick="banUser(' + user.id + ')" class="sk-btn sk-btn-danger"><i class="bi bi-slash-circle"></i>Ban User</button>';
   }
 
-  html += '<button onclick="deleteUser(' + user.id + ')" class="sk-btn sk-btn-ghost danger" style="grid-column:span 2; margin-top:0.5rem;"><i class="bi bi-trash"></i>Delete Permanently</button>';
+  html += '<button type="button" onclick="deleteUser(' + user.id + ')" class="sk-btn sk-btn-ghost danger sk-ex-f3906084"><i class="bi bi-trash"></i>Delete Permanently</button>';
 
   html += '</div>';
 

@@ -3,6 +3,51 @@
    Renders reusable HTML component strings
    ============================================================ */
 
+window.SKDynamicStyles = window.SKDynamicStyles || (() => {
+  'use strict';
+
+  const cache = new Map();
+  let sheetEl = null;
+
+  function getSheet() {
+    if (!sheetEl) {
+      sheetEl = document.createElement('style');
+      sheetEl.setAttribute('data-sk-dynamic-styles', '');
+      document.head.appendChild(sheetEl);
+    }
+    return sheetEl.sheet;
+  }
+
+  function hash(text) {
+    let h = 2166136261;
+    for (let i = 0; i < text.length; i++) {
+      h ^= text.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(36);
+  }
+
+  function normalize(styleText) {
+    return String(styleText || '').trim().replace(/\s+/g, ' ').replace(/;\s*$/, '');
+  }
+
+  function classFor(styleText) {
+    const style = normalize(styleText);
+    if (!style) return '';
+    if (cache.has(style)) return cache.get(style);
+    const className = 'sk-dyn-' + hash(style);
+    cache.set(style, className);
+    try {
+      getSheet().insertRule('.' + className + ' { ' + style + '; }', getSheet().cssRules.length);
+    } catch (err) {
+      if (sheetEl) sheetEl.appendChild(document.createTextNode('.' + className + ' { ' + style + '; }\n'));
+    }
+    return className;
+  }
+
+  return { classFor };
+})();
+
 window.SKComponents = (() => {
   'use strict';
 
@@ -20,7 +65,7 @@ window.SKComponents = (() => {
       </div>`;
     }
     const bg = SKUtils.stringToColor(name);
-    return `<div class="sk-avatar ${sizeClass} ${extraClass}" style="background:${bg};color:white">${initials}</div>`;
+    return `<div class="sk-avatar ${sizeClass} ${extraClass} ${SKDynamicStyles.classFor('background:' + bg + ';color:white')}">${initials}</div>`;
   }
 
   function avatarWithStatus(src, name, status, size = 'md') {
@@ -72,15 +117,15 @@ window.SKComponents = (() => {
   function skeletonCard(count = 1) {
     let html = '';
     for (let i = 0; i < count; i++) {
-      html += `<div class="sk-card" style="padding:1.25rem">
+      html += `<div class="sk-card sk-ex-a88071cf">
         <div class="sk-skeleton-row">
           <div class="sk-skeleton sk-skeleton-avatar"></div>
-          <div style="flex:1">
+          <div class="sk-ex-97445a8d">
             <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
             <div class="sk-skeleton sk-skeleton-text w-1/3"></div>
           </div>
         </div>
-        <div class="sk-skeleton sk-skeleton-text" style="margin-top:0.75rem"></div>
+        <div class="sk-skeleton sk-skeleton-text sk-ex-43cfd349"></div>
         <div class="sk-skeleton sk-skeleton-text w-3/4"></div>
       </div>`;
     }
@@ -92,7 +137,7 @@ window.SKComponents = (() => {
     for (let i = 0; i < rows; i++) {
       html += `<div class="sk-skeleton-row">
         <div class="sk-skeleton sk-skeleton-avatar"></div>
-        <div style="flex:1">
+        <div class="sk-ex-97445a8d">
           <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
           <div class="sk-skeleton sk-skeleton-text w-1/2"></div>
         </div>
@@ -102,12 +147,12 @@ window.SKComponents = (() => {
   }
 
   function skeletonStats(count = 4) {
-    let html = '<div class="sk-grid sk-grid-4" style="margin-bottom:1.5rem">';
+    let html = '<div class="sk-grid sk-grid-4 sk-ex-561f378b">';
     for (let i = 0; i < count; i++) {
       html += `<div class="sk-stat-card">
         <div class="sk-skeleton sk-skeleton-avatar"></div>
-        <div style="flex:1">
-          <div class="sk-skeleton sk-skeleton-text w-1/3" style="height:1.5rem;margin-bottom:0.5rem"></div>
+        <div class="sk-ex-97445a8d">
+          <div class="sk-skeleton sk-skeleton-text w-1/3 sk-ex-54e74057"></div>
           <div class="sk-skeleton sk-skeleton-text w-2/3"></div>
         </div>
       </div>`;
@@ -119,14 +164,14 @@ window.SKComponents = (() => {
   function skeletonTable(rows = 5, cols = 5) {
     let html = '<div class="sk-table-wrap"><table class="sk-table"><thead><tr>';
     for (let c = 0; c < cols; c++) {
-      html += '<th><div class="sk-skeleton sk-skeleton-text" style="width:80px;margin:0"></div></th>';
+      html += '<th><div class="sk-skeleton sk-skeleton-text sk-ex-9035d7b8"></div></th>';
     }
     html += '</tr></thead><tbody>';
     for (let r = 0; r < rows; r++) {
       html += '<tr>';
       for (let c = 0; c < cols; c++) {
         const w = c === 0 ? '60%' : c === 1 ? '80%' : '50%';
-        html += `<td><div class="sk-skeleton sk-skeleton-text" style="width:${w};margin:0"></div></td>`;
+        html += `<td><div class="sk-skeleton sk-skeleton-text ${SKDynamicStyles.classFor('width:' + w + ';margin:0')}"></div></td>`;
       }
       html += '</tr>';
     }
@@ -135,20 +180,20 @@ window.SKComponents = (() => {
   }
 
   function skeletonChat() {
-    return `<div style="padding:1rem;display:flex;flex-direction:column;gap:1rem">
-      <div style="display:flex;gap:0.5rem;align-items:flex-end">
+    return `<div class="sk-ex-d1c1702a">
+      <div class="sk-ex-33a6ff4d">
         <div class="sk-skeleton sk-skeleton-avatar sk-avatar-sm"></div>
-        <div class="sk-skeleton" style="width:60%;height:48px;border-radius:1rem"></div>
+        <div class="sk-skeleton sk-ex-8109b7f1"></div>
       </div>
-      <div style="display:flex;gap:0.5rem;align-items:flex-end;justify-content:flex-end">
-        <div class="sk-skeleton" style="width:45%;height:40px;border-radius:1rem"></div>
+      <div class="sk-ex-619a791c">
+        <div class="sk-skeleton sk-ex-706e034c"></div>
       </div>
-      <div style="display:flex;gap:0.5rem;align-items:flex-end">
+      <div class="sk-ex-33a6ff4d">
         <div class="sk-skeleton sk-skeleton-avatar sk-avatar-sm"></div>
-        <div class="sk-skeleton" style="width:70%;height:56px;border-radius:1rem"></div>
+        <div class="sk-skeleton sk-ex-990fecc0"></div>
       </div>
-      <div style="display:flex;gap:0.5rem;align-items:flex-end;justify-content:flex-end">
-        <div class="sk-skeleton" style="width:35%;height:36px;border-radius:1rem"></div>
+      <div class="sk-ex-619a791c">
+        <div class="sk-skeleton sk-ex-47f2f2e1"></div>
       </div>
     </div>`;
   }
@@ -159,7 +204,7 @@ window.SKComponents = (() => {
   function chatBubble(body, isMe, time, senderName = '') {
     const dir = isMe ? 'sent' : 'received';
     const nameHtml = (!isMe && senderName) 
-      ? `<div style="font-size:0.6875rem;font-weight:600;color:var(--sk-primary);margin-bottom:2px">${esc(senderName)}</div>` 
+      ? `<div class="sk-ex-eecf4339">${esc(senderName)}</div>`
       : '';
     return `<div class="sk-chat-bubble ${dir}">
       ${nameHtml}
@@ -172,11 +217,11 @@ window.SKComponents = (() => {
      MODAL WRAPPER
      ───────────────────────────────────────────────────────── */
   function modal(id, title, bodyHtml, footerHtml = '', maxWidth = '480px') {
-    return `<div id="${id}" class="sk-modal-overlay" style="display:none" onclick="if(event.target===this)SKComponents.closeModal('${id}')">
-      <div class="sk-modal-panel" style="max-width:${maxWidth}">
+    return `<div id="${id}" class="sk-modal-overlay sk-ex-6b99de8b" onclick="if(event.target===this)SKComponents.closeModal('${id}')">
+      <div class="sk-modal-panel ${SKDynamicStyles.classFor('max-width:' + maxWidth)}">
         <div class="sk-modal-header">
           <h3 class="sk-modal-title">${esc(title)}</h3>
-          <button class="sk-modal-close" onclick="SKComponents.closeModal('${id}')" aria-label="Close">
+          <button type="button" class="sk-modal-close" onclick="SKComponents.closeModal('${id}')" aria-label="Close" title="Close">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -226,7 +271,7 @@ window.SKComponents = (() => {
     toastEl.innerHTML = `
       <i class="bi bi-${icons[variant] || icons.info} sk-toast-icon"></i>
       <span class="sk-toast-text">${esc(message)}</span>
-      <button class="sk-toast-dismiss" onclick="this.parentElement.remove()">
+      <button type="button" class="sk-toast-dismiss" onclick="this.parentElement.remove()" aria-label="Dismiss notification" title="Dismiss notification">
         <i class="bi bi-x"></i>
       </button>
     `;
@@ -258,16 +303,16 @@ window.SKComponents = (() => {
       overlay.className = 'sk-modal-overlay';
       overlay.style.display = 'flex';
       overlay.innerHTML = `
-        <div class="sk-modal-panel" style="max-width:400px">
+        <div class="sk-modal-panel sk-ex-cb058518">
           <div class="sk-modal-header">
             <h3 class="sk-modal-title">${esc(title)}</h3>
           </div>
           <div class="sk-modal-body">
-            <p style="color:var(--sk-text-secondary);font-size:var(--sk-text-sm)">${esc(message)}</p>
+            <p class="sk-ex-6aa1944b">${esc(message)}</p>
           </div>
           <div class="sk-modal-footer">
-            <button class="sk-btn sk-btn-secondary" id="${id}-cancel">${esc(cancelText)}</button>
-            <button class="sk-btn ${danger}" id="${id}-confirm">${esc(confirmText)}</button>
+            <button type="button" class="sk-btn sk-btn-secondary" id="${id}-cancel">${esc(cancelText)}</button>
+            <button type="button" class="sk-btn ${danger}" id="${id}-confirm">${esc(confirmText)}</button>
           </div>
         </div>
       `;
@@ -298,7 +343,7 @@ window.SKComponents = (() => {
       const isActive = t.id === activeTab ? 'active' : '';
       const iconHtml = t.icon ? `<i class="bi bi-${t.icon}"></i>` : '';
       const badgeHtml = t.badge ? `<span class="sk-sidebar-badge">${t.badge}</span>` : '';
-      return `<button class="sk-tab ${isActive}" data-tab="${t.id}" onclick="${onSwitchFn}('${t.id}')">
+      return `<button type="button" class="sk-tab ${isActive}" data-tab="${t.id}" onclick="${onSwitchFn}('${t.id}')">
         ${iconHtml} ${esc(t.label)} ${badgeHtml}
       </button>`;
     }).join('')}</div>`;
@@ -310,7 +355,7 @@ window.SKComponents = (() => {
   function toggleSwitch(id, label, checked, onChangeFn) {
     const chk = checked ? 'checked' : '';
     return `<label class="sk-toggle">
-      <input type="checkbox" id="${id}" ${chk} onchange="${onChangeFn}">
+      <input type="checkbox" id="${id}" aria-label="${esc(label)}" title="${esc(label)}" ${chk} onchange="${onChangeFn}">
       <div class="sk-toggle-track"><div class="sk-toggle-thumb"></div></div>
       <span class="sk-toggle-label">${esc(label)}</span>
     </label>`;
@@ -330,12 +375,12 @@ window.SKComponents = (() => {
      PAGE HEADER
      ───────────────────────────────────────────────────────── */
   function pageHeader(title, subtitle, actionsHtml = '') {
-    return `<div class="sk-page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    return `<div class="sk-page-header sk-ex-61701fbf">
       <div>
         <h1 class="sk-page-title">${esc(title)}</h1>
         ${subtitle ? `<p class="sk-page-subtitle">${esc(subtitle)}</p>` : ''}
       </div>
-      ${actionsHtml ? `<div style="display:flex;gap:0.5rem;flex-wrap:wrap">${actionsHtml}</div>` : ''}
+      ${actionsHtml ? `<div class="sk-ex-44eb278d">${actionsHtml}</div>` : ''}
     </div>`;
   }
 
@@ -345,12 +390,12 @@ window.SKComponents = (() => {
   function availabilityBadge(isAvailable, size = 'default') {
     if (isAvailable) {
       return `<span class="sk-badge sk-badge-success">
-        <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block" class="sk-pulse-dot"></span>
+        <span class="sk-pulse-dot sk-ex-7936b8b6"></span>
         Available
       </span>`;
     }
     return `<span class="sk-badge sk-badge-neutral">
-      <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block"></span>
+      <span class="sk-ex-7936b8b6"></span>
       Unavailable
     </span>`;
   }

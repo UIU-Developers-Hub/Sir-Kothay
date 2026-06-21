@@ -124,9 +124,9 @@ function renderCombinedSchedules() {
       '<div class="sk-schedule-meta">Duration: ' + escapeHtml(durText) + (s.last_triggered_at ? ' &middot; Last ran: ' + escapeHtml(timeAgo(s.last_triggered_at)) : '') + '</div>' +
       '</div></div>' +
       '<div class="sk-schedule-actions">' +
-      '<button onclick="toggleSchedule(' + s.id + ',' + s.is_active + ')" class="sk-btn sk-btn-secondary sk-btn-sm">' + (s.is_active ? '<i class="bi bi-pause-fill"></i> Pause' : '<i class="bi bi-play-fill"></i> Resume') + '</button>' +
-      '<button onclick="openEditScheduleModalFromList(' + s.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon" title="Edit schedule"><i class="bi bi-pencil"></i></button>' +
-      '<button onclick="deleteSchedule(' + s.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete schedule"><i class="bi bi-trash"></i></button>' +
+      '<button type="button" onclick="toggleSchedule(' + s.id + ',' + s.is_active + ')" class="sk-btn sk-btn-secondary sk-btn-sm">' + (s.is_active ? '<i class="bi bi-pause-fill"></i> Pause' : '<i class="bi bi-play-fill"></i> Resume') + '</button>' +
+      '<button type="button" onclick="openEditScheduleModalFromList(' + s.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon" title="Edit schedule"><i class="bi bi-pencil"></i></button>' +
+      '<button type="button" onclick="deleteSchedule(' + s.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete schedule"><i class="bi bi-trash"></i></button>' +
       '</div></div>';
   }).join('');
 
@@ -145,16 +145,16 @@ function renderCombinedSchedules() {
 
     return '<div class="sk-schedule-item">' +
       '<div class="sk-schedule-main">' +
-      '<div class="sk-schedule-icon ' + activeClass + '" style="background: ' + iconBg + '; color: ' + iconColor + '; border: ' + iconBorder + '"><i class="bi bi-calendar-event"></i></div>' +
+      '<div class="sk-schedule-icon ' + activeClass + ' ' + SKDynamicStyles.classFor('background: ' + iconBg + '; color: ' + iconColor + '; border: ' + iconBorder) + '"><i class="bi bi-calendar-event"></i></div>' +
       '<div class="sk-schedule-copy">' +
-      '<div class="sk-schedule-title"><span class="sk-status-dot ' + activeClass + '" style="' + (isActive ? 'background: ' + (e.color || '#f68b1f') : '') + '"></span>' + escapeHtml(dateStr) + ' at ' + escapeHtml(timeStr) + '</div>' +
+      '<div class="sk-schedule-title"><span class="sk-status-dot ' + activeClass + (isActive ? ' ' + SKDynamicStyles.classFor('background: ' + (e.color || '#f68b1f')) : '') + '"></span>' + escapeHtml(dateStr) + ' at ' + escapeHtml(timeStr) + '</div>' +
       '<div class="sk-schedule-message">' + escapeHtml(e.title) + '</div>' +
       '<div class="sk-schedule-meta">Ends: ' + escapeHtml(endDateStr) + '</div>' +
       '</div></div>' +
       '<div class="sk-schedule-actions">' +
-      '<button onclick="toggleEvent(' + e.id + ',' + isActive + ')" class="sk-btn sk-btn-secondary sk-btn-sm">' + (isActive ? '<i class="bi bi-pause-fill"></i> Pause' : '<i class="bi bi-play-fill"></i> Resume') + '</button>' +
-      '<button onclick="openEditEventModal(' + e.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon" title="Edit event"><i class="bi bi-pencil"></i></button>' +
-      '<button onclick="deleteEventFromList(' + e.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete event"><i class="bi bi-trash"></i></button>' +
+      '<button type="button" onclick="toggleEvent(' + e.id + ',' + isActive + ')" class="sk-btn sk-btn-secondary sk-btn-sm">' + (isActive ? '<i class="bi bi-pause-fill"></i> Pause' : '<i class="bi bi-play-fill"></i> Resume') + '</button>' +
+      '<button type="button" onclick="openEditEventModal(' + e.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon" title="Edit event"><i class="bi bi-pencil"></i></button>' +
+      '<button type="button" onclick="deleteEventFromList(' + e.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete event"><i class="bi bi-trash"></i></button>' +
       '</div></div>';
   }).join('');
 

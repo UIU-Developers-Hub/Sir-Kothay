@@ -273,16 +273,16 @@ function _stuRenderDetail(thread, options) {
   // Header
   var facHeaderAvatar = resolveProfileImage(fac.profile_image_url);
   var headerHtml =
-    '<button onclick="_stuBackToList()" class="sk-btn sk-btn-ghost sk-btn-icon sk-chat-back" title="Back"><i class="bi bi-arrow-left"></i></button>' +
+    '<button type="button" onclick="_stuBackToList()" class="sk-btn sk-btn-ghost sk-btn-icon sk-chat-back" title="Back"><i class="bi bi-arrow-left"></i></button>' +
     _stuHeaderAvatar(facHeaderAvatar, fac.username || 'Faculty') +
     '<div class="sk-chat-header-main">' +
       '<p class="sk-chat-header-title">' + _esc(fac.username || 'Faculty') + '</p>' +
       '<p class="sk-chat-header-meta">' + _esc(thread.subject) + ' · ' + _stuStatusLabel(thread.status) + '</p>' +
     '</div>' +
     '<div class="sk-chat-header-actions">' +
-      (fac.slug ? '<a href="../broadcast/message.html?user=' + fac.slug + '" target="_blank" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-box-arrow-up-right"></i> Profile</a>' : '') +
-      (thread.status !== 'CLOSED' ? '<button onclick="_stuCloseThread(' + thread.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Close"><i class="bi bi-x-circle"></i></button>' : '') +
-      '<button onclick="_stuDeleteThread(' + thread.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete"><i class="bi bi-trash"></i></button>' +
+      (fac.slug ? '<a href="../broadcast/message.html?user=' + fac.slug + '" target="_blank" rel="noopener" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-box-arrow-up-right"></i> Profile</a>' : '') +
+      (thread.status !== 'CLOSED' ? '<button type="button" onclick="_stuCloseThread(' + thread.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Close"><i class="bi bi-x-circle"></i></button>' : '') +
+      '<button type="button" onclick="_stuDeleteThread(' + thread.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete"><i class="bi bi-trash"></i></button>' +
     '</div>';
   document.getElementById('stuChatHeader').innerHTML = headerHtml;
 
@@ -314,7 +314,7 @@ function _stuRenderDetail(thread, options) {
     document.getElementById('stuChatReplyBar').innerHTML =
       '<div class="sk-chat-reply-form">' +
         '<input type="text" id="stuReplyInput" placeholder="Type a message..." class="sk-input" onkeydown="if(event.key===\'Enter\')_stuSendReply(' + thread.id + ')">' +
-        '<button onclick="_stuSendReply(' + thread.id + ')" class="sk-btn sk-btn-primary"><i class="bi bi-send"></i></button>' +
+        '<button type="button" onclick="_stuSendReply(' + thread.id + ')" class="sk-btn sk-btn-primary" aria-label="Send reply" title="Send reply"><i class="bi bi-send"></i></button>' +
       '</div>';
     if (oldValue) {
       var nextInput = document.getElementById('stuReplyInput');
@@ -327,7 +327,7 @@ function _stuRenderDetail(thread, options) {
       }
     }
   } else {
-    document.getElementById('stuChatReplyBar').innerHTML = '<p class="sk-chat-header-meta" style="text-align:center">This conversation is closed.</p>';
+    document.getElementById('stuChatReplyBar').innerHTML = '<p class="sk-chat-header-meta sk-ex-91a87015">This conversation is closed.</p>';
   }
 
   // Scroll to bottom
@@ -495,10 +495,10 @@ async function initiateNewChat(facultyId, facultySlug, facultyName) {
 
   // Show initiation form in a modal
   var formHtml =
-    '<p style="font-size:var(--sk-text-sm);color:var(--sk-text-secondary);margin-bottom:1rem">Start a conversation with <strong>' + _esc(facultyName) + '</strong>.</p>' +
-    '<input type="text" id="chatSubjectInput" placeholder="Subject (e.g. Office hours query)" class="sk-input" style="margin-bottom:0.75rem">' +
-    '<textarea id="chatBodyInput" placeholder="Your message..." class="sk-textarea" rows="3" style="margin-bottom:0.75rem"></textarea>' +
-    '<button onclick="_submitNewChat(' + facultyId + ')" class="sk-btn sk-btn-primary" style="width:100%"><i class="bi bi-send"></i> Send</button>';
+    '<p class="sk-ex-6d02023b">Start a conversation with <strong>' + _esc(facultyName) + '</strong>.</p>' +
+    '<input type="text" id="chatSubjectInput" placeholder="Subject (e.g. Office hours query)" class="sk-input sk-ex-c05a3c6e">' +
+    '<textarea id="chatBodyInput" placeholder="Your message..." class="sk-textarea sk-ex-c05a3c6e" rows="3"></textarea>' +
+    '<button type="button" onclick="_submitNewChat(' + facultyId + ')" class="sk-btn sk-btn-primary sk-ex-0466783d"><i class="bi bi-send"></i> Send</button>';
   skModal.open(formHtml, { title: 'New Chat' });
 }
 
@@ -538,9 +538,9 @@ function _switchToMessagesTab() {
 
 // Helpers
 function _stuStatusLabel(s) {
-  if (s === 'PENDING') return '<span style="color:#b45309">Awaiting</span>';
-  if (s === 'ACTIVE') return '<span style="color:var(--sk-success)">Open</span>';
-  return '<span style="color:var(--sk-text-placeholder)">Closed</span>';
+  if (s === 'PENDING') return '<span class="sk-ex-6ddf2aac">Awaiting</span>';
+  if (s === 'ACTIVE') return '<span class="sk-ex-3998b87e">Open</span>';
+  return '<span class="sk-ex-d2f2b222">Closed</span>';
 }
 
 function _stuAgo(d) {

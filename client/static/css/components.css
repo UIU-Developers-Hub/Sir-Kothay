@@ -146,6 +146,7 @@ img { max-width: 100%; height: auto; display: block; }
   cursor: pointer;
   transition: all var(--sk-transition-base);
   white-space: nowrap;
+  -webkit-user-select: none;
   user-select: none;
   outline: none;
   position: relative;
@@ -218,6 +219,7 @@ img { max-width: 100%; height: auto; display: block; }
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
   border-color: rgba(239, 68, 68, 0.3);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
@@ -3612,8 +3614,7 @@ img { max-width: 100%; height: auto; display: block; }
 .tab-btn:hover { color: var(--sk-text-primary); }
 .tab-btn.active { color: var(--sk-primary); border-bottom-color: var(--sk-primary); }
 
-/* .tab-content alias — sections shown/hidden via .hidden class by JS */
-.tab-content { /* visible by default unless .hidden is added by JS */ }
+/* .tab-content sections are visible by default unless .hidden is added by JS. */
 
 /* .hover-scale — used by old card elements */
 .hover-scale { transition: border-color 200ms ease-in-out, box-shadow 200ms ease-in-out; }
@@ -4034,7 +4035,7 @@ img { max-width: 100%; height: auto; display: block; }
 .duration-200 { transition-duration: 200ms; }
 .cursor-pointer { cursor: pointer; }
 .cursor-default { cursor: default; }
-.select-none { user-select: none; }
+.select-none { -webkit-user-select: none; user-select: none; }
 .backdrop-blur-sm { backdrop-filter: none; -webkit-backdrop-filter: none; }
 
 .ring-2 { box-shadow: 0 0 0 2px currentColor; }
