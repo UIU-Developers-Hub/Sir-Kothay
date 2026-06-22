@@ -107,14 +107,9 @@ window.SKLayout = (() => {
     return status;
   }
 
-  function renderBackendUnavailableState(options) {
+  function backendUnavailableStateHtml(options) {
     options = options || {};
-    const loadingState = document.getElementById('loadingState');
-    if (!loadingState) return;
-    loadingState.classList.remove('hidden');
-    const mainContent = document.getElementById('mainContent');
-    if (mainContent) mainContent.classList.add('hidden');
-    loadingState.innerHTML = `
+    return `
       <div class="sk-empty-state compact">
         <div class="sk-empty-icon"><i class="bi ${options.icon || 'bi-wifi-off'}"></i></div>
         <div class="sk-empty-title">${SKUtils.escapeHtml(options.title || 'Backend unavailable')}</div>
@@ -124,6 +119,15 @@ window.SKLayout = (() => {
         </button>
       </div>
     `;
+  }
+
+  function renderBackendUnavailableState(options) {
+    const loadingState = document.getElementById('loadingState');
+    if (!loadingState) return;
+    loadingState.classList.remove('hidden');
+    const mainContent = document.getElementById('mainContent');
+    if (mainContent) mainContent.classList.add('hidden');
+    loadingState.innerHTML = backendUnavailableStateHtml(options);
   }
 
   async function retryBackend() {
@@ -1043,6 +1047,7 @@ window.SKLayout = (() => {
     setupPublicNav,
     retryBackend,
     renderOfflineStaticNav,
+    backendUnavailableStateHtml,
     setNavBadge,
     loadFooterContributors
   };

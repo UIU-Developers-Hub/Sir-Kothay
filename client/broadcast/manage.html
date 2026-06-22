@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Manage Notifications - Sir Kothay</title>
     <meta name="description" content="Sir Kothay - Manage your subscriptions and direct messages.">
-    <link rel="stylesheet" href="../static/css/style.css?v=nav-skeleton-1">
+    <link rel="stylesheet" href="../static/css/style.css?v=manage-skeleton-1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   </head>
   <body>
@@ -19,7 +19,23 @@
             <div class="sk-auth-blob sk-auth-blob-1"></div>
             <div class="sk-auth-blob sk-auth-blob-2"></div>
             
-            <div class="sk-auth-card sk-fade-up sk-ex-6a9c8533">
+            <div id="manageSkeleton" class="sk-auth-card sk-fade-up sk-ex-6a9c8533 manage-loading-card" aria-hidden="true">
+              <div class="manage-loading-logo">
+                <span class="sk-skeleton manage-loading-logo-mark"></span>
+                <span class="sk-skeleton manage-loading-logo-text"></span>
+              </div>
+              <span class="sk-skeleton manage-loading-title"></span>
+              <span class="sk-skeleton manage-loading-subtitle"></span>
+              <div class="manage-loading-panel">
+                <span class="sk-skeleton manage-loading-icon"></span>
+                <span class="sk-skeleton manage-loading-copy"></span>
+                <span class="sk-skeleton manage-loading-copy manage-loading-copy-short"></span>
+              </div>
+              <span class="sk-skeleton manage-loading-input"></span>
+              <span class="sk-skeleton manage-loading-button"></span>
+            </div>
+
+            <div id="manageCard" class="sk-auth-card sk-fade-up sk-ex-6a9c8533 hidden">
               <div class="sk-auth-logo">
                 <img src="../static/images/logo.png" alt="Sir Kothay">
                 <span class="sk-auth-logo-text">Sir <span>Kothay?</span></span>
@@ -27,16 +43,7 @@
               <h1 class="sk-auth-title sk-ex-81e4d4ba">Manage Settings</h1>
               <p id="userEmailHero" class="sk-auth-subtitle sk-ex-e7058847">Control your Sir Kothay interactions</p>
 
-              <div id="manageBackendState" class="hidden">
-                <div class="sk-empty-state compact">
-                  <div class="sk-empty-icon"><i class="bi bi-wifi-off"></i></div>
-                  <div class="sk-empty-title">Backend unavailable</div>
-                  <div class="sk-empty-subtitle">Sir Kothay will reconnect automatically.</div>
-                  <button type="button" class="sk-btn sk-btn-primary sk-btn-sm" onclick="SKLayout.retryBackend()">
-                    <i class="bi bi-arrow-clockwise"></i> Retry
-                  </button>
-                </div>
-              </div>
+              <div id="manageBackendState" class="hidden"></div>
 
               <!-- Auth / Email Form -->
               <div id="emailView" class="hidden">
@@ -95,7 +102,7 @@
     <script src="../static/js/utils.js"></script>
     <script src="../static/js/theme.js?v=live-status-2"></script>
     <script src="../static/js/components.js"></script>
-    <script src="../static/js/layout.js?v=nav-skeleton-1"></script>
+    <script src="../static/js/layout.js?v=backend-state-1"></script>
     <script>
       // Initialize Layout
       document.addEventListener('DOMContentLoaded', () => {
@@ -115,6 +122,7 @@
 
       async function initializeManagePage(options = {}) {
         const currentToken = new URLSearchParams(window.location.search).get('token');
+        showManageLoading();
         document.getElementById('emailView').classList.add('hidden');
         document.getElementById('manageView').classList.add('hidden');
         document.getElementById('manageBackendState').classList.add('hidden');
@@ -130,9 +138,10 @@
         }
 
         if (currentToken) {
-          document.getElementById('manageView').classList.remove('hidden');
           try {
             await loadData(null, currentToken);
+            document.getElementById('manageView').classList.remove('hidden');
+            showManageContent();
           } catch (e) {
             if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() !== 'online') {
               showManageBackendUnavailable();
@@ -140,24 +149,54 @@
             }
             document.getElementById('userEmailHero').textContent = 'Error loading settings: ' + e.message;
             document.getElementById('userEmailHero').style.color = 'var(--sk-error)';
+            showManageContent();
           }
         } else {
           document.getElementById('emailView').classList.remove('hidden');
+          showManageContent();
           if (!options.silent) document.getElementById('emailInput').focus();
         }
       }
 
+      function showManageLoading() {
+        const skeleton = document.getElementById('manageSkeleton');
+        const card = document.getElementById('manageCard');
+        if (skeleton) skeleton.classList.remove('hidden');
+        if (card) card.classList.add('hidden');
+      }
+
+      function showManageContent() {
+        const skeleton = document.getElementById('manageSkeleton');
+        const card = document.getElementById('manageCard');
+        if (skeleton) skeleton.classList.add('hidden');
+        if (card) card.classList.remove('hidden');
+      }
 
       function showManageBackendUnavailable() {
-        if (window.SKBackendStatus && SKBackendStatus.markOffline) {
+        if (window.SKBackendStatus && SKBackendStatus.markOffline && (!SKBackendStatus.getState || SKBackendStatus.getState() !== 'offline')) {
           SKBackendStatus.markOffline({ reason: 'manage-page' });
         }
         if (window.SKLayout && SKLayout.renderOfflineStaticNav) {
           SKLayout.renderOfflineStaticNav('home', { hideAuth: true });
         }
+        const backendState = document.getElementById('manageBackendState');
+        if (backendState && window.SKLayout && SKLayout.backendUnavailableStateHtml) {
+          backendState.innerHTML = SKLayout.backendUnavailableStateHtml({
+            subtitle: 'Sir Kothay will reconnect automatically.'
+          });
+        } else if (backendState) {
+          backendState.innerHTML = '<div class="sk-empty-state compact">' +
+            '<div class="sk-empty-icon"><i class="bi bi-wifi-off"></i></div>' +
+            '<div class="sk-empty-title">Backend unavailable</div>' +
+            '<div class="sk-empty-subtitle">Sir Kothay will reconnect automatically.</div>' +
+            '<button type="button" class="sk-btn sk-btn-primary sk-btn-sm" onclick="SKLayout.retryBackend()">' +
+            '<i class="bi bi-arrow-clockwise"></i> Retry</button>' +
+            '</div>';
+        }
         document.getElementById('emailView').classList.add('hidden');
         document.getElementById('manageView').classList.add('hidden');
         document.getElementById('manageBackendState').classList.remove('hidden');
+        showManageContent();
       }
 
       function showToast(msg) {
@@ -188,24 +227,32 @@
           el.classList.remove('hidden');
           return;
         }
+        showManageLoading();
+        document.getElementById('manageBackendState').classList.add('hidden');
+        document.getElementById('emailView').classList.add('hidden');
+        document.getElementById('manageView').classList.add('hidden');
         try {
           await loadData(email, null);
-          document.getElementById('emailView').classList.add('hidden');
           document.getElementById('manageView').classList.remove('hidden');
+          showManageContent();
         } catch (e) {
           if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() !== 'online') {
             showManageBackendUnavailable();
             return;
           }
+          document.getElementById('emailView').classList.remove('hidden');
           el.textContent = e.message || 'An error occurred. Please try again.';
           el.style.color = 'var(--sk-error)';
           el.classList.remove('hidden');
+          showManageContent();
         }
       }
 
       function resetManageEmailView() {
+        document.getElementById('manageBackendState').classList.add('hidden');
         document.getElementById('manageView').classList.add('hidden');
         document.getElementById('emailView').classList.remove('hidden');
+        showManageContent();
         document.getElementById('emailInput').value = '';
         const result = document.getElementById('emailResult');
         if (result) result.classList.add('hidden');

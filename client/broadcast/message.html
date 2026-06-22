@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Broadcast - Sir Kothay</title>
     <meta name="description" content="Sir Kothay - Faculty broadcast page. See availability and send messages.">
-    <link rel="stylesheet" href="../static/css/style.css?v=nav-skeleton-1">
+    <link rel="stylesheet" href="../static/css/style.css?v=contact-value-1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   </head>
   <body>
@@ -19,7 +19,65 @@
 
       <!-- Main Content -->
       <main id="broadcastMain" class="bc-container">
-        <div class="bc-card">
+        <div id="broadcastSkeleton" class="bc-card bc-loading-card" aria-hidden="true">
+          <div class="bc-hero bc-loading-hero">
+            <span class="sk-skeleton bc-loading-avatar"></span>
+            <span class="sk-skeleton bc-loading-title"></span>
+          </div>
+          <div class="bc-msg-section bc-loading-message">
+            <span class="sk-skeleton bc-loading-label"></span>
+            <span class="sk-skeleton bc-loading-panel"></span>
+          </div>
+          <div class="bc-info-list">
+            <div class="bc-info-row">
+              <div class="bc-info-left">
+                <span class="sk-skeleton bc-loading-icon"></span>
+                <span class="bc-loading-copy">
+                  <span class="sk-skeleton bc-loading-text bc-loading-text-sm"></span>
+                  <span class="sk-skeleton bc-loading-text"></span>
+                </span>
+              </div>
+              <span class="bc-info-actions">
+                <span class="sk-skeleton bc-loading-action"></span>
+              </span>
+            </div>
+            <div class="bc-info-row">
+              <div class="bc-info-left">
+                <span class="sk-skeleton bc-loading-icon"></span>
+                <span class="bc-loading-copy">
+                  <span class="sk-skeleton bc-loading-text bc-loading-text-sm"></span>
+                  <span class="sk-skeleton bc-loading-text bc-loading-text-wide"></span>
+                </span>
+              </div>
+              <span class="bc-info-actions">
+                <span class="sk-skeleton bc-loading-action"></span>
+              </span>
+            </div>
+            <div class="bc-info-row">
+              <div class="bc-info-left">
+                <span class="sk-skeleton bc-loading-icon"></span>
+                <span class="bc-loading-copy">
+                  <span class="sk-skeleton bc-loading-text bc-loading-text-sm"></span>
+                  <span class="sk-skeleton bc-loading-text bc-loading-text-mid"></span>
+                </span>
+              </div>
+              <span class="bc-info-actions">
+                <span class="sk-skeleton bc-loading-action"></span>
+              </span>
+            </div>
+          </div>
+          <div class="bc-section">
+            <span class="sk-skeleton bc-loading-pill"></span>
+          </div>
+          <div class="bc-section bc-loading-buttons">
+            <span class="sk-skeleton bc-loading-button"></span>
+            <span class="sk-skeleton bc-loading-button"></span>
+          </div>
+        </div>
+
+        <div id="broadcastBackendState" class="bc-card hidden"></div>
+
+        <div id="broadcastCard" class="bc-card hidden">
           <!-- Hero Section -->
           <div class="bc-hero">
             <img id="userImage" src="../static/images/image.png" alt="User" class="bc-avatar">
@@ -44,7 +102,9 @@
                   <a id="userPhone" href="tel:" class="bc-info-value">Loading...</a>
                 </div>
               </div>
-              <button type="button" id="copyPhone" class="bc-copy-btn" title="Copy"><i class="bi bi-clipboard"></i></button>
+              <div class="bc-info-actions">
+                <button type="button" id="copyPhone" class="bc-action-btn bc-copy-btn" title="Copy Phone" aria-label="Copy Phone"><i class="bi bi-clipboard"></i></button>
+              </div>
             </div>
 
             <div class="bc-info-row">
@@ -55,7 +115,9 @@
                   <a id="userEmail" href="mailto:" class="bc-info-value">Loading...</a>
                 </div>
               </div>
-              <button type="button" id="copyEmail" class="bc-copy-btn" title="Copy"><i class="bi bi-clipboard"></i></button>
+              <div class="bc-info-actions">
+                <button type="button" id="copyEmail" class="bc-action-btn bc-copy-btn" title="Copy Email" aria-label="Copy Email"><i class="bi bi-clipboard"></i></button>
+              </div>
             </div>
 
             <div class="bc-info-row">
@@ -66,7 +128,9 @@
                   <p id="userOrg" class="bc-info-value sk-ex-2a9295c3">Loading...</p>
                 </div>
               </div>
-              <button type="button" id="copyOrg" class="bc-copy-btn" title="Copy"><i class="bi bi-clipboard"></i></button>
+              <div class="bc-info-actions">
+                <button type="button" id="copyOrg" class="bc-action-btn bc-copy-btn" title="Copy Organization" aria-label="Copy Organization"><i class="bi bi-clipboard"></i></button>
+              </div>
             </div>
           </div>
 
@@ -196,7 +260,7 @@
     <script src="../static/js/api.js"></script>
     <script src="../static/js/components.js"></script>
     <script src="../static/js/theme.js?v=live-status-2"></script>
-    <script src="../static/js/layout.js?v=nav-skeleton-1"></script>
+    <script src="../static/js/layout.js?v=backend-state-1"></script>
     <script>
       // Initialize Layout
       document.addEventListener('DOMContentLoaded', () => {
@@ -212,72 +276,230 @@
       const userSlug =
         urlParams.get("user") ||
         window.location.pathname.split("/").pop().replace(".html", "");
+      const BROADCAST_LIVE_INTERVAL_MS = 10000;
+      let broadcastLiveTimer = null;
+      let broadcastLiveInFlight = false;
+      let broadcastReconnectInFlight = false;
+      let broadcastHasLoaded = false;
+      let broadcastPageViewTracked = false;
 
       // Load user data
-      async function loadUserData() {
+      async function loadUserData(options) {
+        options = options || {};
+        var silent = !!options.silent;
+        if (!silent) showBroadcastLoading();
+        if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() === 'offline') {
+          showBroadcastBackendUnavailable();
+          return;
+        }
+
         try {
-          const response = await fetch(
-            `${API_BASE_URL}/api/broadcast/${userSlug}/`,
-          );
+          const data = await fetchBroadcastData();
 
-          if (!response.ok) {
-            throw new Error(
-              `API returned ${response.status}: Endpoint not implemented`,
-            );
+          applyBroadcastData(data, { focusMessage: !silent && !broadcastHasLoaded });
+          if (!broadcastPageViewTracked) {
+            trackPageVisit();
+            broadcastPageViewTracked = true;
           }
-
-          const data = await response.json();
-
-          // Update user information
-          document.getElementById("userName").textContent =
-            data.username || data.user_username || "User";
-          document.getElementById("userPhone").textContent =
-            data.phone_number || "N/A";
-          document.getElementById("userPhone").href =
-            `tel:${data.phone_number || ""}`;
-          document.getElementById("userEmail").textContent =
-            data.email || data.user_email || "N/A";
-          document.getElementById("userEmail").href =
-            `mailto:${data.email || data.user_email || ""}`;
-          document.getElementById("userOrg").textContent =
-            data.organization || "N/A";
-
-          if (data.profile_image) {
-            document.getElementById("userImage").src =
-              resolveProfileImage(data.profile_image);
-          }
-
-          // Show broadcast message or default status if exists
-          const displayMsg = data.active_message || data.default_status;
-          if (displayMsg) {
-            document.getElementById("broadcastMessage").textContent = displayMsg;
-            document.getElementById("broadcastSection").classList.remove("hidden");
-            focusBroadcastMessage();
-          }
-
-          // Update availability badge
-          updateAvailBadge(data.is_available, displayMsg);
-
-          // Track this page view for analytics
-          trackPageVisit();
-
-          // Setup copy buttons
-          document.getElementById("copyPhone").onclick = () =>
-            copyToClipboard(data.phone_number || "N/A");
-          document.getElementById("copyEmail").onclick = () =>
-            copyToClipboard(data.email || data.user_email || "N/A");
-          document.getElementById("copyOrg").onclick = () =>
-            copyToClipboard(data.organization || "N/A");
 
           // Apply role-aware behavior (hides/shows buttons based on who's viewing)
           await applyRoleAwareBehavior(data);
+          showBroadcastContent();
+          broadcastHasLoaded = true;
+          if (!silent) startBroadcastLive();
         } catch (error) {
           console.error("Error loading user data:", error);
+          if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() !== 'online') {
+            showBroadcastBackendUnavailable();
+            return;
+          }
+          if (silent && broadcastHasLoaded) return;
           showErrorState(error.message);
         }
       }
 
+      async function fetchBroadcastData() {
+        const response = await fetch(`${API_BASE_URL}/api/broadcast/${userSlug}/`, {
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `API returned ${response.status}: Endpoint not implemented`,
+          );
+        }
+
+        return response.json();
+      }
+
+      function applyBroadcastData(data, options) {
+        options = options || {};
+        var displayName = data.username || data.user_username || "User";
+        var phone = data.phone_number || "N/A";
+        var email = data.email || data.user_email || "N/A";
+        var org = data.organization || "N/A";
+        var image = document.getElementById("userImage");
+        var imageSrc = resolveProfileImage(data.profile_image_url || data.profile_image, '../static/images/image.png');
+        var displayMsg = data.active_message || data.default_status || '';
+        var broadcastSection = document.getElementById("broadcastSection");
+        var broadcastMessage = document.getElementById("broadcastMessage");
+
+        document.getElementById("userName").textContent = displayName;
+        document.getElementById("userPhone").textContent = phone;
+        document.getElementById("userPhone").href = data.phone_number ? `tel:${data.phone_number}` : "tel:";
+        document.getElementById("userEmail").textContent = email;
+        document.getElementById("userEmail").href = (data.email || data.user_email) ? `mailto:${data.email || data.user_email}` : "mailto:";
+        document.getElementById("userOrg").textContent = org;
+
+        if (image) {
+          image.alt = displayName;
+          image.onerror = function () {
+            image.onerror = null;
+            image.src = '../static/images/image.png';
+          };
+          if (image.src !== imageSrc) image.src = imageSrc;
+        }
+
+        if (displayMsg) {
+          broadcastMessage.textContent = displayMsg;
+          broadcastSection.classList.remove("hidden");
+          if (options.focusMessage) focusBroadcastMessage();
+        } else {
+          broadcastMessage.textContent = '';
+          broadcastSection.classList.add("hidden");
+        }
+
+        updateAvailBadge(data.is_available, displayMsg);
+
+        document.getElementById("copyPhone").onclick = () =>
+          copyToClipboard(data.phone_number || "N/A");
+        document.getElementById("copyEmail").onclick = () =>
+          copyToClipboard(data.email || data.user_email || "N/A");
+        document.getElementById("copyOrg").onclick = () =>
+          copyToClipboard(data.organization || "N/A");
+      }
+
+      async function refreshBroadcastLive() {
+        if (document.visibilityState === 'hidden') return;
+        if (window.SKBackendStatus && window.SKBackendStatus.getState && window.SKBackendStatus.getState() === 'offline') return;
+        await loadUserData({ silent: true });
+      }
+
+      function scheduleBroadcastLive() {
+        if (broadcastLiveTimer) window.clearTimeout(broadcastLiveTimer);
+        if (document.visibilityState === 'hidden') return;
+        if (!broadcastHasLoaded) return;
+        broadcastLiveTimer = window.setTimeout(broadcastLiveTick, BROADCAST_LIVE_INTERVAL_MS);
+      }
+
+      async function broadcastLiveTick() {
+        if (broadcastLiveInFlight) {
+          scheduleBroadcastLive();
+          return;
+        }
+        broadcastLiveInFlight = true;
+        try {
+          await refreshBroadcastLive();
+        } catch (e) {
+          // Global backend status handles connection failures.
+        } finally {
+          broadcastLiveInFlight = false;
+          scheduleBroadcastLive();
+        }
+      }
+
+      function startBroadcastLive() {
+        scheduleBroadcastLive();
+      }
+
+      function stopBroadcastLive() {
+        if (broadcastLiveTimer) window.clearTimeout(broadcastLiveTimer);
+        broadcastLiveTimer = null;
+      }
+
+      async function refreshBroadcastAfterReconnect() {
+        if (broadcastReconnectInFlight) return;
+        broadcastReconnectInFlight = true;
+        try {
+          await loadUserData({ silent: broadcastHasLoaded });
+          startBroadcastLive();
+        } finally {
+          broadcastReconnectInFlight = false;
+        }
+      }
+
+      window.addEventListener('sk:backend-restored', function () {
+        refreshBroadcastAfterReconnect();
+      });
+      window.addEventListener('sk:backend-status', function (event) {
+        if (event.detail && event.detail.status === 'offline') {
+          stopBroadcastLive();
+          showBroadcastBackendUnavailable();
+        }
+      });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+          startBroadcastLive();
+          if (broadcastHasLoaded) refreshBroadcastLive();
+        } else {
+          stopBroadcastLive();
+        }
+      });
+
+      function backendUnavailableHtml() {
+        if (window.SKLayout && SKLayout.backendUnavailableStateHtml) {
+          return SKLayout.backendUnavailableStateHtml({
+            subtitle: 'Sir Kothay will reconnect automatically.'
+          });
+        }
+        return '<div class="sk-empty-state compact">' +
+          '<div class="sk-empty-icon"><i class="bi bi-wifi-off"></i></div>' +
+          '<div class="sk-empty-title">Backend unavailable</div>' +
+          '<div class="sk-empty-subtitle">Sir Kothay will reconnect automatically.</div>' +
+          '<button type="button" class="sk-btn sk-btn-primary sk-btn-sm" onclick="SKLayout.retryBackend()">' +
+          '<i class="bi bi-arrow-clockwise"></i> Retry</button>' +
+          '</div>';
+      }
+
+      function showBroadcastLoading() {
+        var skeleton = document.getElementById("broadcastSkeleton");
+        var card = document.getElementById("broadcastCard");
+        var backendState = document.getElementById("broadcastBackendState");
+        if (skeleton) skeleton.classList.remove("hidden");
+        if (card) card.classList.add("hidden");
+        if (backendState) backendState.classList.add("hidden");
+      }
+
+      function showBroadcastContent() {
+        var skeleton = document.getElementById("broadcastSkeleton");
+        var card = document.getElementById("broadcastCard");
+        var backendState = document.getElementById("broadcastBackendState");
+        if (skeleton) skeleton.classList.add("hidden");
+        if (backendState) backendState.classList.add("hidden");
+        if (card) card.classList.remove("hidden");
+      }
+
+      function showBroadcastBackendUnavailable() {
+        stopBroadcastLive();
+        if (window.SKBackendStatus && SKBackendStatus.markOffline && (!SKBackendStatus.getState || SKBackendStatus.getState() !== 'offline')) {
+          SKBackendStatus.markOffline({ reason: 'broadcast-page' });
+        }
+        if (window.SKLayout && SKLayout.renderOfflineStaticNav) {
+          SKLayout.renderOfflineStaticNav('home', { hideAuth: true });
+        }
+        var skeleton = document.getElementById("broadcastSkeleton");
+        var card = document.getElementById("broadcastCard");
+        var backendState = document.getElementById("broadcastBackendState");
+        if (backendState) {
+          backendState.innerHTML = backendUnavailableHtml();
+          backendState.classList.remove("hidden");
+        }
+        if (skeleton) skeleton.classList.add("hidden");
+        if (card) card.classList.add("hidden");
+      }
+
       function showErrorState(errorMsg) {
+        showBroadcastContent();
         document.getElementById("userName").textContent = "User Not Found";
         document.getElementById("userPhone").textContent = "Endpoint Missing";
         document.getElementById("userEmail").textContent = "See Console";

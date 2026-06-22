@@ -8,9 +8,24 @@ var _chatListSignature = '';
 var _activeConvoSignature = '';
 var FACULTY_CHAT_LIVE_INTERVAL_MS = 3000;
 
+function _chatTokenUserId() {
+  var token = localStorage.getItem('access_token');
+  if (!token) return null;
+  try {
+    var payload = token.split('.')[1];
+    if (!payload) return null;
+    var base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) base64 += '=';
+    var decoded = JSON.parse(atob(base64));
+    return decoded.user_id || decoded.id || decoded.sub || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 function _chatCurrentUserId() {
   var user = window.SKLayout && SKLayout.getUser ? SKLayout.getUser() : null;
-  return user && user.id ? user.id : null;
+  return user && user.id ? user.id : _chatTokenUserId();
 }
 
 function _chatSeenStorageKey() {

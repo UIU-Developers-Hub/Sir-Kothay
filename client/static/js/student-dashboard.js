@@ -1,8 +1,42 @@
 let currentUser = null;
 let studentDashboardLiveTimer = null;
 let studentDashboardLiveInFlight = false;
+let studentDashboardBadgeRefreshInFlight = false;
 const studentTabLoaded = {};
 const STUDENT_DASHBOARD_LIVE_INTERVAL_MS = 10000;
+
+function setStudentSummaryLoading(isLoading) {
+    var card = document.getElementById('studentSummaryCard');
+    if (card) card.classList.toggle('sk-summary-loading', !!isLoading);
+}
+
+function hydrateStudentUserFromToken() {
+    if (currentUser && currentUser.id) return currentUser;
+    var token = localStorage.getItem('access_token');
+    if (!token) return currentUser;
+    try {
+        var payload = token.split('.')[1];
+        if (!payload) return currentUser;
+        var base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) base64 += '=';
+        var decoded = JSON.parse(atob(base64));
+        var userId = decoded.user_id || decoded.id || decoded.sub;
+        if (userId) currentUser = Object.assign({}, currentUser || {}, { id: userId });
+    } catch (e) {}
+    return currentUser;
+}
+
+function queueStudentDashboardBadgeRefresh(activeTab) {
+    activeTab = activeTab || getActiveStudentTab();
+    if (studentDashboardBadgeRefreshInFlight) return;
+    studentDashboardBadgeRefreshInFlight = true;
+    Promise.resolve()
+        .then(function () { return refreshStudentDashboardBadges(activeTab); })
+        .catch(function (e) { console.warn('Student dashboard badge refresh unavailable:', e); })
+        .finally(function () {
+            studentDashboardBadgeRefreshInFlight = false;
+        });
+}
 
 function updateStudentSummaryProfile(details) {
     var image = document.getElementById('userImage');
@@ -38,6 +72,21 @@ async function refreshStudentAvailableCount() {
         console.warn('Student available count unavailable:', e);
         return null;
     }
+}
+
+async function refreshStudentDashboardBadges(activeTab) {
+    hydrateStudentUserFromToken();
+    activeTab = activeTab || getActiveStudentTab();
+    var tasks = [];
+
+    if (activeTab !== 'messages' && typeof refreshStudentChatBadge === 'function') {
+        tasks.push(refreshStudentChatBadge());
+    }
+    if (activeTab !== 'feed' && typeof refreshStudentFeedBadge === 'function') {
+        tasks.push(refreshStudentFeedBadge());
+    }
+
+    if (tasks.length) await Promise.all(tasks);
 }
 
 function showNotifyModal(msg, variant) {
@@ -334,6 +383,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initialTab = await activateStudentTab(initialTab, { updateUrl: false, loadData: false });
     renderStudentTabSkeleton(initialTab);
     showStudentDashboardShell();
+    hydrateStudentUserFromToken();
+    queueStudentDashboardBadgeRefresh(initialTab);
     
     // Setup tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -390,6 +441,7 @@ async function loadStudentData() {
         }
         updateStudentSummaryProfile(userDetails);
         await refreshStudentAvailableCount();
+        setStudentSummaryLoading(false);
         
         showStudentDashboardShell();
 
@@ -615,6 +667,44 @@ function inlineJsString(value) {
     return escapeHtml(String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\r\n]+/g, ' '));
 }
 
+function renderCopyableContactRow(icon, iconTone, value, label, openHref) {
+    if (!value) return '';
+    var safeValue = escapeHtml(value);
+    var inlineValue = inlineJsString(value);
+    var safeLabel = escapeHtml(label || 'detail');
+    var safeOpenHref = openHref ? escapeHtml(openHref) : '';
+    var tone = iconTone ? ' ' + iconTone : '';
+    var valueMarkup = safeOpenHref
+        ? '<a href="' + safeOpenHref + '" class="sk-contact-value" title="Open ' + safeLabel + '" aria-label="Open ' + safeLabel + '">' + safeValue + '</a>'
+        : '<span class="sk-contact-value">' + safeValue + '</span>';
+    return '<div class="sk-contact-row">' +
+        '<div class="sk-contact-icon' + tone + '"><i class="bi ' + icon + '"></i></div>' +
+        valueMarkup +
+        '<div class="sk-contact-actions">' +
+            '<button type="button" class="sk-contact-action sk-contact-copy" onclick="copyFacultyDetail(this, \'' + inlineValue + '\', \'' + inlineJsString(label || 'detail') + '\')" title="Copy ' + safeLabel + '" aria-label="Copy ' + safeLabel + '">' +
+                '<i class="bi bi-copy"></i>' +
+            '</button>' +
+        '</div>' +
+    '</div>';
+}
+
+async function copyFacultyDetail(button, value, label) {
+    var ok = false;
+    if (window.SKUtils && SKUtils.copyToClipboard) {
+        ok = await SKUtils.copyToClipboard(value);
+    }
+    if (!ok) return;
+    if (button) {
+        var icon = button.querySelector('i');
+        if (icon) icon.className = 'bi bi-check2';
+        button.classList.add('copied');
+        window.setTimeout(function () {
+            if (icon) icon.className = 'bi bi-copy';
+            button.classList.remove('copied');
+        }, 1200);
+    }
+}
+
 function getFacultyDisplayStatus(fac) {
     if (!fac) return '';
     return ((fac.active_message || fac.default_status || '') + '').trim();
@@ -793,9 +883,9 @@ function viewFacultyProfile(facultyId) {
     const chatMeta = getChatButtonMeta(interest.faculty);
     const publicHref = '../broadcast/message.html?user=' + encodeURIComponent(fac.slug || '');
     const contactRows = [
-        fac.user_email ? `<div class="sk-contact-row"><div class="sk-contact-icon"><i class="bi bi-envelope"></i></div><span>${escapeHtml(fac.user_email)}</span></div>` : '',
-        fac.phone_number ? `<div class="sk-contact-row"><div class="sk-contact-icon success"><i class="bi bi-telephone"></i></div><span>${escapeHtml(fac.phone_number)}</span></div>` : '',
-        fac.bio ? `<div class="sk-contact-row"><div class="sk-contact-icon neutral"><i class="bi bi-person-lines-fill"></i></div><span>${escapeHtml(fac.bio)}</span></div>` : ''
+        renderCopyableContactRow('bi-envelope', '', fac.user_email, 'Email', fac.user_email ? 'mailto:' + fac.user_email : ''),
+        renderCopyableContactRow('bi-telephone', 'success', fac.phone_number, 'Phone', fac.phone_number ? 'tel:' + fac.phone_number : ''),
+        renderCopyableContactRow('bi-building', 'neutral', fac.organization || 'UIU', 'Organization')
     ].join('');
     
     const content = `

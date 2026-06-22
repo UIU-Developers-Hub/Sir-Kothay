@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Student Dashboard - Sir Kothay</title>
   <meta name="description" content="Student Dashboard - Track faculty availability and messages">
-  <link rel="stylesheet" href="../static/css/style.css?v=nav-skeleton-1">
+  <link rel="stylesheet" href="../static/css/style.css?v=summary-skeleton-1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
@@ -27,9 +27,26 @@
         <div id="mainContent" class="hidden sk-dashboard-layout">
           <!-- Left Sidebar: Profile Summary -->
           <aside class="sk-dashboard-sidebar">
-            <section class="sk-card sk-profile-summary">
+            <section id="studentSummaryCard" class="sk-card sk-profile-summary sk-summary-loading">
               <div class="sk-card-accent"></div>
-              <div class="sk-profile-summary-main sk-ex-77db2ea5">
+              <div class="sk-summary-skeleton sk-student-summary-skeleton" aria-hidden="true">
+                <div class="sk-student-summary-skeleton-id">
+                  <span class="sk-skeleton sk-student-summary-skeleton-avatar"></span>
+                  <div class="sk-student-summary-skeleton-lines">
+                    <span class="sk-skeleton sk-skeleton-text w-3/4"></span>
+                    <span class="sk-skeleton sk-skeleton-text w-2/3"></span>
+                    <span class="sk-skeleton sk-student-summary-skeleton-pill"></span>
+                  </div>
+                </div>
+                <div class="sk-student-summary-skeleton-stat">
+                  <span class="sk-skeleton sk-student-summary-skeleton-icon"></span>
+                  <div class="sk-student-summary-skeleton-stat-lines">
+                    <span class="sk-skeleton sk-skeleton-text w-2/3"></span>
+                    <span class="sk-skeleton sk-student-summary-skeleton-count"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="sk-profile-summary-main sk-summary-real sk-ex-77db2ea5">
                 <div class="sk-profile-summary-id sk-ex-633df4dd">
                   <img id="userImage" src="../static/images/image.png" alt="User" class="sk-profile-summary-avatar sk-ex-5b08182d">
                   <div>
@@ -208,7 +225,7 @@
   <script src="../static/js/notify-modal.js?v=ui-fix-5"></script>
   <script src="../static/js/sk-modal.js?v=ui-fix-5"></script>
   <script src="../static/js/dashboard-profile.js?v=tab-skeleton-2"></script>
-  <script src="../static/js/student-dashboard.js?v=student-summary-1"></script>
+  <script src="../static/js/student-dashboard.js?v=summary-skeleton-1"></script>
   <script src="../static/js/student-chat.js?v=tab-skeleton-2"></script>
   <script>
     SKLayout.init({

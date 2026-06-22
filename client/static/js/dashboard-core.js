@@ -40,6 +40,11 @@ function handleDashboardUnavailable(message, markOffline) {
   }
 }
 
+function setFacultySummaryLoading(isLoading) {
+  var card = document.getElementById('facultySummaryCard');
+  if (card) card.classList.toggle('sk-summary-loading', !!isLoading);
+}
+
 // --- Global templates cache for interconnection ---
 window._quickTemplates = [];
 
@@ -241,6 +246,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // --- Profile & Dashboard Load ---
 var userSlug = null;
+var facultyInboxBadgeRefreshInFlight = false;
+
+function queueFacultyInboxBadgeRefresh() {
+  if (typeof loadUnreadCount !== 'function') return;
+  if (facultyInboxBadgeRefreshInFlight) return;
+  facultyInboxBadgeRefreshInFlight = true;
+  Promise.resolve()
+    .then(function () { return loadUnreadCount(); })
+    .catch(function (e) { console.warn('Faculty inbox badge refresh unavailable:', e); })
+    .finally(function () {
+      facultyInboxBadgeRefreshInFlight = false;
+    });
+}
 
 async function loadDashboard() {
   if (!checkAuth()) return;
@@ -267,6 +285,7 @@ async function loadDashboard() {
       var meData = await meRes.json();
       if (meData.role === 'STUDENT') { window.location.href = 'student.html'; return; }
       if (!meData.role && meData.is_staff) { window.location.href = 'admin.html'; return; }
+      queueFacultyInboxBadgeRefresh();
       // If user is admin (is_staff), inject Admin Panel link into navbar
       if (meData.is_staff) {
         var desktopNav = document.getElementById('desktopNavLinks');
@@ -304,9 +323,10 @@ async function loadDashboard() {
       userSlug = data.slug;
       updateAvailabilityUI(data.is_available);
       showFacultyDashboardShell();
-      loadQRCode();
-      loadUnreadCount();
+      var qrLoad = loadQRCode();
       activateFacultyTab(_facultyActiveTab(), { updateUrl: false });
+      await qrLoad;
+      setFacultySummaryLoading(false);
     } else { throw new Error(data.detail || 'Failed to load'); }
   } catch (e) {
     console.error('Dashboard Load Error:', e);

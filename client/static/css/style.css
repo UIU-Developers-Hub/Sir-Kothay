@@ -6,6 +6,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import url('design-tokens.css?v=ui-premium-sidebar-2');
 @import url('animations.css?v=ui-final-dashboard-1');
-@import url('components.css?v=nav-skeleton-1');
+@import url('components.css?v=summary-skeleton-3');
 @import url('layout.css?v=nav-skeleton-1');
-@import url('extracted-inline.css?v=inline-extract-1');
+@import url('extracted-inline.css?v=contact-value-1');

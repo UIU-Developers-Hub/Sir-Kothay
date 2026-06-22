@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Dashboard - Sir Kothay</title>
   <meta name="description" content="Faculty Dashboard - Manage your broadcast status, schedules, and messages">
-  <link rel="stylesheet" href="../static/css/style.css?v=nav-skeleton-1">
+  <link rel="stylesheet" href="../static/css/style.css?v=summary-skeleton-3">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
@@ -30,10 +30,43 @@
         <div id="mainContent" class="hidden sk-dashboard-layout">
           <aside class="sk-dashboard-sidebar">
           <!-- Profile Section (Redesigned) -->
-          <section class="sk-card sk-fc-header-card sk-ex-5256a0c7">
+          <section id="facultySummaryCard" class="sk-card sk-fc-header-card sk-summary-loading sk-ex-5256a0c7">
             <div class="sk-card-accent"></div>
             
-            <div class="sk-fc-header-grid">
+            <div class="sk-summary-skeleton sk-faculty-summary-skeleton" aria-hidden="true">
+              <div class="sk-faculty-summary-skeleton-identity">
+                <span class="sk-skeleton sk-faculty-summary-skeleton-avatar"></span>
+                <div class="sk-faculty-summary-skeleton-info">
+                  <span class="sk-skeleton sk-skeleton-text w-3/4"></span>
+                  <span class="sk-skeleton sk-skeleton-text w-2/3"></span>
+                  <span class="sk-skeleton sk-skeleton-text w-1/2"></span>
+                </div>
+              </div>
+              <div class="sk-faculty-summary-skeleton-management">
+                <div class="sk-faculty-summary-skeleton-label-row">
+                  <span class="sk-skeleton sk-skeleton-text w-1/3"></span>
+                  <span class="sk-skeleton sk-skeleton-text w-1/3"></span>
+                </div>
+                <span class="sk-skeleton sk-faculty-summary-skeleton-status"></span>
+                <span class="sk-skeleton sk-skeleton-text w-1/2"></span>
+                <span class="sk-skeleton sk-faculty-summary-skeleton-input"></span>
+                <div class="sk-faculty-summary-skeleton-controls">
+                  <span class="sk-skeleton sk-faculty-summary-skeleton-select"></span>
+                  <span class="sk-skeleton sk-faculty-summary-skeleton-save"></span>
+                </div>
+              </div>
+              <div class="sk-faculty-summary-skeleton-actions">
+                <span class="sk-skeleton sk-faculty-summary-skeleton-qr"></span>
+                <div class="sk-faculty-summary-skeleton-buttons">
+                  <span class="sk-skeleton sk-faculty-summary-skeleton-button"></span>
+                  <span class="sk-skeleton sk-faculty-summary-skeleton-button"></span>
+                </div>
+                <span class="sk-skeleton sk-faculty-summary-skeleton-wide-button"></span>
+                <span class="sk-skeleton sk-faculty-summary-skeleton-mobile-button"></span>
+              </div>
+            </div>
+
+            <div class="sk-fc-header-grid sk-summary-real">
               <!-- Left: Identity -->
               <div class="sk-fc-header-identity">
                 <div class="sk-fc-header-avatar-wrap">
@@ -522,11 +555,11 @@
   <script src="../static/js/notify-modal.js?v=ui-fix-5"></script>
   <script src="../static/js/sk-modal.js?v=ui-fix-5"></script>
   <script src="../static/js/dashboard-profile.js?v=tab-skeleton-2"></script>
-  <script src="../static/js/dashboard-core.js?v=chat-deeplink-1"></script>
+  <script src="../static/js/dashboard-core.js?v=summary-skeleton-1"></script>
   <script src="../static/js/dashboard-templates.js?v=tab-skeleton-2"></script>
   <script src="../static/js/dashboard-schedules.js?v=tab-skeleton-2"></script>
   <script src="../static/js/dashboard-calendar.js?v=tab-skeleton-2"></script>
-  <script src="../static/js/dashboard-chat.js?v=chat-deeplink-1"></script>
+  <script src="../static/js/dashboard-chat.js?v=badge-bootstrap-1"></script>
   <script>
     // Initialize layout with sidebar
     SKLayout.init({
