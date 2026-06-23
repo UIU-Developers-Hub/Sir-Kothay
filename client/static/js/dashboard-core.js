@@ -585,9 +585,9 @@ async function loadMessages() {
           '<div class="sk-broadcast-meta">' + renderStatusBadge(msg) +
           '<span class="sk-inline-note"><i class="bi bi-hourglass-split"></i> ' + durLabel + '</span></div></div>' +
           '<div class="sk-broadcast-actions">' +
-          '<button type="button" onclick="toggleMsg(' + msg.id + ',' + msg.active + ')" class="sk-btn ' + (msg.active ? 'sk-btn-danger' : 'sk-btn-success') + ' sk-btn-sm">' + (msg.active ? '<i class="bi bi-pause-fill"></i> Stop' : '<i class="bi bi-play-fill"></i> Go Live') + '</button>' +
-          '<button type="button" onclick="openEditModal(' + msg.id + ',\'' + escapeHtml(msg.message).replace(/'/g, "\\'") + '\',' + (msg.scheduled_for ? "'" + msg.scheduled_for + "'" : 'null') + ',' + (msg.duration_seconds || 'null') + ',\'' + (msg.set_availability || '') + '\')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Edit status" title="Edit status"><i class="bi bi-pencil"></i></button>' +
-          '<button type="button" onclick="confirmDeleteMsg(' + msg.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" aria-label="Delete status" title="Delete status"><i class="bi bi-trash"></i></button>' +
+          '<button type="button" onclick="toggleMsg(' + msg.id + ',' + msg.active + ')" class="sk-btn sk-action-main ' + (msg.active ? 'sk-action-stop' : 'sk-action-live') + '">' + (msg.active ? '<i class="bi bi-pause-circle-fill"></i> Stop' : '<i class="bi bi-play-circle-fill"></i> Go Live') + '</button>' +
+          '<button type="button" onclick="openEditModal(' + msg.id + ',\'' + escapeHtml(msg.message).replace(/'/g, "\\'") + '\',' + (msg.scheduled_for ? "'" + msg.scheduled_for + "'" : 'null') + ',' + (msg.duration_seconds || 'null') + ',\'' + (msg.set_availability || '') + '\')" class="sk-btn sk-action-icon" aria-label="Edit status" title="Edit status"><i class="bi bi-pencil-square"></i></button>' +
+          '<button type="button" onclick="confirmDeleteMsg(' + msg.id + ')" class="sk-btn sk-action-icon danger" aria-label="Delete status" title="Delete status"><i class="bi bi-trash3"></i></button>' +
           '</div></div>';
       }).join('') + '</div>';
     } else {

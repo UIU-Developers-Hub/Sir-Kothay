@@ -249,6 +249,50 @@ img { max-width: 100%; height: auto; display: block; }
   border-color: var(--sk-primary-hover);
 }
 
+.sk-dashboard-page .sk-btn-primary,
+.sk-dashboard-page .sk-btn-gradient {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.24);
+  color: var(--sk-primary-hover);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.sk-dashboard-page .sk-btn-primary:hover,
+.sk-dashboard-page .sk-btn-gradient:hover {
+  background: rgba(249, 115, 22, 0.18);
+  border-color: rgba(249, 115, 22, 0.36);
+  color: var(--sk-primary-hover);
+}
+
+.sk-dashboard-page .sk-btn-success {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.24);
+  color: var(--sk-success);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.sk-dashboard-page .sk-btn-success:hover {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.34);
+  color: var(--sk-success);
+}
+
+.sk-dashboard-page .sk-btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.22);
+  color: var(--sk-error);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.sk-dashboard-page .sk-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.32);
+  color: var(--sk-error);
+}
+
 /* Sizes */
 .sk-btn-sm { padding: 0.375rem 0.875rem; font-size: var(--sk-text-xs); }
 .sk-btn-lg { padding: 0.75rem 1.75rem; font-size: var(--sk-text-base); }
@@ -1559,9 +1603,6 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .sk-schedule-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--sk-space-2);
   flex: 0 0 auto;
 }
 
@@ -2159,7 +2200,8 @@ a.sk-contact-value:focus-visible {
 
   .sk-schedule-actions {
     width: 100%;
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr) 36px 36px;
+    min-width: 0;
   }
 
   /* Keep avatar and text side-by-side, just tighten the gaps */
@@ -2276,10 +2318,7 @@ a.sk-contact-value:focus-visible {
 }
 
 .sk-broadcast-actions {
-  display: flex;
-  align-items: center;
   flex: 0 0 auto;
-  gap: var(--sk-space-2);
 }
 
 .sk-status-badge {
@@ -2332,7 +2371,7 @@ a.sk-contact-value:focus-visible {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: var(--sk-space-4);
+  gap: var(--sk-space-3);
   min-height: 100%;
   padding: var(--sk-space-4);
   background: var(--sk-card-bg);
@@ -2377,16 +2416,134 @@ a.sk-contact-value:focus-visible {
   color: var(--sk-text-secondary);
   font-size: var(--sk-text-sm);
   line-height: 1.55;
+  margin-bottom: 0;
 }
 
 .sk-template-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--sk-space-2);
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
 }
 
-.sk-template-actions .sk-btn-primary {
-  flex: 1 1 auto;
+.sk-schedule-actions,
+.sk-broadcast-actions,
+.sk-template-actions {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) 34px 34px;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: min(100%, 15rem);
+  padding: 0.1875rem;
+  background: var(--sk-bg-muted);
+  border: 1px solid var(--sk-border-light);
+  border-radius: var(--sk-radius-xl);
+}
+
+.sk-template-actions {
+  grid-template-columns: minmax(0, 1fr) 34px 34px;
+  min-width: 0;
+}
+
+.sk-schedule-actions .sk-btn,
+.sk-broadcast-actions .sk-btn,
+.sk-template-actions .sk-btn {
+  min-height: 34px;
+  height: 34px;
+  border-radius: calc(var(--sk-radius-lg) - 2px);
+  font-weight: var(--sk-font-semibold);
+  box-shadow: none;
+}
+
+.sk-action-main {
+  width: 100%;
+  padding: 0 0.75rem;
+  letter-spacing: 0;
+}
+
+.sk-action-main i {
+  font-size: 1rem;
+}
+
+.sk-action-live {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.22);
+  color: var(--sk-success);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.sk-action-live:hover {
+  background: rgba(34, 197, 94, 0.16);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: var(--sk-success);
+}
+
+.sk-action-stop {
+  background: rgba(239, 68, 68, 0.09);
+  border-color: rgba(239, 68, 68, 0.18);
+  color: var(--sk-error);
+}
+
+.sk-action-stop:hover {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.26);
+  color: var(--sk-error);
+}
+
+.sk-action-template {
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.22);
+  color: var(--sk-primary-hover);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.sk-action-template:hover {
+  background: rgba(249, 115, 22, 0.16);
+  border-color: rgba(249, 115, 22, 0.32);
+  color: var(--sk-primary-hover);
+}
+
+.sk-action-pause {
+  background: var(--sk-card-bg);
+  border-color: transparent;
+  color: var(--sk-text-primary);
+}
+
+.sk-action-pause:hover {
+  background: var(--sk-bg-surface);
+  border-color: var(--sk-border);
+}
+
+.sk-action-icon {
+  width: 34px;
+  padding: 0;
+  background: var(--sk-card-bg);
+  border-color: transparent;
+  color: var(--sk-text-tertiary);
+}
+
+.sk-action-icon i {
+  font-size: 0.95rem;
+}
+
+.sk-action-icon:hover,
+.sk-action-icon:focus-visible {
+  background: var(--sk-bg-surface);
+  border-color: var(--sk-border);
+  color: var(--sk-text-primary);
+}
+
+.sk-action-icon.danger {
+  color: var(--sk-error);
+}
+
+.sk-action-icon.danger:hover,
+.sk-action-icon.danger:focus-visible {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(220, 38, 38, 0.18);
+  color: var(--sk-error);
 }
 
 @media (max-width: 767px) {
@@ -2395,13 +2552,16 @@ a.sk-contact-value:focus-visible {
     flex-direction: column;
   }
 
-  .sk-broadcast-actions {
+  .sk-schedule-actions,
+  .sk-broadcast-actions,
+  .sk-template-actions {
     width: 100%;
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr) 34px 34px;
+    min-width: 0;
   }
 
+  .sk-schedule-actions .sk-btn,
   .sk-broadcast-actions .sk-btn {
-    flex: 1 1 auto;
     text-align: center;
   }
 }
@@ -2865,12 +3025,7 @@ a.sk-contact-value:focus-visible {
     padding: var(--sk-space-3);
   }
 
-  .sk-template-actions {
-    flex-wrap: wrap;
-  }
-
   .sk-template-actions .sk-btn {
-    flex: 1 1 auto;
     text-align: center;
   }
 
@@ -3537,22 +3692,24 @@ a.sk-contact-value:focus-visible {
 }
 
 .sk-chat-filter-btn {
-  border: 1px solid var(--sk-border);
+  border: 1px solid var(--sk-border-light);
   border-radius: var(--sk-radius-md);
-  background: var(--sk-bg-surface);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--sk-text-tertiary);
   cursor: pointer;
   font-family: inherit;
   font-size: 0.6875rem;
   font-weight: var(--sk-font-bold);
   padding: 0.25rem 0.5rem;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   transition: background var(--sk-transition-base), color var(--sk-transition-base), border-color var(--sk-transition-base);
 }
 
 .sk-chat-filter-btn:hover,
 .sk-chat-filter-btn.active {
-  background: var(--sk-primary-light);
-  border-color: var(--sk-primary-muted);
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.24);
   color: var(--sk-primary);
 }
 
@@ -3568,11 +3725,11 @@ a.sk-contact-value:focus-visible {
 }
 
 .sk-convo-item:hover {
-  background: var(--sk-primary-light);
+  background: rgba(249, 115, 22, 0.08);
 }
 
 .sk-convo-item.active {
-  background: var(--sk-primary-light);
+  background: rgba(249, 115, 22, 0.12);
   border-left-color: var(--sk-primary);
 }
 
@@ -3584,7 +3741,8 @@ a.sk-contact-value:focus-visible {
   width: 38px;
   height: 38px;
   border-radius: var(--sk-radius-lg);
-  background: var(--sk-primary-light);
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.18);
   color: var(--sk-primary);
   font-size: var(--sk-text-sm);
   font-weight: var(--sk-font-bold);
@@ -3593,6 +3751,7 @@ a.sk-contact-value:focus-visible {
 
 .sk-convo-avatar.visitor {
   background: rgba(251, 146, 60, 0.12);
+  border-color: rgba(251, 146, 60, 0.2);
   color: var(--sk-orange-600);
 }
 
@@ -3664,7 +3823,8 @@ a.sk-contact-value:focus-visible {
   flex: 0 0 auto;
   padding: 0.125rem 0.375rem;
   border-radius: var(--sk-radius-full);
-  background: var(--sk-primary-light);
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.18);
   color: var(--sk-primary);
   font-size: 0.5625rem;
   font-weight: var(--sk-font-bold);
@@ -3683,7 +3843,8 @@ a.sk-contact-value:focus-visible {
   width: 38px;
   height: 38px;
   border-radius: var(--sk-radius-lg);
-  background: var(--sk-primary-light);
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.18);
   color: var(--sk-primary);
   font-size: var(--sk-text-sm);
   font-weight: var(--sk-font-bold);
@@ -3692,6 +3853,7 @@ a.sk-contact-value:focus-visible {
 
 .sk-chat-header-avatar.visitor {
   background: rgba(251, 146, 60, 0.12);
+  border-color: rgba(251, 146, 60, 0.2);
   color: var(--sk-orange-600);
 }
 
@@ -3738,13 +3900,15 @@ a.sk-contact-value:focus-visible {
 .sk-chat-system {
   margin-bottom: var(--sk-space-3);
   padding: 0.625rem 0.875rem;
-  border: 1px solid var(--sk-border);
+  border: 1px solid var(--sk-border-light);
   border-radius: var(--sk-radius-xl);
-  background: var(--sk-bg-muted);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--sk-text-tertiary);
   font-size: var(--sk-text-xs);
   font-weight: var(--sk-font-medium);
   text-align: center;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 .sk-chat-system.warning {
@@ -3776,7 +3940,10 @@ a.sk-contact-value:focus-visible {
   line-height: 1.5;
   position: relative;
   word-wrap: break-word;
-  box-shadow: var(--sk-shadow-sm);
+  border: 1px solid transparent;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--sk-shadow-xs);
 }
 
 .sk-chat-bubble > div {
@@ -3785,14 +3952,16 @@ a.sk-contact-value:focus-visible {
 }
 
 .sk-chat-bubble.sent {
-  background: var(--sk-primary);
-  color: white;
+  background: rgba(249, 115, 22, 0.14);
+  border-color: rgba(249, 115, 22, 0.28);
+  color: var(--sk-primary-text);
   margin-left: auto;
   border-bottom-right-radius: var(--sk-radius-sm);
 }
 
 .sk-chat-bubble.received {
-  background: var(--sk-bg-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--sk-border-light);
   color: var(--sk-text-primary);
   margin-right: auto;
   border-bottom-left-radius: var(--sk-radius-sm);
@@ -3811,7 +3980,7 @@ a.sk-contact-value:focus-visible {
 }
 
 .sk-chat-bubble.sent .sk-chat-time {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--sk-text-tertiary);
   text-align: right;
 }
 
@@ -3819,6 +3988,7 @@ a.sk-contact-value:focus-visible {
   display: flex;
   gap: var(--sk-space-2);
   align-items: center;
+  width: 100%;
 }
 
 .sk-chat-reply-form .sk-input {
@@ -3961,11 +4131,13 @@ a.sk-contact-value:focus-visible {
 /* Split panel layout for chat */
 .sk-split {
   display: flex;
-  background: var(--sk-card-bg);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--sk-card-border);
   border-radius: var(--sk-radius-xl);
   overflow: hidden;
   min-height: 520px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 .sk-split-left {
@@ -3988,8 +4160,10 @@ a.sk-contact-value:focus-visible {
 
 .sk-split-header {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--sk-border);
-  background: var(--sk-bg-muted);
+  border-bottom: 1px solid var(--sk-border-light);
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 .sk-split-body {
@@ -4001,8 +4175,10 @@ a.sk-contact-value:focus-visible {
 
 .sk-split-footer {
   padding: 0.75rem 1rem;
-  border-top: 1px solid var(--sk-border);
-  background: var(--sk-bg-muted);
+  border-top: 1px solid var(--sk-border-light);
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 @media (max-width: 768px) {

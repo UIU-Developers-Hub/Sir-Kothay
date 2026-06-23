@@ -932,3 +932,90 @@
 .sk-ex-fc511f0c { margin-top:1.5rem; }
 .sk-ex-fdc26976 { font-size:clamp(1.5rem,3vw,2.25rem); font-weight:800; color:white; margin-bottom:1rem; }
 .sk-ex-ff55c2e2 { background:var(--sk-success-bg); color:var(--sk-success); }
+
+/* Broadcast frosted controls */
+.sk-broadcast-page .bc-section-form,
+.sk-broadcast-page .sk-ex-901a73c2,
+.sk-broadcast-page .manage-loading-panel,
+.sk-broadcast-page .empty-state {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--sk-border-light);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.sk-broadcast-page .bc-msg-panel {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.34);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.sk-broadcast-page .bc-info-icon,
+.sk-broadcast-page .sk-item-icon {
+  background: rgba(249, 115, 22, 0.14);
+  border: 1px solid rgba(249, 115, 22, 0.32);
+  color: var(--sk-primary);
+}
+
+.sk-broadcast-page .bc-action-btn,
+.sk-broadcast-page .bc-notify-btn,
+.sk-broadcast-page .sk-ex-33ab4df9 {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--sk-border-light);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.sk-broadcast-page .bc-action-btn:hover,
+.sk-broadcast-page .bc-action-btn:focus-visible,
+.sk-broadcast-page .bc-notify-btn:hover {
+  background: rgba(249, 115, 22, 0.14);
+  border-color: rgba(249, 115, 22, 0.32);
+  color: var(--sk-primary);
+}
+
+.sk-broadcast-page .sk-btn-primary,
+.sk-broadcast-page .sk-btn-gradient {
+  background: rgba(249, 115, 22, 0.16);
+  border-color: rgba(249, 115, 22, 0.34);
+  color: var(--sk-primary-hover);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.sk-broadcast-page .sk-btn-primary:hover,
+.sk-broadcast-page .sk-btn-gradient:hover {
+  background: rgba(249, 115, 22, 0.22);
+  border-color: rgba(249, 115, 22, 0.42);
+  color: var(--sk-primary-hover);
+}
+
+.sk-broadcast-page .sk-btn-success,
+.sk-broadcast-page .sk-ex-38e9b9c6,
+.sk-broadcast-page .sk-ex-ff55c2e2 {
+  background: rgba(34, 197, 94, 0.16);
+  border-color: rgba(34, 197, 94, 0.34);
+  color: var(--sk-success);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.sk-broadcast-page .sk-btn-danger,
+.sk-broadcast-page .sk-ex-c203b65e {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.32);
+  color: var(--sk-error);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.sk-broadcast-page .toggle-switch.active {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.sk-broadcast-page .sk-item-row {
+  border-bottom-color: var(--sk-border-light);
+}

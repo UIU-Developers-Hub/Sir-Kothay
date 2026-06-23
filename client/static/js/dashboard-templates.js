@@ -24,9 +24,9 @@ async function loadTemplates() {
         '<p class="sk-template-message">' + escapeHtml(t.message) + '</p>' +
         '</div>' +
         '<div class="sk-template-actions">' +
-        '<button type="button" onclick="activateTemplate(' + t.id + ')" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-broadcast"></i>Go Live</button>' +
-        '<button type="button" onclick="openEditTemplateModal(' + t.id + ',\'' + escapeHtml(t.label).replace(/'/g, "\\'") + '\',\'' + escapeHtml(t.message).replace(/'/g, "\\'") + '\',\'' + (t.set_availability || '') + '\')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Edit template" title="Edit template"><i class="bi bi-pencil"></i></button>' +
-        '<button type="button" onclick="deleteTemplate(' + t.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" aria-label="Delete template" title="Delete template"><i class="bi bi-trash"></i></button>' +
+        '<button type="button" onclick="activateTemplate(' + t.id + ')" class="sk-btn sk-action-main sk-action-template"><i class="bi bi-lightning-charge-fill"></i> Go Live</button>' +
+        '<button type="button" onclick="openEditTemplateModal(' + t.id + ',\'' + escapeHtml(t.label).replace(/'/g, "\\'") + '\',\'' + escapeHtml(t.message).replace(/'/g, "\\'") + '\',\'' + (t.set_availability || '') + '\')" class="sk-btn sk-action-icon" aria-label="Edit template" title="Edit template"><i class="bi bi-pencil-square"></i></button>' +
+        '<button type="button" onclick="deleteTemplate(' + t.id + ')" class="sk-btn sk-action-icon danger" aria-label="Delete template" title="Delete template"><i class="bi bi-trash3"></i></button>' +
         '</div></div>';
     }).join('');
     // Also update the quick-picks in the Add Message modal
