@@ -10,6 +10,7 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
 
 ### Broadcasting & Status
 - **Live Broadcast Status** — set a message visible to anyone who scans your QR code or visits your page
+- **Live Public Broadcast Pages** — public status pages refresh availability, active messages, contact actions, and chat entry points without requiring a full reload
 - **Timed Statuses** — schedule a status to go live later, or auto-expire after a set duration
 - **Fallback Status** — default message and default availability automatically restored when a timed status expires
 - **Availability Toggle** — mark yourself Available/Unavailable; subscribers and students get notified on change
@@ -24,6 +25,9 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
 
 ### Role-Based Dashboards
 - **Faculty Dashboard** — full broadcast management, QR codes, analytics, scheduling, unified chat inbox
+- **Live Dashboard Updates** — faculty and student dashboards refresh nav badges, availability counts, chat states, schedules, templates, and broadcast status automatically
+- **Dashboard Skeleton States** — sidebar, bottom navigation, tab content, broadcast, and manage pages show targeted loading skeletons while auth/backend checks and page data finish loading
+- **Backend Offline States** — dashboards and public management pages show a consistent reconnect/retry UI when the backend is temporarily unavailable
 - **Student Dashboard** — faculty interest tracking, threaded chat, granular notification preferences
   - **Mandatory Student ID** — students are prompted to enter their ID on first login (blocking modal)
 - **Admin Dashboard** — granular user management panel:
@@ -44,6 +48,7 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
   - **Close & Delete All** — bulk action to clean up all threads
   - **Students can follow up** in pending threads before faculty accepts
   - **Auto-Close Stale Chats** — `close_stale_chats` command auto-closes inactive threads based on faculty `auto_close_hours` setting
+- **Chat Deep Links** — dashboard and email links can open the correct inbox tab and target conversation directly
 - **Chat Notification Preferences** — per-faculty settings:
   - `notify_new_chats` — email on new chat thread
   - `notify_chat_replies` — email on each reply
@@ -52,7 +57,7 @@ Built with **Django REST Framework** (backend API) and a **static HTML + Tailwin
   - **Sender Verification** — inbox cross-references visitor emails with registered users (shows student ID, role)
   - **Multi-Reply Threading** — faculty can reply multiple times (append-only conversation)
 - **Faculty Inbox** — unified split-panel view for both student chats and visitor DMs
-- **Email Notifications** — all chat lifecycle events (new thread, acceptance, reply, close) trigger async email notifications
+- **Email Notifications** — all chat lifecycle events (new thread, acceptance, reply, close) trigger async, responsive email notifications with consistent branding and action links
 
 ### Profile & Identity
 - **Email Verification** — secure OTP (10-minute expiry) and link-based email verification gate required for dashboard access
@@ -98,12 +103,12 @@ Sir-Kothay/
 │   │   ├── login.html               # Login (email or student ID)
 │   │   └── register.html            # Register (Faculty / Student)
 │   ├── broadcast/
-│   │   └── message.html             # Public broadcast viewer (QR landing)
+│   │   ├── message.html             # Public broadcast viewer (QR landing)
+│   │   └── manage.html              # Public notification/message management page
 │   ├── dashboard/
 │   │   ├── home.html                # Faculty dashboard (tabs: status, QR, schedule, chat, analytics)
 │   │   ├── student.html             # Student dashboard (faculty tracking, chat)
-│   │   ├── admin.html               # Admin dashboard (user management)
-│   │   └── profile.html             # Profile editor (shared)
+│   │   └── admin.html               # Admin dashboard (user management)
 │   └── static/
 │       ├── css/
 │       ├── images/
@@ -111,6 +116,7 @@ Sir-Kothay/
 │           ├── api-config.js          # API base URL + endpoint constants
 │           ├── dashboard-core.js      # Faculty: auth, profile, QR, broadcast, DM inbox
 │           ├── dashboard-chat.js      # Faculty: split-panel unified chat UI
+│           ├── dashboard-profile.js   # Shared dashboard profile tab
 │           ├── dashboard-templates.js # Faculty: quick status templates
 │           ├── dashboard-schedules.js # Faculty: recurring schedules
 │           ├── dashboard-calendar.js  # Faculty: calendar events

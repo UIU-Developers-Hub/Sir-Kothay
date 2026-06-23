@@ -427,7 +427,7 @@ async function loadStudentData() {
         }
         
         currentUser = await response.json();
-        
+
         document.getElementById('userName').textContent = currentUser.username || 'Student';
         document.getElementById('userEmail').textContent = currentUser.email || '';
         document.getElementById('studentIdDisplay').textContent = `ID: ${currentUser.student_id || 'N/A'}`;
@@ -442,7 +442,7 @@ async function loadStudentData() {
         updateStudentSummaryProfile(userDetails);
         await refreshStudentAvailableCount();
         setStudentSummaryLoading(false);
-        
+
         showStudentDashboardShell();
 
         // If user is admin (is_staff), inject Admin Panel link into navbar
