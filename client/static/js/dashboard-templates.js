@@ -4,14 +4,15 @@ async function loadTemplates() {
   try {
     var res = await apiRequest(API_ENDPOINTS.TEMPLATES_LIST);
     var data = await res.json();
-    window._quickTemplates = Array.isArray(data) ? data : (data.results || []);
+    var items = Array.isArray(data) ? data : (data.results || []);
+    if (typeof _facultyActiveTab === 'function' && _facultyActiveTab() !== 'templates') return items;
+    window._quickTemplates = items;
     var el = document.getElementById('templatesList');
-    if (!res.ok) { el.innerHTML = '<div class="sk-empty-state compact" style="grid-column:1/-1"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Failed to load templates</div></div>'; return; }
-    var items = window._quickTemplates;
+    if (!res.ok) { el.innerHTML = '<div class="sk-empty-state compact sk-ex-068a8ddc"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Failed to load templates</div></div>'; return; }
     if (items.length === 0) {
-      el.innerHTML = '<div style="grid-column:1/-1">' +
-        (window.SKComponents ? SKComponents.emptyState('lightning-fill', 'Save time with Quick Templates', 'Create reusable status messages you can activate with one click.', '<button onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary">Create Your First Template</button>') :
-        '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-lightning-fill"></i></div><div class="sk-empty-title">Save time with Quick Templates</div><div class="sk-empty-subtitle">Create reusable status messages you can activate with one click.</div><button onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary">Create Your First Template</button></div>') +
+      el.innerHTML = '<div class="sk-ex-068a8ddc">' +
+        (window.SKComponents ? SKComponents.emptyState('lightning-fill', 'Save time with Quick Templates', 'Create reusable status messages you can activate with one click.', '<button type="button" onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary">Create Your First Template</button>') :
+        '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-lightning-fill"></i></div><div class="sk-empty-title">Save time with Quick Templates</div><div class="sk-empty-subtitle">Create reusable status messages you can activate with one click.</div><button type="button" onclick="openNewTemplateModal()" class="sk-btn sk-btn-primary">Create Your First Template</button></div>') +
         '</div>';
       return;
     }
@@ -23,15 +24,15 @@ async function loadTemplates() {
         '<p class="sk-template-message">' + escapeHtml(t.message) + '</p>' +
         '</div>' +
         '<div class="sk-template-actions">' +
-        '<button onclick="activateTemplate(' + t.id + ')" class="sk-btn sk-btn-primary sk-btn-sm"><i class="bi bi-broadcast"></i>Go Live</button>' +
-        '<button onclick="openEditTemplateModal(' + t.id + ',\'' + escapeHtml(t.label).replace(/'/g, "\\'") + '\',\'' + escapeHtml(t.message).replace(/'/g, "\\'") + '\',\'' + (t.set_availability || '') + '\')" class="sk-btn sk-btn-ghost sk-btn-icon" aria-label="Edit template"><i class="bi bi-pencil"></i></button>' +
-        '<button onclick="deleteTemplate(' + t.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" aria-label="Delete template"><i class="bi bi-trash"></i></button>' +
+        '<button type="button" onclick="activateTemplate(' + t.id + ')" class="sk-btn sk-action-main sk-action-template"><i class="bi bi-lightning-charge-fill"></i> Go Live</button>' +
+        '<button type="button" onclick="openEditTemplateModal(' + t.id + ',\'' + escapeHtml(t.label).replace(/'/g, "\\'") + '\',\'' + escapeHtml(t.message).replace(/'/g, "\\'") + '\',\'' + (t.set_availability || '') + '\')" class="sk-btn sk-action-icon" aria-label="Edit template" title="Edit template"><i class="bi bi-pencil-square"></i></button>' +
+        '<button type="button" onclick="deleteTemplate(' + t.id + ')" class="sk-btn sk-action-icon danger" aria-label="Delete template" title="Delete template"><i class="bi bi-trash3"></i></button>' +
         '</div></div>';
     }).join('');
     // Also update the quick-picks in the Add Message modal
     renderTemplateQuickPicks();
   } catch (e) {
-    document.getElementById('templatesList').innerHTML = '<div class="sk-empty-state compact" style="grid-column:1/-1"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Error loading templates</div></div>';
+    document.getElementById('templatesList').innerHTML = '<div class="sk-empty-state compact sk-ex-068a8ddc"><div class="sk-empty-icon error"><i class="bi bi-exclamation-triangle"></i></div><div class="sk-empty-title">Error loading templates</div></div>';
   }
 }
 

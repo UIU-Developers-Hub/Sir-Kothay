@@ -1,5 +1,4 @@
 from django.conf import settings as django_settings
-from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -18,31 +17,18 @@ from .chat_serializers import (
     ChatInitiateSerializer,
     ChatReplySerializer,
 )
+from notifications.services import chat_thread_url, get_client_base_url, send_email_async
 
 
 def _get_client_base():
     """Return the client base URL for email links."""
-    return getattr(django_settings, 'CLIENT_PUBLIC_BASE_URL', '').rstrip('/')
+    return get_client_base_url()
 
 
-import threading
-
-def _send_chat_email_worker(subject, body, from_email, to_email):
-    """Worker running in a background thread to send chat-related emails without blocking the request thread."""
-    try:
-        send_mail(subject, body, from_email, [to_email], fail_silently=False)
-    except Exception as e:
-        print(f"Background chat email delivery failed to {to_email}: {e}")
-
-def _send_chat_email(to_email, subject, body):
+def _send_chat_email(to_email, subject, body, **email_options):
     """Helper to send a chat-related email asynchronously in the background."""
     from_email = getattr(django_settings, 'DEFAULT_FROM_EMAIL', 'noreply@sirkothay.com')
-    t = threading.Thread(
-        target=_send_chat_email_worker,
-        args=(subject, body, from_email, to_email)
-    )
-    t.daemon = True
-    t.start()
+    send_email_async(subject, body, from_email, [to_email], **email_options)
 
 
 def _should_notify(user, setting_name):
@@ -96,8 +82,7 @@ def initiate_chat(request):
 
     # Email faculty if setting enabled
     if _should_notify(faculty, 'notify_new_chats'):
-        client_base = _get_client_base()
-        thread_link = f'{client_base}/dashboard/home.html?tab=chats&thread={thread.id}'
+        thread_link = chat_thread_url(faculty, thread.id)
         student_id = request.user.student_id or 'N/A'
         email_body = (
             f'Hi {faculty.username},\n\n'
@@ -107,7 +92,21 @@ def initiate_chat(request):
             f'View the thread: {thread_link}\n\n'
             f'— Sir Kothay'
         )
-        _send_chat_email(faculty.email, f'New Chat: {subject} — Sir Kothay', email_body)
+        _send_chat_email(
+            faculty.email,
+            f'New Chat: {subject} — Sir Kothay',
+            email_body,
+            eyebrow='New chat',
+            title='New chat started',
+            greeting=faculty.username,
+            intro=[f'{request.user.username} started a new chat with you.'],
+            facts=[('Student', request.user.username), ('Student ID', student_id), ('Subject', subject)],
+            quote_label='Message',
+            quote=body,
+            action_label='Open chat',
+            action_url=thread_link,
+            footer_note='You received this because new chat email notifications are enabled for your account.',
+        )
 
     result = ChatThreadDetailSerializer(thread).data
     return Response(result, status=status.HTTP_201_CREATED)
@@ -165,8 +164,7 @@ def accept_thread(request, pk):
 
     # Email student if setting enabled
     if _should_notify(thread.student, 'notify_new_chats'):
-        client_base = _get_client_base()
-        thread_link = f'{client_base}/dashboard/student.html?tab=messages&thread={thread.id}'
+        thread_link = chat_thread_url(thread.student, thread.id)
         email_body = (
             f'Hi {thread.student.username},\n\n'
             f'{thread.faculty.username} accepted your chat request.\n\n'
@@ -175,7 +173,19 @@ def accept_thread(request, pk):
             f'View the thread: {thread_link}\n\n'
             f'— Sir Kothay'
         )
-        _send_chat_email(thread.student.email, f'Chat Accepted: {thread.subject} — Sir Kothay', email_body)
+        _send_chat_email(
+            thread.student.email,
+            f'Chat Accepted: {thread.subject} — Sir Kothay',
+            email_body,
+            eyebrow='Chat accepted',
+            title='Your chat request was accepted',
+            greeting=thread.student.username,
+            intro=[f'{thread.faculty.username} accepted your chat request. You can continue the conversation now.'],
+            facts=[('Faculty', thread.faculty.username), ('Subject', thread.subject)],
+            action_label='Open chat',
+            action_url=thread_link,
+            footer_note='You received this because chat email notifications are enabled for your account.',
+        )
 
     return Response({'message': 'Thread accepted.', 'status': 'ACTIVE'})
 
@@ -219,11 +229,7 @@ def reply_thread(request, pk):
     if thread.status == 'PENDING' and other == thread.faculty:
         pass  # Faculty already received the initial notification
     elif _should_notify(other, 'notify_chat_replies'):
-        client_base = _get_client_base()
-        if other.role == 'STUDENT':
-            thread_link = f'{client_base}/dashboard/student.html?tab=messages&thread={thread.id}'
-        else:
-            thread_link = f'{client_base}/dashboard/home.html?tab=chats&thread={thread.id}'
+        thread_link = chat_thread_url(other, thread.id)
         email_body = (
             f'Hi {other.username},\n\n'
             f'{request.user.username} sent a new message in your chat.\n\n'
@@ -232,7 +238,21 @@ def reply_thread(request, pk):
             f'View the thread: {thread_link}\n\n'
             f'— Sir Kothay'
         )
-        _send_chat_email(other.email, f'New Reply: {thread.subject} — Sir Kothay', email_body)
+        _send_chat_email(
+            other.email,
+            f'New Reply: {thread.subject} — Sir Kothay',
+            email_body,
+            eyebrow='Chat reply',
+            title='New chat reply',
+            greeting=other.username,
+            intro=[f'{request.user.username} sent a new message in your chat.'],
+            facts=[('Subject', thread.subject)],
+            quote_label='Message',
+            quote=body,
+            action_label='Open chat',
+            action_url=thread_link,
+            footer_note='You received this because chat reply email notifications are enabled for your account.',
+        )
 
     return Response(ChatThreadDetailSerializer(thread).data)
 
@@ -255,15 +275,11 @@ def close_thread(request, pk):
     thread.save(update_fields=['status', 'closed_at', 'closed_by'])
 
     # Email both parties about closure (based on their settings)
-    client_base = _get_client_base()
     for participant in [thread.student, thread.faculty]:
         if participant == request.user:
             continue  # Don't email the person who closed it
         if _should_notify(participant, 'notify_chat_closed'):
-            if participant.role == 'STUDENT':
-                thread_link = f'{client_base}/dashboard/student.html?tab=messages&thread={thread.id}'
-            else:
-                thread_link = f'{client_base}/dashboard/home.html?tab=chats&thread={thread.id}'
+            thread_link = chat_thread_url(participant, thread.id)
             email_body = (
                 f'Hi {participant.username},\n\n'
                 f'{request.user.username} has closed the chat thread.\n\n'
@@ -272,7 +288,19 @@ def close_thread(request, pk):
                 f'View the thread: {thread_link}\n\n'
                 f'— Sir Kothay'
             )
-            _send_chat_email(participant.email, f'Chat Closed: {thread.subject} — Sir Kothay', email_body)
+            _send_chat_email(
+                participant.email,
+                f'Chat Closed: {thread.subject} — Sir Kothay',
+                email_body,
+                eyebrow='Chat closed',
+                title='Chat thread closed',
+                greeting=participant.username,
+                intro=[f'{request.user.username} has closed the chat thread.'],
+                facts=[('Subject', thread.subject), ('Status', 'Closed')],
+                action_label='View thread',
+                action_url=thread_link,
+                footer_note='You received this because chat closed email notifications are enabled for your account.',
+            )
 
     return Response({'message': 'Thread closed.', 'status': 'CLOSED'})
 

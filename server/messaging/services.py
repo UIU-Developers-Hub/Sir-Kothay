@@ -54,13 +54,13 @@ def process_stale_chats():
                 
                 closed_count += 1
 
-                from messaging.chat_views import _send_chat_email, _should_notify, _get_client_base
-                client_base = _get_client_base()
+                from messaging.chat_views import _send_chat_email, _should_notify
+                from notifications.services import chat_thread_url, dashboard_url_for_user
                 for participant in [thread.student, thread.faculty]:
                     if _should_notify(participant, 'notify_chat_closed'):
-                        link = f'{client_base}/dashboard/student.html?tab=messages&thread={thread.id}' if participant.role == 'STUDENT' else f'{client_base}/dashboard/home.html?tab=chats&thread={thread.id}'
                         action_text = "permanently deleted" if will_delete else "closed"
-                        link_text = "" if will_delete else f'\nView the thread: {link}\n'
+                        link = dashboard_url_for_user(participant) if will_delete else chat_thread_url(participant, thread.id)
+                        link_text = f'\nOpen dashboard: {link}\n' if will_delete else f'\nView the thread: {link}\n'
                         time_str = _format_seconds(seconds)
                         body = (
                             f'Hi {participant.username},\n\n'
@@ -72,6 +72,16 @@ def process_stale_chats():
                             participant.email,
                             f'Chat Auto-{action_text.title()}: {thread_subject} — Sir Kothay',
                             body,
+                            eyebrow='Chat automation',
+                            title=f'Chat auto-{action_text}',
+                            greeting=participant.username,
+                            intro=[
+                                f'Your chat thread was automatically {action_text} due to {time_str} of inactivity.'
+                            ],
+                            facts=[('Subject', thread_subject), ('Status', action_text.title())],
+                            action_label='Open dashboard' if will_delete else 'View thread',
+                            action_url=link,
+                            footer_note='You received this because chat closed email notifications are enabled for your account.',
                         )
         except UserDetails.DoesNotExist:
             continue

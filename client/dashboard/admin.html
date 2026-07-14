@@ -6,16 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Admin Dashboard - Sir Kothay</title>
   <meta name="description" content="Admin Panel - Manage users, roles, and system settings">
-  <link rel="stylesheet" href="../static/css/style.css?v=ui-fix-30">
+  <link rel="stylesheet" href="../static/css/style.css?v=nav-skeleton-1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <style>
-    .sort-btn { cursor:pointer; user-select:none; }
-    .sort-btn:hover { color: var(--sk-primary); }
-    .sort-btn .bi { font-size:0.65rem; margin-left:2px; opacity:0.5; }
-    .sort-btn.active .bi { opacity:1; color: var(--sk-primary); }
-  </style>
 </head>
-<body>
+<body class="sk-dashboard-page">
   <div class="sk-app">
     <!-- Sidebar -->
     <aside class="sk-sidebar">
@@ -30,9 +24,9 @@
       <div class="sk-page">
         <!-- Loading Skeleton -->
         <div id="loadingState">
-          <div class="sk-skeleton sk-skeleton-card" style="height:120px;margin-bottom:1.5rem"></div>
-          <div class="sk-skeleton sk-skeleton-card" style="height:60px;margin-bottom:1rem"></div>
-          <div class="sk-skeleton sk-skeleton-card" style="height:400px"></div>
+          <div class="sk-skeleton sk-skeleton-card sk-ex-327fb09d"></div>
+          <div class="sk-skeleton sk-skeleton-card sk-ex-3e2dea77"></div>
+          <div class="sk-skeleton sk-skeleton-card sk-ex-080426d1"></div>
         </div>
 
         <div id="mainContent" class="hidden">
@@ -57,13 +51,13 @@
                 <i class="bi bi-search sk-search-icon"></i>
                 <input type="text" id="adminSearch" placeholder="Search by name, email, or student ID..." class="sk-input" oninput="renderAdminUsers()">
               </div>
-              <select id="filterRole" class="sk-select" onchange="renderAdminUsers()">
+              <select id="filterRole" class="sk-select" aria-label="Filter by role" title="Filter by role" onchange="renderAdminUsers()">
                 <option value="">All Roles</option><option value="FACULTY">Faculty</option><option value="STUDENT">Student</option><option value="NONE">None (Admin only)</option>
               </select>
-              <select id="filterStatus" class="sk-select" onchange="renderAdminUsers()">
+              <select id="filterStatus" class="sk-select" aria-label="Filter by status" title="Filter by status" onchange="renderAdminUsers()">
                 <option value="">All Status</option><option value="active">Active</option><option value="deactivated">Deactivated</option><option value="banned">Banned</option>
               </select>
-              <button onclick="resetFilters()" class="sk-btn sk-btn-ghost sk-btn-sm"><i class="bi bi-x-circle"></i> Reset</button>
+              <button type="button" onclick="resetFilters()" class="sk-btn sk-btn-ghost sk-btn-sm"><i class="bi bi-x-circle"></i> Reset</button>
             </div>
           </section>
 
@@ -71,10 +65,10 @@
           <section class="sk-card sk-admin-table-card">
             <div class="sk-card-header">
               <div>
-                <h2 class="sk-card-title"><i class="bi bi-people-fill" style="color:var(--sk-primary);margin-right:0.5rem"></i>User Management</h2>
+                <h2 class="sk-card-title"><i class="bi bi-people-fill sk-ex-32d7a17b"></i>User Management</h2>
                 <div class="sk-card-subtitle">Manage user roles, status, and account access.</div>
               </div>
-              <span id="filteredCount" style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary)"></span>
+              <span id="filteredCount" class="sk-ex-02533e3b"></span>
             </div>
             <div class="sk-table-wrap">
               <table class="sk-table">
@@ -86,12 +80,12 @@
                     <th class="sort-btn" onclick="setSort('role')">Role <i class="bi" id="sortIcon_role"></i></th>
                     <th class="sort-btn" onclick="setSort('is_active')">Status <i class="bi" id="sortIcon_is_active"></i></th>
                     <th class="sort-btn" onclick="setSort('date_joined')">Joined <i class="bi" id="sortIcon_date_joined"></i></th>
-                    <th style="text-align:center">Actions</th>
+                    <th class="sk-ex-91a87015">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="adminUsersTable"></tbody>
               </table>
-              <p id="emptyTableMessage" style="display:none;text-align:center;padding:2rem;color:var(--sk-text-placeholder)">No users found matching your filters.</p>
+              <p id="emptyTableMessage" class="sk-ex-c58e8e9f">No users found matching your filters.</p>
             </div>
           </section>
         </div>
@@ -107,68 +101,68 @@
     <div id="userDetailPanel" class="sk-admin-drawer" onclick="event.stopPropagation()">
       <div class="sk-admin-drawer-header">
         <h3 class="sk-admin-drawer-title"><i class="bi bi-person-badge"></i>User Details</h3>
-        <button onclick="closeUserDetail()" class="sk-modal-close"><i class="bi bi-x-lg"></i></button>
+        <button type="button" onclick="closeUserDetail()" class="sk-modal-close" aria-label="Close user details" title="Close user details"><i class="bi bi-x-lg"></i></button>
       </div>
       <div id="userDetailBody" class="sk-admin-drawer-body"></div>
     </div>
   </div>
 
   <!-- Change Role Modal -->
-  <div id="changeRoleModal" class="sk-modal-overlay hidden" style="z-index:200">
-    <div class="sk-modal-panel" style="max-width:380px">
+  <div id="changeRoleModal" class="sk-modal-overlay hidden sk-ex-a2aa5c99">
+    <div class="sk-modal-panel sk-ex-b4a851bd">
       <div class="sk-modal-header">
-        <h3 class="sk-modal-title"><i class="bi bi-arrow-left-right" style="color:var(--sk-primary);margin-right:0.5rem"></i>Change Role</h3>
-        <button class="sk-modal-close" onclick="closeChangeRoleModal()"><i class="bi bi-x-lg"></i></button>
+        <h3 class="sk-modal-title"><i class="bi bi-arrow-left-right sk-ex-32d7a17b"></i>Change Role</h3>
+        <button type="button" class="sk-modal-close" onclick="closeChangeRoleModal()" aria-label="Close change role dialog" title="Close change role dialog"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="sk-modal-body">
-        <p style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary);margin-bottom:1rem">Select a new role for <strong id="crUserName"></strong></p>
+        <p class="sk-ex-ee59914f">Select a new role for <strong id="crUserName"></strong></p>
         <input type="hidden" id="crUserId">
-        <div id="crRoleOptions" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem"></div>
-        <div id="crStudentIdGroup" class="hidden" style="margin-bottom:1rem">
-          <label class="sk-label">Student ID <span style="color:var(--sk-text-placeholder)">(optional)</span></label>
+        <div id="crRoleOptions" class="sk-ex-da279a18"></div>
+        <div id="crStudentIdGroup" class="hidden sk-ex-363cdaa2">
+          <label class="sk-label">Student ID <span class="sk-ex-d2f2b222">(optional)</span></label>
           <input type="text" id="crStudentId" placeholder="e.g. 0112430141" class="sk-input">
-          <p style="font-size:var(--sk-text-xs);color:var(--sk-text-placeholder);margin-top:0.25rem">Leave blank — student will set it on next login.</p>
+          <p class="sk-ex-fa6a3e05">Leave blank — student will set it on next login.</p>
         </div>
       </div>
       <div class="sk-modal-footer">
-        <button onclick="closeChangeRoleModal()" class="sk-btn sk-btn-secondary">Cancel</button>
-        <button onclick="confirmChangeRole()" class="sk-btn sk-btn-primary">Apply</button>
+        <button type="button" onclick="closeChangeRoleModal()" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button type="button" onclick="confirmChangeRole()" class="sk-btn sk-btn-primary">Apply</button>
       </div>
     </div>
   </div>
 
   <!-- Reset Password Modal -->
-  <div id="resetPasswordModal" class="sk-modal-overlay hidden" style="z-index:200">
-    <div class="sk-modal-panel" style="max-width:380px">
+  <div id="resetPasswordModal" class="sk-modal-overlay hidden sk-ex-a2aa5c99">
+    <div class="sk-modal-panel sk-ex-b4a851bd">
       <div class="sk-modal-header">
-        <h3 class="sk-modal-title"><i class="bi bi-key" style="color:var(--sk-warning);margin-right:0.5rem"></i>Reset Password</h3>
-        <button class="sk-modal-close" onclick="closeResetPasswordModal()"><i class="bi bi-x-lg"></i></button>
+        <h3 class="sk-modal-title"><i class="bi bi-key sk-ex-26c10e9e"></i>Reset Password</h3>
+        <button type="button" class="sk-modal-close" onclick="closeResetPasswordModal()" aria-label="Close reset password dialog" title="Close reset password dialog"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="sk-modal-body">
-        <p style="font-size:var(--sk-text-sm);color:var(--sk-text-tertiary);margin-bottom:1rem">Reset password for <strong id="rpUserName"></strong></p>
+        <p class="sk-ex-ee59914f">Reset password for <strong id="rpUserName"></strong></p>
         <input type="hidden" id="rpUserId">
         
         <div class="sk-form-group">
-          <label class="sk-label">New Password <span style="color:var(--sk-text-placeholder)">(optional)</span></label>
+          <label class="sk-label">New Password <span class="sk-ex-d2f2b222">(optional)</span></label>
           <input type="text" id="rpPassword" placeholder="Enter custom password..." class="sk-input">
-          <p style="font-size:var(--sk-text-xs);color:var(--sk-text-placeholder);margin-top:0.25rem">If left blank, a random 8-character password will be generated automatically. The new password will be emailed to the user.</p>
+          <p class="sk-ex-fa6a3e05">If left blank, a random 8-character password will be generated automatically. The new password will be emailed to the user.</p>
         </div>
       </div>
       <div class="sk-modal-footer">
-        <button onclick="closeResetPasswordModal()" class="sk-btn sk-btn-secondary">Cancel</button>
-        <button onclick="confirmResetPassword()" class="sk-btn sk-btn-warning">Reset & Email User</button>
+        <button type="button" onclick="closeResetPasswordModal()" class="sk-btn sk-btn-secondary">Cancel</button>
+        <button type="button" onclick="confirmResetPassword()" class="sk-btn sk-btn-warning">Reset & Email User</button>
       </div>
     </div>
   </div>
 
   <!-- Scripts -->
-  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/api-config.js?v=backend-sync-1"></script>
   <script src="../static/js/utils.js"></script>
-  <script src="../static/js/theme.js?v=ui-fix-30"></script>
+  <script src="../static/js/theme.js?v=live-status-2"></script>
   <script src="../static/js/components.js"></script>
-  <script src="../static/js/layout.js?v=ui-fix-30"></script>
+  <script src="../static/js/layout.js?v=nav-skeleton-1"></script>
   <script src="../static/js/notify-modal.js?v=ui-fix-5"></script>
-  <script src="../static/js/admin-dashboard.js?v=ui-fix-9"></script>
+  <script src="../static/js/admin-dashboard.js?v=backend-sync-1"></script>
   <script>
     SKLayout.init({
       page: 'admin',

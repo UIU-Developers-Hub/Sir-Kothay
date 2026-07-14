@@ -50,5 +50,6 @@ urlpatterns = [
     path('api/messaging/', include('messaging.api_urls')),
     path('api/scheduler/', include('scheduler.api_urls')),
     path('api/notifications/', include('notifications.api_urls')),
+    path('api/health/', views.health_view, name='api_health'),
     path('api/github-webhook/', webhooks.github_webhook, name='github_webhook'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -2,6 +2,69 @@
 var _allConvos = [];
 var _chatFilter = 'all';
 var _activeConvo = null;
+var _chatLiveTimer = null;
+var _chatLiveInFlight = false;
+var _chatListSignature = '';
+var _activeConvoSignature = '';
+var FACULTY_CHAT_LIVE_INTERVAL_MS = 3000;
+
+function _chatTokenUserId() {
+  var token = localStorage.getItem('access_token');
+  if (!token) return null;
+  try {
+    var payload = token.split('.')[1];
+    if (!payload) return null;
+    var base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) base64 += '=';
+    var decoded = JSON.parse(atob(base64));
+    return decoded.user_id || decoded.id || decoded.sub || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function _chatCurrentUserId() {
+  var user = window.SKLayout && SKLayout.getUser ? SKLayout.getUser() : null;
+  return user && user.id ? user.id : _chatTokenUserId();
+}
+
+function _chatSeenStorageKey() {
+  return 'sk_faculty_chat_seen_' + (_chatCurrentUserId() || 'guest');
+}
+
+function _chatReadSeenMap() {
+  try {
+    var value = JSON.parse(localStorage.getItem(_chatSeenStorageKey()) || '{}');
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function _chatWriteSeenMap(map) {
+  localStorage.setItem(_chatSeenStorageKey(), JSON.stringify(map || {}));
+}
+
+function _chatConvoSignature(c) {
+  return [c.type, c.id, c.lastMessageAt || '', c.lastSender || '', c.lastMsg || ''].join(':');
+}
+
+function _chatThreadUnread(c, seenMap) {
+  if (c.type !== 'thread' || !c.lastSender) return false;
+  if (c.lastSenderRole === 'FACULTY') return false;
+  var userId = _chatCurrentUserId();
+  if (userId && parseInt(c.lastSender, 10) === parseInt(userId, 10)) return false;
+  return seenMap[c.type + ':' + c.id] !== _chatConvoSignature(c);
+}
+
+function _markThreadConvoSeen(c) {
+  if (!c || c.type !== 'thread') return;
+  var seen = _chatReadSeenMap();
+  seen[c.type + ':' + c.id] = _chatConvoSignature(c);
+  _chatWriteSeenMap(seen);
+  c.unread = false;
+  _updateBadge();
+}
 
 function _convoAvatar(src, name, variant) {
   var initial = (name || '?').charAt(0).toUpperCase();
@@ -27,44 +90,170 @@ function _statusDot(status) {
   return '<span class="sk-convo-dot" title="Closed"></span>';
 }
 
-async function loadUnifiedInbox() {
-  var threads = [], dms = [];
-  try {
-    var [tRes, dRes] = await Promise.all([
-      apiRequest(API_BASE_URL + '/api/messaging/chat/threads/'),
-      apiRequest(API_BASE_URL + '/api/messaging/inbox/')
-    ]);
-    if (tRes.ok) threads = await tRes.json();
-    if (dRes.ok) dms = await dRes.json();
-  } catch (e) { console.error(e); }
+function _inboxTabActive() {
+  var tab = document.getElementById('tab-inbox');
+  return !!tab && !tab.classList.contains('hidden') && document.visibilityState !== 'hidden';
+}
 
-  _allConvos = [];
-  threads.forEach(function (t) {
+var _facultyDeepLinkOpened = '';
+
+function _readFacultyInboxDeepLink() {
+  var params = new URLSearchParams(window.location.search);
+  var tab = params.get('tab');
+  if (tab && ['inbox', 'chats'].indexOf(tab) === -1) return null;
+
+  var threadId = parseInt(params.get('thread'), 10);
+  if (!isNaN(threadId) && threadId > 0) return { type: 'thread', id: threadId };
+
+  var dmId = parseInt(params.get('dm') || params.get('message'), 10);
+  if (!isNaN(dmId) && dmId > 0) return { type: 'dm', id: dmId };
+
+  return null;
+}
+
+function _syncFacultyConversationUrl(type, id) {
+  try {
+    var url = new URL(window.location);
+    url.searchParams.set('tab', 'inbox');
+    url.searchParams.delete('thread');
+    url.searchParams.delete('dm');
+    url.searchParams.delete('message');
+    if (type === 'thread') url.searchParams.set('thread', id);
+    if (type === 'dm') url.searchParams.set('dm', id);
+    history.replaceState(null, '', url);
+  } catch (e) {}
+}
+
+async function _openFacultyDeepLinkedConversation() {
+  var target = _readFacultyInboxDeepLink();
+  if (!target) return false;
+
+  var key = target.type + ':' + target.id;
+  if (_facultyDeepLinkOpened === key) return true;
+
+  var convo = _allConvos.find(function (c) {
+    return c.type === target.type && c.id === target.id;
+  });
+  if (!convo) return false;
+
+  _facultyDeepLinkOpened = key;
+  await openConversation(target.type, target.id);
+  return true;
+}
+
+function _convoListSignature(convos) {
+  return (convos || []).map(function (c) {
+    return [c.type, c.id, c.status, c.lastTime, c.lastMsg || '', c.unread ? 1 : 0].join(':');
+  }).join('|');
+}
+
+function _threadDetailSignature(thread) {
+  return [
+    'thread',
+    thread.id,
+    thread.status,
+    thread.closed_by_name || '',
+    thread.last_activity_at || '',
+    (thread.messages || []).map(function (m) {
+      return [m.id, m.sender, m.body, m.created_at].join(':');
+    }).join('|')
+  ].join('::');
+}
+
+function _dmDetailSignature(dm) {
+  return [
+    'dm',
+    dm.id,
+    dm.is_closed ? 1 : 0,
+    dm.is_read ? 1 : 0,
+    dm.replied_at || '',
+    dm.body || '',
+    dm.reply_body || ''
+  ].join('::');
+}
+
+async function _fetchUnifiedInboxData() {
+  var threads = [], dms = [];
+  var [tRes, dRes] = await Promise.all([
+    apiRequest(API_BASE_URL + '/api/messaging/chat/threads/'),
+    apiRequest(API_BASE_URL + '/api/messaging/inbox/')
+  ]);
+  if (tRes.ok) threads = await tRes.json();
+  if (dRes.ok) dms = await dRes.json();
+  return { threads: threads, dms: dms };
+}
+
+function _buildUnifiedConvos(data) {
+  var convos = [];
+  (data.threads || []).forEach(function (t) {
     var info = t.student_info || {};
-    _allConvos.push({
+    var last = t.last_message || {};
+    convos.push({
       type: 'thread', id: t.id, name: info.username || 'Student',
       email: info.email || '', avatar: resolveProfileImage(info.profile_image_url),
       subject: t.subject, status: t.status, studentId: info.student_id || '',
-      lastMsg: t.last_message ? t.last_message.body : '',
+      lastMsg: last.body || '',
+      lastSender: last.sender || null,
+      lastSenderRole: last.sender_role || null,
+      lastMessageAt: last.created_at || null,
       lastTime: t.last_activity_at || t.created_at,
       unread: false, raw: t
     });
   });
-  dms.forEach(function (d) {
+  (data.dms || []).forEach(function (d) {
     var replies = _parseReplies(d.reply_body);
-    _allConvos.push({
+    convos.push({
       type: 'dm', id: d.id, name: d.sender_name, email: d.sender_email,
       avatar: '', subject: d.subject || 'Direct Message', status: d.is_closed ? 'CLOSED' : 'OPEN',
       studentId: d.sender_student_id || '', isRegistered: d.sender_is_registered,
       lastMsg: replies.length ? replies[replies.length - 1].body : d.body,
+      lastSender: null,
+      lastSenderRole: null,
+      lastMessageAt: d.replied_at || d.created_at,
       lastTime: d.replied_at || d.created_at, unread: !d.is_read, raw: d
     });
   });
+  var seen = _chatReadSeenMap();
+  convos.forEach(function (c) {
+    if (c.type === 'thread') c.unread = _chatThreadUnread(c, seen);
+  });
+  convos.sort(function (a, b) { return new Date(b.lastTime) - new Date(a.lastTime); });
+  return convos;
+}
 
-  _allConvos.sort(function (a, b) { return new Date(b.lastTime) - new Date(a.lastTime); });
-  _renderConvoList();
-  _initFilterBtns();
-  _updateBadge();
+async function loadUnifiedInbox(options) {
+  options = options || {};
+  try {
+    var nextConvos = _buildUnifiedConvos(await _fetchUnifiedInboxData());
+    if (options.badgeOnly || !_inboxTabActive()) {
+      var badgeCount = nextConvos.filter(function (c) { return c.unread; }).length;
+      _setInboxBadge(badgeCount);
+      return nextConvos;
+    }
+    var nextSignature = _convoListSignature(nextConvos);
+    var activeIdentity = _activeConvo ? { type: _activeConvo.type, id: _activeConvo.id } : null;
+
+    _allConvos = nextConvos;
+    if (activeIdentity) {
+      _activeConvo = _allConvos.find(function (c) {
+        return c.type === activeIdentity.type && c.id === activeIdentity.id;
+      }) || null;
+    }
+
+    if (nextSignature !== _chatListSignature || !options.silent) {
+      _chatListSignature = nextSignature;
+      _renderConvoList();
+      _initFilterBtns();
+    }
+    _updateBadge();
+    await _openFacultyDeepLinkedConversation();
+
+    if (!_activeConvo && activeIdentity && !options.silent) _backToList();
+    return _allConvos;
+  } catch (e) {
+    if (!options.silent) console.error(e);
+    return _allConvos;
+  }
 }
 
 function _initFilterBtns() {
@@ -100,7 +289,7 @@ function _renderConvoList() {
     if (c.type === 'thread') {
       badge = _statusDot(c.status);
     }
-    var verified = c.studentId ? '<i class="bi bi-patch-check-fill" style="color:var(--sk-primary);font-size:0.625rem"></i>' : '';
+    var verified = c.studentId ? '<i class="bi bi-patch-check-fill sk-ex-2f3ca1be"></i>' : '';
     var typeBadge = (c.type === 'dm' && !c.isRegistered) ? '<span class="sk-convo-type visitor">Visitor</span>' : '';
     var unreadDot = c.unread ? '<span class="sk-convo-dot unread"></span>' : '';
     return '<div class="sk-convo-item ' + (isActive ? 'active' : '') + '" onclick="openConversation(\'' + c.type + '\',' + c.id + ')">' +
@@ -122,6 +311,8 @@ async function openConversation(type, id) {
   var c = _allConvos.find(function (x) { return x.type === type && x.id === id; });
   if (!c) return;
   _activeConvo = c;
+  _syncFacultyConversationUrl(type, id);
+  if (type === 'thread') _markThreadConvoSeen(c);
   _renderConvoList(); // highlight active
 
   // On mobile, detail replaces the list. On desktop, keep the split view visible.
@@ -143,29 +334,45 @@ async function openConversation(type, id) {
 }
 
 /* ---- Thread conversation ---- */
-async function _renderThreadConvo(c) {
+async function _renderThreadConvo(c, options) {
+  options = options || {};
   try {
     var res = await apiRequest(API_BASE_URL + '/api/messaging/chat/' + c.id + '/');
     if (!res.ok) return;
     var thread = await res.json();
+    var signature = _threadDetailSignature(thread);
+    if (options.onlyIfChanged && signature === _activeConvoSignature) return;
+    _activeConvoSignature = signature;
     c.raw = thread; // update raw
+    c.status = thread.status;
+    c.lastTime = thread.last_activity_at || thread.created_at;
+    c.lastMsg = thread.last_message ? thread.last_message.body : c.lastMsg;
+    c.lastSender = thread.last_message ? thread.last_message.sender : c.lastSender;
+    c.lastSenderRole = thread.last_message ? thread.last_message.sender_role : c.lastSenderRole;
+    c.lastMessageAt = thread.last_message ? thread.last_message.created_at : c.lastMessageAt;
+    _markThreadConvoSeen(c);
     var stu = thread.student_info || {};
     var stuAvatarUrl = resolveProfileImage(stu.profile_image_url);
-    var verified = stu.student_id ? ' <i class="bi bi-patch-check-fill" style="color:var(--sk-primary)"></i>' : '';
+    var verified = stu.student_id ? ' <i class="bi bi-patch-check-fill sk-ex-dec34d23"></i>' : '';
+    var oldInput = document.getElementById('replyInput');
+    var oldValue = oldInput && options.preserveReply ? oldInput.value : '';
+    var hadFocus = oldInput && document.activeElement === oldInput;
+    var msgBox = document.getElementById('chatConvoMessages');
+    var shouldStick = !msgBox || (msgBox.scrollHeight - msgBox.scrollTop - msgBox.clientHeight < 96);
 
     // Header
     var headerHtml =
-      '<button onclick="_backToList()" class="sk-btn sk-btn-ghost sk-btn-icon sk-chat-back" title="Back"><i class="bi bi-arrow-left"></i></button>' +
+      '<button type="button" onclick="_backToList()" class="sk-btn sk-btn-ghost sk-btn-icon sk-chat-back" title="Back"><i class="bi bi-arrow-left"></i></button>' +
       _chatHeaderAvatar(stuAvatarUrl, stu.username || 'Student') +
       '<div class="sk-chat-header-main">' +
         '<p class="sk-chat-header-title">' + escapeHtml(stu.username || 'Student') + verified + '</p>' +
         '<p class="sk-chat-header-meta">' + escapeHtml(thread.subject) + ' · ' + _statusLabel(thread.status) + '</p>' +
       '</div>' +
       '<div class="sk-chat-header-actions">' +
-        (stu.student_id ? '<button onclick="_viewProfile(' + JSON.stringify(JSON.stringify(stu)).replace(/"/g, '&quot;') + ')" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-person-circle"></i> Profile</button>' : '') +
-        (thread.status === 'PENDING' ? '<button onclick="_acceptThread(' + thread.id + ')" class="sk-btn sk-btn-success sk-btn-sm"><i class="bi bi-check-lg"></i> Accept</button>' : '') +
-        (thread.status !== 'CLOSED' ? '<button onclick="_closeThread(' + thread.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Close"><i class="bi bi-x-circle"></i></button>' : '') +
-        '<button onclick="_deleteThreadInline(' + thread.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete"><i class="bi bi-trash"></i></button>' +
+        (stu.student_id ? '<button type="button" onclick="_viewProfile(' + JSON.stringify(JSON.stringify(stu)).replace(/"/g, '&quot;') + ')" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-person-circle"></i> Profile</button>' : '') +
+        (thread.status === 'PENDING' ? '<button type="button" onclick="_acceptThread(' + thread.id + ')" class="sk-btn sk-btn-success sk-btn-sm"><i class="bi bi-check-lg"></i> Accept</button>' : '') +
+        (thread.status !== 'CLOSED' ? '<button type="button" onclick="_closeThread(' + thread.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Close"><i class="bi bi-x-circle"></i></button>' : '') +
+        '<button type="button" onclick="_deleteThreadInline(' + thread.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" title="Delete"><i class="bi bi-trash"></i></button>' +
       '</div>';
     document.getElementById('chatConvoHeader').innerHTML = headerHtml;
 
@@ -184,21 +391,40 @@ async function _renderThreadConvo(c) {
       document.getElementById('chatReplyBar').innerHTML =
         '<div class="sk-chat-reply-form">' +
           '<input type="text" id="replyInput" placeholder="Type a reply..." class="sk-input" onkeydown="if(event.key===\'Enter\')_sendThreadReply(' + thread.id + ')">' +
-          '<button onclick="_sendThreadReply(' + thread.id + ')" class="sk-btn sk-btn-primary"><i class="bi bi-send"></i></button>' +
+          '<button type="button" onclick="_sendThreadReply(' + thread.id + ')" class="sk-btn sk-btn-primary" aria-label="Send reply" title="Send reply"><i class="bi bi-send"></i></button>' +
         '</div>';
+      if (oldValue) {
+        var nextInput = document.getElementById('replyInput');
+        if (nextInput) {
+          nextInput.value = oldValue;
+          if (hadFocus) {
+            nextInput.focus();
+            nextInput.setSelectionRange(nextInput.value.length, nextInput.value.length);
+          }
+        }
+      }
     } else if (thread.status === 'PENDING') {
-      document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta" style="text-align:center">Accept this chat to reply.</p>';
+      document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta sk-ex-91a87015">Accept this chat to reply.</p>';
     } else {
-      document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta" style="text-align:center">This conversation is closed.</p>';
+      document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta sk-ex-91a87015">This conversation is closed.</p>';
     }
-    _scrollMsgs();
+    if (shouldStick || options.forceScroll) _scrollMsgs();
   } catch (e) { console.error(e); }
 }
 
 /* ---- DM conversation ---- */
-function _renderDmConvo(c) {
+function _renderDmConvo(c, options) {
+  options = options || {};
   var dm = c.raw;
-  var verified = c.isRegistered ? ' <i class="bi bi-patch-check-fill" style="color:var(--sk-primary)"></i>' : '';
+  var signature = _dmDetailSignature(dm);
+  if (options.onlyIfChanged && signature === _activeConvoSignature) return;
+  _activeConvoSignature = signature;
+  var verified = c.isRegistered ? ' <i class="bi bi-patch-check-fill sk-ex-dec34d23"></i>' : '';
+  var oldInput = document.getElementById('replyInput');
+  var oldValue = oldInput && options.preserveReply ? oldInput.value : '';
+  var hadFocus = oldInput && document.activeElement === oldInput;
+  var msgBox = document.getElementById('chatConvoMessages');
+  var shouldStick = !msgBox || (msgBox.scrollHeight - msgBox.scrollTop - msgBox.clientHeight < 96);
 
   // Mark as read
   if (!dm.is_read) {
@@ -209,16 +435,16 @@ function _renderDmConvo(c) {
 
   // Header
   document.getElementById('chatConvoHeader').innerHTML =
-    '<button onclick="_backToList()" class="sk-btn sk-btn-ghost sk-btn-icon sk-chat-back" title="Back"><i class="bi bi-arrow-left"></i></button>' +
+    '<button type="button" onclick="_backToList()" class="sk-btn sk-btn-ghost sk-btn-icon sk-chat-back" title="Back"><i class="bi bi-arrow-left"></i></button>' +
     _chatHeaderAvatar('', c.name, c.isRegistered ? '' : 'visitor') +
     '<div class="sk-chat-header-main">' +
       '<p class="sk-chat-header-title">' + escapeHtml(c.name) + verified + (!c.isRegistered ? ' <span class="sk-convo-type visitor">Visitor</span>' : '') + '</p>' +
-      '<p class="sk-chat-header-meta">' + escapeHtml(c.email) + (c.subject ? ' · ' + escapeHtml(c.subject) : '') + '</p>' +
+      '<p class="sk-chat-header-meta wrap">' + escapeHtml(c.email) + (c.subject ? ' · ' + escapeHtml(c.subject) : '') + '</p>' +
     '</div>' +
     '<div class="sk-chat-header-actions">' +
-      (c.isRegistered ? '<button onclick="_viewProfile(' + JSON.stringify(JSON.stringify({username:c.name,email:c.email,student_id:c.studentId})).replace(/"/g,'&quot;') + ')" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-person-circle"></i> Profile</button>' : '') +
-      '<button onclick="_closeDmInline(' + dm.id + ')" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-check-circle"></i> Close</button>' +
-      '<button onclick="_deleteDmInline(' + dm.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger"><i class="bi bi-trash"></i></button>' +
+      (c.isRegistered ? '<button type="button" onclick="_viewProfile(' + JSON.stringify(JSON.stringify({username:c.name,email:c.email,student_id:c.studentId})).replace(/"/g,'&quot;') + ')" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-person-circle"></i> Profile</button>' : '') +
+      '<button type="button" onclick="_closeDmInline(' + dm.id + ')" class="sk-btn sk-btn-secondary sk-btn-sm"><i class="bi bi-check-circle"></i> Close</button>' +
+      '<button type="button" onclick="_deleteDmInline(' + dm.id + ')" class="sk-btn sk-btn-ghost sk-btn-icon danger" aria-label="Delete direct message" title="Delete direct message"><i class="bi bi-trash"></i></button>' +
     '</div>';
 
   // Messages
@@ -234,12 +460,22 @@ function _renderDmConvo(c) {
     document.getElementById('chatReplyBar').innerHTML =
       '<div class="sk-chat-reply-form">' +
         '<input type="text" id="replyInput" placeholder="Type a reply..." class="sk-input" onkeydown="if(event.key===\'Enter\')_sendDmReply(' + dm.id + ')">' +
-        '<button onclick="_sendDmReply(' + dm.id + ')" class="sk-btn sk-btn-primary"><i class="bi bi-send"></i></button>' +
+        '<button type="button" onclick="_sendDmReply(' + dm.id + ')" class="sk-btn sk-btn-primary" aria-label="Send reply" title="Send reply"><i class="bi bi-send"></i></button>' +
       '</div>';
+    if (oldValue) {
+      var nextInput = document.getElementById('replyInput');
+      if (nextInput) {
+        nextInput.value = oldValue;
+        if (hadFocus) {
+          nextInput.focus();
+          nextInput.setSelectionRange(nextInput.value.length, nextInput.value.length);
+        }
+      }
+    }
   } else {
-    document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta" style="text-align:center">This conversation is closed.</p>';
+    document.getElementById('chatReplyBar').innerHTML = '<p class="sk-chat-header-meta sk-ex-91a87015">This conversation is closed.</p>';
   }
-  _scrollMsgs();
+  if (shouldStick || options.forceScroll) _scrollMsgs();
 }
 
 /* ---- Actions ---- */
@@ -255,6 +491,61 @@ async function _sendThreadReply(threadId) {
     if (res.ok) { await loadUnifiedInbox(); openConversation('thread', threadId); }
     else { var e = await res.json(); await skNotify(e.error || 'Failed', { variant: 'error' }); input.disabled = false; }
   } catch (e) { input.disabled = false; }
+}
+
+function _scheduleFacultyChatLiveTick() {
+  if (_chatLiveTimer) clearTimeout(_chatLiveTimer);
+  if (!_inboxTabActive()) return;
+  _chatLiveTimer = setTimeout(_facultyChatLiveTick, FACULTY_CHAT_LIVE_INTERVAL_MS);
+}
+
+async function _refreshActiveConvoLive() {
+  if (!_activeConvo || !_inboxTabActive()) return;
+  if (_activeConvo.type === 'thread') {
+    await _renderThreadConvo(_activeConvo, { onlyIfChanged: true, preserveReply: true });
+  } else {
+    _renderDmConvo(_activeConvo, { onlyIfChanged: true, preserveReply: true });
+  }
+}
+
+async function _facultyChatLiveTick() {
+  if (!_inboxTabActive()) {
+    stopFacultyChatLive();
+    return;
+  }
+  if (window.SKBackendStatus && window.SKBackendStatus.getState && window.SKBackendStatus.getState() === 'offline') {
+    _scheduleFacultyChatLiveTick();
+    return;
+  }
+  if (_chatLiveInFlight) {
+    _scheduleFacultyChatLiveTick();
+    return;
+  }
+  _chatLiveInFlight = true;
+  try {
+    var previousActive = _activeConvo ? { type: _activeConvo.type, id: _activeConvo.id } : null;
+    await loadUnifiedInbox({ silent: true });
+    if (previousActive && !_activeConvo) {
+      _backToList();
+    } else {
+      await _refreshActiveConvoLive();
+    }
+  } catch (e) {
+    // The global backend banner handles visible connection failures.
+  } finally {
+    _chatLiveInFlight = false;
+    _scheduleFacultyChatLiveTick();
+  }
+}
+
+function startFacultyChatLive() {
+  if (!_inboxTabActive()) return;
+  _scheduleFacultyChatLiveTick();
+}
+
+function stopFacultyChatLive() {
+  if (_chatLiveTimer) clearTimeout(_chatLiveTimer);
+  _chatLiveTimer = null;
 }
 
 async function _sendDmReply(dmId) {
@@ -331,11 +622,11 @@ async function _closeAndDeleteAll() {
 
 function _viewProfile(jsonStr) {
   var s = JSON.parse(jsonStr);
-  var badge = s.student_id ? '<span class="sk-profile-pill" style="margin-top:0.75rem"><i class="bi bi-patch-check-fill"></i>Verified</span>' : '';
+  var badge = s.student_id ? '<span class="sk-profile-pill sk-ex-43cfd349"><i class="bi bi-patch-check-fill"></i>Verified</span>' : '';
   skModal.open(
-    '<div style="text-align:center">' +
-      '<div class="sk-chat-header-avatar" style="width:64px;height:64px;margin:0 auto;font-size:1.5rem">' + (s.username||'S').charAt(0).toUpperCase() + '</div>' +
-      '<h3 class="sk-profile-summary-title" style="margin-top:0.75rem">' + escapeHtml(s.username||'User') + '</h3>' +
+    '<div class="sk-ex-91a87015">' +
+      '<div class="sk-chat-header-avatar sk-ex-e80e96c2">' + (s.username||'S').charAt(0).toUpperCase() + '</div>' +
+      '<h3 class="sk-profile-summary-title sk-ex-43cfd349">' + escapeHtml(s.username||'User') + '</h3>' +
       (s.email ? '<p class="sk-profile-summary-subtitle">' + escapeHtml(s.email) + '</p>' : '') +
       (s.student_id ? '<p class="sk-chat-header-meta">ID: ' + escapeHtml(s.student_id) + '</p>' : '') +
       badge + '</div>',
@@ -371,9 +662,9 @@ function _renderBubble(body, name, time, isMe) {
 }
 
 function _statusLabel(s) {
-  if (s === 'PENDING') return '<span style="color:#b45309">Awaiting</span>';
-  if (s === 'ACTIVE') return '<span style="color:var(--sk-success)">Open</span>';
-  return '<span style="color:var(--sk-text-placeholder)">Closed</span>';
+  if (s === 'PENDING') return '<span class="sk-ex-6ddf2aac">Awaiting</span>';
+  if (s === 'ACTIVE') return '<span class="sk-ex-3998b87e">Open</span>';
+  return '<span class="sk-ex-d2f2b222">Closed</span>';
 }
 
 function _scrollMsgs() {
@@ -398,21 +689,66 @@ function _parseReplies(replyBody) {
     var parsed = JSON.parse(replyBody);
     if (Array.isArray(parsed)) return parsed;
   } catch (e) {}
-  return [{ body: replyBody, by: 'broadcaster', at: null }];
+  return String(replyBody).split(/\n---REPLY_SEP---\n/g).map(function (entry) {
+    var trimmed = entry.trim();
+    var match = trimmed.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
+    return {
+      body: match ? match[2].trim() : trimmed,
+      by: 'broadcaster',
+      at: match ? match[1] : null
+    };
+  }).filter(function (entry) {
+    return entry.body;
+  });
 }
 
 function _updateBadge() {
   var count = _allConvos.filter(function (c) { return c.unread; }).length;
+  _setInboxBadge(count);
+}
+
+function _setInboxBadge(count) {
   var el = document.getElementById('unreadBadge');
   if (el) {
-    el.textContent = count;
+    el.textContent = count > 99 ? '99+' : String(count);
     if (count > 0) el.classList.remove('hidden');
     else el.classList.add('hidden');
   }
   var dmEl = document.getElementById('unreadDmCount');
-  if (dmEl) dmEl.textContent = count;
+  if (dmEl) dmEl.textContent = count > 99 ? '99+' : String(count);
+  if (window.SKLayout && SKLayout.setNavBadge) SKLayout.setNavBadge('inbox', count);
 }
 
 // Keep old function name for compatibility with analytics click
 function loadInbox() { loadUnifiedInbox(); }
-function loadUnreadCount() { _updateBadge(); }
+async function refreshFacultyInboxBadge() {
+  try {
+    var convos = _buildUnifiedConvos(await _fetchUnifiedInboxData());
+    var count = convos.filter(function (c) { return c.unread; }).length;
+    _setInboxBadge(count);
+  } catch (e) {}
+}
+function loadUnreadCount() { return refreshFacultyInboxBadge(); }
+
+function clearFacultyInbox() {
+  stopFacultyChatLive();
+  _allConvos = [];
+  _activeConvo = null;
+  _chatListSignature = '';
+  _activeConvoSignature = '';
+  var list = document.getElementById('conversationList');
+  if (list) list.innerHTML = '';
+  var empty = document.getElementById('chatEmptyState');
+  if (empty) empty.style.display = 'flex';
+  var active = document.getElementById('chatActiveConvo');
+  if (active) active.style.display = 'none';
+  ['chatConvoHeader', 'chatConvoMessages', 'chatReplyBar'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+}
+
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible') startFacultyChatLive();
+  else stopFacultyChatLive();
+});

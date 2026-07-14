@@ -41,15 +41,15 @@ async function loadInbox() {
         '<div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="bi bi-envelope-open text-2xl text-blue-500"></i></div>' +
         '<h3 class="text-gray-700 font-semibold mb-1">No messages from visitors yet</h3>' +
         '<p class="text-gray-400 text-sm mb-2">When visitors find you via your <strong>broadcast page</strong> or <strong>QR code</strong>,<br>they can send you private messages that appear here.</p>' +
-        '<button onclick="viewBroadcastPage()" class="text-sm text-blue-500 underline hover:text-blue-700">View your public broadcast page →</button></div>';
+        '<button type="button" onclick="viewBroadcastPage()" class="text-sm text-blue-500 underline hover:text-blue-700">View your public broadcast page →</button></div>';
       return;
     }
     el.innerHTML = data.map(function (dm) {
       var unread = !dm.is_read;
       var replies = parseReplies(dm.reply_body);
-      var avatar = '<div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white" style="background:' + stringToColor(dm.sender_name) + '">' + dm.sender_name.charAt(0).toUpperCase() + '</div>';
+      var avatar = '<div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white ' + SKDynamicStyles.classFor('background:' + stringToColor(dm.sender_name)) + '">' + dm.sender_name.charAt(0).toUpperCase() + '</div>';
       var verifiedBadge = dm.sender_is_registered ? '<i class="bi bi-patch-check-fill text-blue-500 text-xs ml-1" title="Verified Account (ID: ' + escapeHtml(dm.sender_student_id || 'N/A') + ')"></i>' : '';
-      var viewProfileBtn = dm.sender_is_registered ? '<button onclick="event.stopPropagation(); _viewDmSenderProfile(' + JSON.stringify(JSON.stringify({username: dm.sender_name, email: dm.sender_email, student_id: dm.sender_student_id, role: dm.sender_role})).replace(/"/g, '&quot;') + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-blue-500 hover:bg-blue-50 transition"><i class="bi bi-person-circle mr-1"></i>View</button>' : '';
+      var viewProfileBtn = dm.sender_is_registered ? '<button type="button" onclick="event.stopPropagation(); _viewDmSenderProfile(' + JSON.stringify(JSON.stringify({username: dm.sender_name, email: dm.sender_email, student_id: dm.sender_student_id, role: dm.sender_role})).replace(/"/g, '&quot;') + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-blue-500 hover:bg-blue-50 transition"><i class="bi bi-person-circle mr-1"></i>View</button>' : '';
       return '<div class="flex gap-3 p-4 rounded-xl border mb-2 transition-shadow hover:shadow-md ' + (unread ? 'bg-blue-50/50 border-blue-200' : 'bg-white border-gray-100') + '">' +
         avatar +
         '<div class="flex-1 min-w-0">' +
@@ -60,10 +60,10 @@ async function loadInbox() {
         '<p class="text-sm text-gray-600 mt-1.5 leading-relaxed">' + escapeHtml(dm.body) + '</p>' +
         renderReplies(replies) +
         '<div class="flex gap-1.5 mt-2">' +
-        '<button onclick="openReply(' + dm.id + ',' + JSON.stringify(escapeHtml(dm.sender_name)).replace(/"/g, '&quot;') + ')" class="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition"><i class="bi bi-reply mr-1"></i>' + (replies.length > 0 ? 'Reply Again' : 'Reply') + '</button>' +
+        '<button type="button" onclick="openReply(' + dm.id + ',' + JSON.stringify(escapeHtml(dm.sender_name)).replace(/"/g, '&quot;') + ')" class="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition"><i class="bi bi-reply mr-1"></i>' + (replies.length > 0 ? 'Reply Again' : 'Reply') + '</button>' +
         viewProfileBtn +
-        '<button onclick="closeDm(' + dm.id + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-yellow-50 hover:text-yellow-600 transition" title="Close DM"><i class="bi bi-check-circle"></i></button>' +
-        '<button onclick="deleteDm(' + dm.id + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500 transition"><i class="bi bi-trash"></i></button>' +
+        '<button type="button" onclick="closeDm(' + dm.id + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-yellow-50 hover:text-yellow-600 transition" title="Close DM"><i class="bi bi-check-circle"></i></button>' +
+        '<button type="button" onclick="deleteDm(' + dm.id + ')" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500 transition" aria-label="Delete direct message" title="Delete direct message"><i class="bi bi-trash"></i></button>' +
         '</div></div></div>';
     }).join('');
     loadUnreadCount();

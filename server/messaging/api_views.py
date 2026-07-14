@@ -1,6 +1,5 @@
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.core.mail import send_mail
 from django.conf import settings as django_settings
 
 from rest_framework import status
@@ -18,7 +17,13 @@ from .serializers import (
     DirectMessageReplySerializer,
     DirectMessageSerializer,
 )
-from notifications.services import send_email_async
+from notifications.services import (
+    chat_thread_url,
+    dashboard_url_for_user,
+    manage_link_for_email,
+    public_broadcast_url,
+    send_email_async,
+)
 
 
 @api_view(['POST'])
@@ -49,15 +54,35 @@ def send_dm(request, user_slug):
         # Notify the faculty of the new ChatThread message
         faculty_email = user_details.user.email
         if faculty_email:
+            thread_link = chat_thread_url(user_details.user, thread.id)
             fac_subject = f'New Chat Request from {registered_user.username}'
             fac_body = (
                 f'Hi {user_details.user.username},\n\n'
                 f'{registered_user.username} has started a new chat with you.\n\n'
                 f'Subject: {subject}\n'
                 f'Message:\n{body}\n\n'
-                f'You can view and reply from your dashboard Inbox.\n'
+                f'You can view and reply from your dashboard Inbox:\n{thread_link}\n'
             )
-            send_email_async(fac_subject, fac_body, django_settings.DEFAULT_FROM_EMAIL, [faculty_email])
+            send_email_async(
+                fac_subject,
+                fac_body,
+                django_settings.DEFAULT_FROM_EMAIL,
+                [faculty_email],
+                eyebrow='New chat request',
+                title='New chat request',
+                greeting=user_details.user.username,
+                intro=[f'{registered_user.username} has started a new chat with you.'],
+                facts=[
+                    ('Student', registered_user.username),
+                    ('Student ID', registered_user.student_id or 'N/A'),
+                    ('Subject', subject),
+                ],
+                quote_label='Message',
+                quote=body,
+                action_label='Open chat request',
+                action_url=thread_link,
+                footer_note='You received this because new chat email notifications are enabled for your account.',
+            )
 
         return Response(
             {'message': 'Your message has been sent and added to your Dashboard Inbox.'},
@@ -77,9 +102,8 @@ def send_dm(request, user_slug):
         defaults={'notify_preference': 'none', 'is_active': False}
     )
 
-    client_base = getattr(django_settings, 'CLIENT_PUBLIC_BASE_URL', 'http://127.0.0.1:5500/client')
-    if not client_base: client_base = 'http://127.0.0.1:5500/client'
-    manage_url = f'{client_base}/broadcast/manage.html?token={sub.unsubscribe_token}'
+    manage_url = manage_link_for_email(dm.sender_email, subscription=sub)
+    profile_url = public_broadcast_url(user_details.user)
 
     # Send confirmation email to the sender
     subject = f'Message sent to {user_details.user.username}'
@@ -92,11 +116,31 @@ def send_dm(request, user_slug):
         f'---\n'
         f'Manage your subscriptions:\n{manage_url}\n'
     )
-    send_email_async(subject, body, django_settings.DEFAULT_FROM_EMAIL, [dm.sender_email])
+    secondary_actions = []
+    if profile_url:
+        secondary_actions.append({'label': 'Open faculty page', 'url': profile_url})
+    send_email_async(
+        subject,
+        body,
+        django_settings.DEFAULT_FROM_EMAIL,
+        [dm.sender_email],
+        eyebrow='Message delivered',
+        title=f'Message sent to {user_details.user.username}',
+        greeting=dm.sender_name,
+        intro=['Your message has been successfully delivered.'],
+        facts=[('Faculty', user_details.user.username), ('Subject', dm.subject or 'No Subject')],
+        quote_label='Your message',
+        quote=dm.body,
+        action_label='Manage messages',
+        action_url=manage_url,
+        secondary_actions=secondary_actions,
+        footer_note='This magic link lets you manage public subscriptions and direct messages for this email address.',
+    )
 
     # Send notification email to the faculty
     faculty_email = user_details.user.email
     if faculty_email:
+        inbox_url = dashboard_url_for_user(user_details.user, tab='inbox', dm_id=dm.id)
         fac_subject = f'New Message from {dm.sender_name}'
         fac_body = (
             f'Hi {user_details.user.username},\n\n'
@@ -104,9 +148,27 @@ def send_dm(request, user_slug):
             f'From: {dm.sender_name} ({dm.sender_email})\n'
             f'Subject: {dm.subject or "No Subject"}\n'
             f'Message:\n{dm.body}\n\n'
-            f'You can view and reply to this message from your Sir Kothay dashboard Inbox.\n'
+            f'You can view and reply to this message from your Sir Kothay dashboard Inbox:\n{inbox_url}\n'
         )
-        send_email_async(fac_subject, fac_body, django_settings.DEFAULT_FROM_EMAIL, [faculty_email])
+        send_email_async(
+            fac_subject,
+            fac_body,
+            django_settings.DEFAULT_FROM_EMAIL,
+            [faculty_email],
+            eyebrow='New direct message',
+            title='New visitor message',
+            greeting=user_details.user.username,
+            intro=['You received a new message from your public broadcast page.'],
+            facts=[
+                ('From', f'{dm.sender_name} ({dm.sender_email})'),
+                ('Subject', dm.subject or 'No Subject'),
+            ],
+            quote_label='Message',
+            quote=dm.body,
+            action_label='Open message',
+            action_url=inbox_url,
+            footer_note='You received this because this message was sent to your Sir Kothay public page.',
+        )
 
     return Response(
         {'message': 'Your message has been sent successfully.'},
@@ -180,12 +242,11 @@ def reply_dm(request, pk):
 
     from notifications.models import StatusSubscription
     sub = StatusSubscription.objects.filter(email=dm.sender_email).first()
-    manage_text = ''
-    if sub:
-        client_base = getattr(django_settings, 'CLIENT_PUBLIC_BASE_URL', 'http://127.0.0.1:5500/client')
-        if not client_base: client_base = 'http://127.0.0.1:5500/client'
-        manage_url = f'{client_base}/broadcast/manage.html?token={sub.unsubscribe_token}'
-        manage_text = f'\n---\nManage your subscriptions:\n{manage_url}\n'
+    manage_url = manage_link_for_email(dm.sender_email, subscription=sub)
+    registered_sender = CustomUser.objects.filter(email=dm.sender_email).first()
+    secondary_actions = []
+    if registered_sender:
+        secondary_actions.append({'label': 'Open dashboard', 'url': dashboard_url_for_user(registered_sender)})
 
     from_email = getattr(django_settings, 'DEFAULT_FROM_EMAIL', 'noreply@sirkothay.com')
     subject = f'Reply from {request.user.username} — Sir Kothay'
@@ -194,10 +255,29 @@ def reply_dm(request, pk):
         f'{request.user.username} replied to your message:\n\n'
         f'--- Your message ---\n{dm.body}\n\n'
         f'--- Reply ---\n{reply_text}\n\n'
-        f'— Sir Kothay\n'
-        f'{manage_text}'
+        f'Manage this conversation:\n{manage_url}\n\n'
+        f'— Sir Kothay'
     )
-    send_mail(subject, body, from_email, [dm.sender_email], fail_silently=True)
+    send_email_async(
+        subject,
+        body,
+        from_email,
+        [dm.sender_email],
+        fail_silently=True,
+        eyebrow='Direct message reply',
+        title=f'Reply from {request.user.username}',
+        greeting=dm.sender_name,
+        intro=[f'{request.user.username} replied to your message.'],
+        facts=[('Original subject', dm.subject or 'No Subject')],
+        sections=[
+            {'title': 'Your message', 'body': dm.body},
+            {'title': 'Reply', 'body': reply_text},
+        ],
+        action_label='Manage this conversation',
+        action_url=manage_url,
+        secondary_actions=secondary_actions,
+        footer_note='This magic link lets you manage public subscriptions and direct messages for this email address.',
+    )
 
     return Response({'message': 'Reply sent successfully.'})
 

@@ -40,10 +40,10 @@
     var titleHtml = title ? '<h3 class="sk-modal-title">' + escapeHtml(title) + '</h3>' : '<span></span>';
 
     backdrop.innerHTML =
-      '<div class="sk-modal-panel" style="max-width:' + maxW + '">' +
+      '<div class="sk-modal-panel ' + SKDynamicStyles.classFor('max-width:' + maxW) + '">' +
         '<div class="' + headerClass + '">' +
           titleHtml +
-          '<button class="sk-modal-close sk-modal-close-btn" aria-label="Close"><i class="bi bi-x-lg"></i></button>' +
+          '<button type="button" class="sk-modal-close sk-modal-close-btn" aria-label="Close" title="Close"><i class="bi bi-x-lg"></i></button>' +
         '</div>' +
         '<div class="sk-modal-body">' + html + '</div>' +
       '</div>';

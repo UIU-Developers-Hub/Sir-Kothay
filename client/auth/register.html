@@ -6,46 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Sign Up - Sir Kothay</title>
   <meta name="description" content="Create your Sir Kothay account - Leave notes when you're away">
-  <link rel="stylesheet" href="../static/css/style.css?v=ui-fix-30">
+  <link rel="stylesheet" href="../static/css/style.css?v=nav-skeleton-1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <style>
-    .sk-role-option {
-      cursor: pointer;
-      transition: all 200ms ease;
-      border: 2px solid var(--sk-border);
-      border-radius: var(--sk-radius-xl);
-      padding: 1rem;
-      text-align: center;
-      flex: 1;
-    }
-    .sk-role-option:hover { border-color: var(--sk-primary-muted); background: var(--sk-primary-light); }
-    .sk-role-option.selected {
-      border-color: var(--sk-primary);
-      background: var(--sk-primary-light);
-      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
-    }
-    .sk-role-option .role-icon {
-      font-size: 1.75rem;
-      display: block;
-      margin-bottom: 0.5rem;
-      color: var(--sk-text-tertiary);
-    }
-    .sk-role-option.selected .role-icon { color: var(--sk-primary); }
-    .sk-role-option .role-label {
-      font-weight: 600;
-      font-size: var(--sk-text-sm);
-      color: var(--sk-text-secondary);
-    }
-    .sk-role-option.selected .role-label { color: var(--sk-primary); }
-    .sk-student-fields {
-      max-height: 0; overflow: hidden; opacity: 0;
-      transition: max-height 300ms ease, opacity 200ms ease, margin 200ms ease;
-      margin-bottom: 0;
-    }
-    .sk-student-fields.show {
-      max-height: 100px; opacity: 1; margin-bottom: 1.25rem;
-    }
-  </style>
 </head>
 <body>
   <div class="sk-app">
@@ -53,24 +15,24 @@
 
     <!-- Main Content -->
     <main class="sk-main">
-      <div class="sk-page" style="padding-top: 0">
+      <div class="sk-page sk-ex-eae290ea">
         <div class="sk-auth-page">
     <div class="sk-auth-blob sk-auth-blob-1"></div>
     <div class="sk-auth-blob sk-auth-blob-2"></div>
 
-    <div class="sk-auth-card sk-fade-up" style="max-width:480px">
+    <div class="sk-auth-card sk-fade-up sk-ex-d2a26356">
 
       <h1 class="sk-auth-title">Create Account</h1>
       <p class="sk-auth-subtitle">Join Sir Kothay today</p>
 
       <!-- Message -->
-      <div id="message" style="display:none;padding:0.75rem 1rem;border-radius:var(--sk-radius-lg);font-size:var(--sk-text-sm);margin-bottom:1.5rem;animation:sk-fade-in 200ms ease"></div>
+      <div id="message" class="sk-ex-50be5b2c"></div>
 
       <form id="registerForm" onsubmit="handleRegister(event)">
         <!-- Role Selection -->
         <div class="sk-form-group">
           <label class="sk-label">I am a</label>
-          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+          <div class="sk-ex-16214ebb">
             <div class="sk-role-option selected" id="roleFaculty" onclick="selectRole('FACULTY')">
               <i class="bi bi-person-workspace role-icon"></i>
               <span class="role-label">Faculty</span>
@@ -104,9 +66,9 @@
         <!-- Password -->
         <div class="sk-form-group">
           <label class="sk-label" for="password">Password</label>
-          <div style="position:relative">
-            <input type="password" id="password" class="sk-input" placeholder="Create a password" required style="padding-right:2.75rem">
-            <button type="button" onclick="togglePwd('password','pwdIcon1')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sk-text-placeholder);cursor:pointer;padding:4px;font-size:1.125rem">
+          <div class="sk-ex-d461c96d">
+            <input type="password" id="password" class="sk-input sk-ex-11780b84" placeholder="Create a password" required>
+            <button type="button" onclick="togglePwd('password','pwdIcon1')" aria-label="Show password" title="Show password" class="sk-ex-a7bb75c2">
               <i class="bi bi-eye" id="pwdIcon1"></i>
             </button>
           </div>
@@ -115,23 +77,23 @@
         <!-- Confirm Password -->
         <div class="sk-form-group">
           <label class="sk-label" for="password2">Confirm Password</label>
-          <div style="position:relative">
-            <input type="password" id="password2" class="sk-input" placeholder="Confirm your password" required style="padding-right:2.75rem">
-            <button type="button" onclick="togglePwd('password2','pwdIcon2')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sk-text-placeholder);cursor:pointer;padding:4px;font-size:1.125rem">
+          <div class="sk-ex-d461c96d">
+            <input type="password" id="password2" class="sk-input sk-ex-11780b84" placeholder="Confirm your password" required>
+            <button type="button" onclick="togglePwd('password2','pwdIcon2')" aria-label="Show confirmed password" title="Show confirmed password" class="sk-ex-a7bb75c2">
               <i class="bi bi-eye" id="pwdIcon2"></i>
             </button>
           </div>
         </div>
 
-        <button type="submit" id="submitBtn" class="sk-btn sk-btn-gradient" style="width:100%;padding:0.75rem;font-size:var(--sk-text-base);margin-top:0.5rem">
+        <button type="submit" id="submitBtn" class="sk-btn sk-btn-gradient sk-ex-3ce974d8">
           <span id="btnText">Create Account</span>
           <i class="bi bi-arrow-right"></i>
         </button>
       </form>
 
-      <p style="text-align:center;margin-top:1.5rem;font-size:var(--sk-text-sm);color:var(--sk-text-tertiary)">
+      <p class="sk-ex-62904985">
         Already have an account?
-        <a href="login.html" style="color:var(--sk-primary);font-weight:600">Sign In</a>
+        <a href="login.html" class="sk-ex-3dc32d92">Sign In</a>
       </p>
 
     </div>
@@ -147,11 +109,11 @@
     </nav>
   </div>
 
-  <script src="../static/js/api-config.js"></script>
+  <script src="../static/js/api-config.js?v=backend-sync-1"></script>
   <script src="../static/js/utils.js"></script>
-  <script src="../static/js/theme.js?v=ui-fix-30"></script>
+  <script src="../static/js/theme.js?v=live-status-2"></script>
   <script src="../static/js/components.js"></script>
-  <script src="../static/js/layout.js?v=ui-fix-30"></script>
+  <script src="../static/js/layout.js?v=nav-skeleton-1"></script>
   <script>
     SKLayout.setupPublicNav && SKLayout.setupPublicNav('register');
 

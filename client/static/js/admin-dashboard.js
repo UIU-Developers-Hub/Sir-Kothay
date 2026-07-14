@@ -2,6 +2,11 @@
 let adminUsers = [];
 let currentSort = { key: 'id', dir: 'asc' };
 let currentAdminUser = null;
+let currentDetailUserId = null;
+let adminLiveTimer = null;
+let adminLiveInFlight = false;
+let adminUsersSignature = '';
+const ADMIN_LIVE_INTERVAL_MS = 10000;
 
 /* ── Helpers ── */
 function _notify(msg, variant) {
@@ -12,6 +17,22 @@ function _notify(msg, variant) {
 function _confirm(msg) {
   if (typeof skConfirm !== 'undefined') return skConfirm(msg, { danger: true });
   return Promise.resolve(window.confirm(msg));
+}
+
+function _showAdminBackendUnavailable(message, markOffline) {
+  if (markOffline !== false && window.SKBackendStatus && SKBackendStatus.markOffline) {
+    SKBackendStatus.markOffline({ reason: 'admin-load' });
+  }
+  if (window.SKLayout && SKLayout.renderOfflineStaticNav) {
+    SKLayout.renderOfflineStaticNav('home', { hideAuth: true });
+  }
+  var main = document.getElementById('mainContent');
+  if (main) main.classList.add('hidden');
+  var loading = document.getElementById('loadingState');
+  if (loading) {
+    loading.classList.remove('hidden');
+    loading.innerHTML = '<div class="sk-empty-state compact"><div class="sk-empty-icon"><i class="bi bi-wifi-off"></i></div><div class="sk-empty-title">Backend unavailable</div><div class="sk-empty-subtitle">' + _esc(message || 'You are still signed in. Sir Kothay will reconnect automatically.') + '</div><button type="button" class="sk-btn sk-btn-primary sk-btn-sm" onclick="SKLayout.retryBackend()"><i class="bi bi-arrow-clockwise"></i> Retry</button></div>';
+  }
 }
 
 function _relativeTime(dateStr) {
@@ -46,8 +67,8 @@ function _statusBadge(u) {
   else if (!u.is_active) bHtml += '<span class="sk-admin-badge status-deactivated"><i class="bi bi-pause-circle-fill"></i>Deactivated</span>';
   else bHtml += '<span class="sk-admin-badge status-active"><i class="bi bi-check-circle-fill"></i>Active</span>';
   
-  if (u.is_email_verified) bHtml += '<span class="sk-admin-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b; margin-left:6px;"><i class="bi bi-envelope-check-fill"></i>Verified</span>';
-  else bHtml += '<span class="sk-admin-badge" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; margin-left:6px;"><i class="bi bi-envelope-x-fill"></i>Unverified</span>';
+  if (u.is_email_verified) bHtml += '<span class="sk-admin-badge sk-ex-e5ff12e7"><i class="bi bi-envelope-check-fill"></i>Verified</span>';
+  else bHtml += '<span class="sk-admin-badge sk-ex-02cf285b"><i class="bi bi-envelope-x-fill"></i>Unverified</span>';
   
   return bHtml;
 }
@@ -60,6 +81,109 @@ function _adminBadge(u) {
 function _headers() {
   return { 'Authorization': 'Bearer ' + localStorage.getItem('access_token'), 'Content-Type': 'application/json' };
 }
+
+function _adminUsersSignature(users) {
+  return (users || []).map(function (u) {
+    return [
+      u.id,
+      u.username,
+      u.email,
+      u.role || '',
+      u.student_id || '',
+      u.is_active ? 1 : 0,
+      u.is_staff ? 1 : 0,
+      u.is_banned ? 1 : 0,
+      u.is_email_verified ? 1 : 0,
+    ].join(':');
+  }).join('|');
+}
+
+function _adminModalOpen() {
+  return ['changeRoleModal', 'resetPasswordModal'].some(function (id) {
+    var el = document.getElementById(id);
+    return el && !el.classList.contains('hidden');
+  });
+}
+
+async function fetchAdminUsers() {
+  var usersRes = await fetch(API_BASE_URL + '/api/dashboard/admin-users/', { headers: _headers() });
+  if (!usersRes.ok) throw new Error('Failed to load users');
+  return usersRes.json();
+}
+
+async function refreshAdminUsersLive(options) {
+  options = options || {};
+  if (document.visibilityState === 'hidden') return;
+  if (window.SKBackendStatus && window.SKBackendStatus.getState && window.SKBackendStatus.getState() === 'offline') return;
+
+  var users = await fetchAdminUsers();
+  var sig = _adminUsersSignature(users);
+  if (sig === adminUsersSignature && !options.force) return;
+
+  var openDetailId = null;
+  var detailOverlay = document.getElementById('userDetailOverlay');
+  if (detailOverlay && !detailOverlay.classList.contains('hidden')) {
+    openDetailId = currentDetailUserId;
+  }
+
+  adminUsers = users;
+  adminUsersSignature = sig;
+  updateCounts();
+  renderAdminUsers();
+
+  if (openDetailId && !_adminModalOpen()) {
+    var stillExists = adminUsers.some(function (u) { return u.id === openDetailId; });
+    if (stillExists) showUserDetail(openDetailId);
+    else closeUserDetail();
+  }
+}
+
+function scheduleAdminLive() {
+  if (adminLiveTimer) window.clearTimeout(adminLiveTimer);
+  if (document.visibilityState === 'hidden') return;
+  adminLiveTimer = window.setTimeout(adminLiveTick, ADMIN_LIVE_INTERVAL_MS);
+}
+
+async function adminLiveTick() {
+  if (adminLiveInFlight) {
+    scheduleAdminLive();
+    return;
+  }
+  adminLiveInFlight = true;
+  try {
+    await refreshAdminUsersLive();
+  } catch (e) {
+    // Global backend status handles connection failures.
+  } finally {
+    adminLiveInFlight = false;
+    scheduleAdminLive();
+  }
+}
+
+function startAdminLive() {
+  scheduleAdminLive();
+}
+
+function stopAdminLive() {
+  if (adminLiveTimer) window.clearTimeout(adminLiveTimer);
+  adminLiveTimer = null;
+}
+
+let adminReconnectRefreshInFlight = false;
+async function refreshAdminAfterReconnect() {
+  if (adminReconnectRefreshInFlight) return;
+  adminReconnectRefreshInFlight = true;
+  try {
+    await loadAdminPanel();
+    await refreshAdminUsersLive({ force: true });
+  } finally {
+    adminReconnectRefreshInFlight = false;
+  }
+}
+
+window.addEventListener('sk:backend-restored', function () {
+  refreshAdminAfterReconnect();
+});
 
 function _setStudentIdGroupVisible(visible) {
   var group = document.getElementById('crStudentIdGroup');
@@ -77,9 +201,21 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 async function loadAdminPanel() {
   try {
+    if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() === 'unknown' && SKBackendStatus.check) {
+      await SKBackendStatus.check('admin-dashboard-load');
+    }
+    if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() !== 'online') {
+      _showAdminBackendUnavailable();
+      return;
+    }
+
     var headers = _headers();
     var meRes = await fetch(API_BASE_URL + '/api/auth/users/me/', { headers: headers });
-    if (!meRes.ok) throw new Error('Auth failed');
+    if (meRes.status === 401 || meRes.status === 403) throw new Error('AUTH_FAILED');
+    if (!meRes.ok) {
+      _showAdminBackendUnavailable('You are still signed in. Retry in a moment.', [502, 503, 504].indexOf(meRes.status) !== -1);
+      return;
+    }
     currentAdminUser = await meRes.json();
 
     if (!currentAdminUser.is_staff) {
@@ -98,19 +234,23 @@ async function loadAdminPanel() {
       if (dLinkM) { dLinkM.href = dashUrl; dLinkM.classList.remove('hidden'); }
     }
 
-    var usersRes = await fetch(API_BASE_URL + '/api/dashboard/admin-users/', { headers: headers });
-    if (!usersRes.ok) throw new Error('Failed to load users');
-    adminUsers = await usersRes.json();
+    adminUsers = await fetchAdminUsers();
+    adminUsersSignature = _adminUsersSignature(adminUsers);
 
     updateCounts();
     document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
     renderAdminUsers();
+    startAdminLive();
   } catch (error) {
     console.error(error);
-    _notify('Error loading admin panel: ' + error.message, 'error');
-    localStorage.removeItem('access_token');
-    setTimeout(function() { window.location.href = '../auth/login.html'; }, 2000);
+    if (error && error.message === 'AUTH_FAILED') {
+      _notify('Session expired. Please login again.', 'error');
+      localStorage.removeItem('access_token');
+      setTimeout(function() { window.location.href = '../auth/login.html'; }, 1200);
+      return;
+    }
+    _showAdminBackendUnavailable();
   }
 }
 
@@ -195,7 +335,7 @@ function renderAdminUsers() {
 
   tbody.innerHTML = filtered.map(function(u) {
     var isSelf = currentAdminUser && u.id === currentAdminUser.id;
-    var actions = '<button onclick="event.stopPropagation(); showUserDetail(' + u.id + ')" class="sk-btn sk-btn-secondary sk-btn-sm" title="Manage User"><i class="bi bi-sliders" style="margin-right:4px;"></i> Manage</button>';
+    var actions = '<button type="button" onclick="event.stopPropagation(); showUserDetail(' + u.id + ')" class="sk-btn sk-btn-secondary sk-btn-sm" title="Manage User"><i class="bi bi-sliders sk-ex-c6b76b85"></i> Manage</button>';
 
     return '<tr ondblclick="showUserDetail(' + u.id + ')">' +
       '<td>' + u.id + '</td>' +
@@ -385,7 +525,7 @@ function changeRole(userId) {
   var html = '';
   options.forEach(function(opt, i) {
     html += '<label class="sk-role-option">' +
-      '<input type="radio" name="crRole" value="' + opt.value + '"' + (i === 0 ? ' checked' : '') +
+      '<input type="radio" name="crRole" value="' + opt.value + '" aria-label="' + opt.label + '" title="' + opt.label + '"' + (i === 0 ? ' checked' : '') +
       ' onchange="_setStudentIdGroupVisible(this.value === \'STUDENT\')">' +
       '<i class="bi ' + opt.icon + '"></i>' +
       '<div><span class="sk-role-option-title">' + opt.label + '</span>' +
@@ -446,6 +586,7 @@ async function confirmChangeRole() {
 function showUserDetail(userId) {
   var user = adminUsers.find(function(u) { return u.id === userId; });
   if (!user) return;
+  currentDetailUserId = userId;
   var isSelf = currentAdminUser && user.id === currentAdminUser.id;
 
   var body = document.getElementById('userDetailBody');
@@ -478,27 +619,27 @@ function showUserDetail(userId) {
   });
   html += '</div>';
 
-  html += '<div class="sk-admin-detail-actions" style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-top:1.5rem; border-top:1px solid var(--sk-border); padding-top:1.5rem;">' +
-    '<h4 class="sk-admin-action-title" style="grid-column:span 2; margin-bottom:0.5rem;">Actions</h4>';
+  html += '<div class="sk-admin-detail-actions sk-ex-b212337a">' +
+    '<h4 class="sk-admin-action-title sk-ex-b4441db5">Actions</h4>';
 
-  html += '<button onclick="changeRole(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-arrow-left-right"></i>Change Role</button>';
-  html += '<button onclick="toggleAdmin(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-shield-lock"></i>' + (user.is_staff ? 'Remove Admin' : 'Grant Admin') + '</button>';
+  html += '<button type="button" onclick="changeRole(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-arrow-left-right"></i>Change Role</button>';
+  html += '<button type="button" onclick="toggleAdmin(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-shield-lock"></i>' + (user.is_staff ? 'Remove Admin' : 'Grant Admin') + '</button>';
 
-  html += '<button onclick="toggleVerify(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-envelope"></i>' + (user.is_email_verified ? 'Mark Unverified' : 'Mark Verified') + '</button>';
-  html += '<button onclick="resetUserPassword(' + user.id + ')" class="sk-btn sk-btn-warning"><i class="bi bi-key"></i>Reset Password</button>';
+  html += '<button type="button" onclick="toggleVerify(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-envelope"></i>' + (user.is_email_verified ? 'Mark Unverified' : 'Mark Verified') + '</button>';
+  html += '<button type="button" onclick="resetUserPassword(' + user.id + ')" class="sk-btn sk-btn-warning"><i class="bi bi-key"></i>Reset Password</button>';
 
   if (user.is_banned) {
-    html += '<button onclick="unbanUser(' + user.id + ')" class="sk-btn sk-btn-success" style="grid-column:span 2;"><i class="bi bi-unlock"></i>Unban User</button>';
+    html += '<button type="button" onclick="unbanUser(' + user.id + ')" class="sk-btn sk-btn-success sk-ex-94a5b462"><i class="bi bi-unlock"></i>Unban User</button>';
   } else {
     if (user.is_active) {
-      html += '<button onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-pause-circle"></i>Deactivate</button>';
+      html += '<button type="button" onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-secondary"><i class="bi bi-pause-circle"></i>Deactivate</button>';
     } else {
-      html += '<button onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-success"><i class="bi bi-check-circle"></i>Activate</button>';
+      html += '<button type="button" onclick="toggleUserActive(' + user.id + ')" class="sk-btn sk-btn-success"><i class="bi bi-check-circle"></i>Activate</button>';
     }
-    html += '<button onclick="banUser(' + user.id + ')" class="sk-btn sk-btn-danger"><i class="bi bi-slash-circle"></i>Ban User</button>';
+    html += '<button type="button" onclick="banUser(' + user.id + ')" class="sk-btn sk-btn-danger"><i class="bi bi-slash-circle"></i>Ban User</button>';
   }
 
-  html += '<button onclick="deleteUser(' + user.id + ')" class="sk-btn sk-btn-ghost danger" style="grid-column:span 2; margin-top:0.5rem;"><i class="bi bi-trash"></i>Delete Permanently</button>';
+  html += '<button type="button" onclick="deleteUser(' + user.id + ')" class="sk-btn sk-btn-ghost danger sk-ex-f3906084"><i class="bi bi-trash"></i>Delete Permanently</button>';
 
   html += '</div>';
 
@@ -507,11 +648,21 @@ function showUserDetail(userId) {
 }
 
 function closeUserDetail() {
+  currentDetailUserId = null;
   document.getElementById('userDetailOverlay').classList.add('hidden');
 }
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeUserDetail();
+});
+
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible') {
+    startAdminLive();
+    refreshAdminUsersLive();
+  } else {
+    stopAdminLive();
+  }
 });
 
 /* ── Logout ── */

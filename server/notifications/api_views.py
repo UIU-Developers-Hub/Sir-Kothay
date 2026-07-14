@@ -12,7 +12,12 @@ from messaging.models import DirectMessage, ChatThread
 
 from .models import StatusSubscription
 from .serializers import StatusSubscriptionSerializer, SubscribeSerializer
-from .services import send_email_async
+from .services import (
+    dashboard_url_for_user,
+    manage_link_for_email,
+    public_broadcast_url,
+    send_email_async,
+)
 from django.conf import settings
 
 
@@ -39,6 +44,38 @@ def subscribe(request, user_slug):
             interest.save(update_fields=['notify_preference'])
         
         msg = 'You will be notified for all updates.' if notify_preference == 'all' else 'You will be notified when this person is available.'
+        dashboard_link = dashboard_url_for_user(
+            registered_user,
+            tab='faculties' if registered_user.role == 'STUDENT' else None,
+        )
+        profile_url = public_broadcast_url(user_details.user)
+        pref_str = 'all updates' if notify_preference == 'all' else 'when they become available'
+        subject = f'Subscription Confirmed: {user_details.user.username}'
+        body = (
+            f'Hi {registered_user.username},\n\n'
+            f'You have successfully subscribed to status updates for {user_details.user.username}.\n'
+            f'You will be notified {pref_str}.\n\n'
+            f'Manage this from your dashboard:\n{dashboard_link}\n\n'
+            f'Thanks,\nSir Kothay Team'
+        )
+        secondary_actions = []
+        if profile_url:
+            secondary_actions.append({'label': 'Open public page', 'url': profile_url})
+        send_email_async(
+            subject,
+            body,
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            eyebrow='Subscription',
+            title=f'Updates enabled for {user_details.user.username}',
+            greeting=registered_user.username,
+            intro=[f'Your Sir Kothay account will receive {pref_str} for this faculty member.'],
+            facts=[('Faculty', user_details.user.username), ('Preference', msg)],
+            action_label='Open dashboard',
+            action_url=dashboard_link,
+            secondary_actions=secondary_actions,
+            footer_note='You received this because this email belongs to a registered Sir Kothay account.',
+        )
         return Response({'message': f'Added to your Dashboard: {msg}'}, status=status.HTTP_200_OK)
 
     # Standard anonymous flow
@@ -60,11 +97,8 @@ def subscribe(request, user_slug):
     if needs_save:
         sub.save(update_fields=['is_active', 'notify_preference'])
 
-    # Build client url
-    client_base = getattr(settings, 'CLIENT_PUBLIC_BASE_URL', None)
-    if not client_base:
-        client_base = 'http://127.0.0.1:5500/client'
-    manage_url = f'{client_base}/broadcast/manage.html?token={sub.unsubscribe_token}'
+    manage_url = manage_link_for_email(email, subscription=sub)
+    profile_url = public_broadcast_url(user_details.user)
     
     pref_str = 'all updates' if notify_preference == 'all' else 'when they become available'
     subject = f'Subscription Confirmed: {user_details.user.username}'
@@ -75,7 +109,24 @@ def subscribe(request, user_slug):
         f'---\n'
         f'Manage your subscriptions:\n{manage_url}\n'
     )
-    send_email_async(subject, body, settings.DEFAULT_FROM_EMAIL, [email])
+    secondary_actions = []
+    if profile_url:
+        secondary_actions.append({'label': 'Open public page', 'url': profile_url})
+    send_email_async(
+        subject,
+        body,
+        settings.DEFAULT_FROM_EMAIL,
+        [email],
+        eyebrow='Subscription',
+        title=f'Updates enabled for {user_details.user.username}',
+        greeting='there',
+        intro=[f'You will receive status emails {pref_str} for this faculty member.'],
+        facts=[('Faculty', user_details.user.username), ('Preference', pref_str.title())],
+        action_label='Manage subscription',
+        action_url=manage_url,
+        secondary_actions=secondary_actions,
+        footer_note='This magic link lets you manage public subscriptions and direct messages for this email address.',
+    )
 
     msg = 'You will be notified for all updates.' if notify_preference == 'all' else 'You will be notified when this person is available.'
     return Response(
@@ -224,6 +275,9 @@ def manage_subscriptions(request):
             i.notify_preference = preference
             i.save(update_fields=['notify_preference'])
             res_pref = i.notify_preference
+            action_url = dashboard_url_for_user(registered_user, tab='faculties')
+            action_label = 'Open dashboard'
+            footer_note = 'You received this because this email belongs to a registered Sir Kothay account.'
         else:
             s = get_object_or_404(StatusSubscription, pk=item_id, email=email)
             faculty_name = s.broadcaster.username
@@ -234,11 +288,26 @@ def manage_subscriptions(request):
                 s.notify_preference = preference
             s.save(update_fields=['is_active', 'notify_preference'])
             res_pref = preference
+            action_url = manage_link_for_email(email, subscription=s)
+            action_label = 'Manage subscription'
+            footer_note = 'This magic link lets you manage public subscriptions and direct messages for this email address.'
             
         subject = "Subscription Settings Updated"
         pref_str = "All Updates" if preference == 'all' else "When Available" if preference == 'available' else "No Updates"
         body = f"Your notification subscription for {faculty_name} has been updated to: {pref_str}.\n\nThank you,\nSir Kothay Team"
-        send_email_async(subject, body, settings.DEFAULT_FROM_EMAIL, [email])
+        send_email_async(
+            subject,
+            body,
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            eyebrow='Subscription',
+            title='Subscription settings updated',
+            intro=[f'Your notification subscription for {faculty_name} has been updated.'],
+            facts=[('Faculty', faculty_name), ('Preference', pref_str)],
+            action_label=action_label,
+            action_url=action_url,
+            footer_note=footer_note,
+        )
             
         return Response({'status': 'ok', 'preference': res_pref})
             
@@ -270,7 +339,7 @@ def request_manage_link(request):
         return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Check if there are any active objects for this email
-    registered_user = CustomUser.objects.filter(email=email).exists()
+    registered_user = CustomUser.objects.filter(email=email).first()
     has_sub = StatusSubscription.objects.filter(email=email).exists()
     has_dm = DirectMessage.objects.filter(sender_email=email).exists()
     
@@ -278,12 +347,40 @@ def request_manage_link(request):
         return Response({'error': 'No active subscriptions or messages found for this email.'}, status=status.HTTP_404_NOT_FOUND)
 
     token = Signer().sign(email)
-    frontend_url = settings.FRONTEND_URL if hasattr(settings, 'FRONTEND_URL') else 'http://127.0.0.1:5500/client'
-    link = f"{frontend_url}/broadcast/manage.html?token={token}"
+    manage_link = manage_link_for_email(email, token=token)
+    if registered_user:
+        link = dashboard_url_for_user(registered_user)
+        action_label = 'Open dashboard'
+        footer_note = 'Use your Sir Kothay account to manage dashboard notifications.'
+        body = (
+            f'Open your Sir Kothay dashboard to manage notification subscriptions and direct messages:\n\n'
+            f'{link}\n'
+        )
+        secondary_actions = []
+        if has_sub or has_dm:
+            secondary_actions.append({'label': 'Use magic manage link', 'url': manage_link})
+            body += f'\nYou can also use this magic manage link for visitor subscriptions and direct messages:\n\n{manage_link}\n'
+    else:
+        link = manage_link
+        action_label = 'Manage notifications'
+        footer_note = 'This magic link acts like a password for this email address. Do not share it.'
+        secondary_actions = []
+        body = f"Click the link below to securely manage your notification subscriptions and direct messages:\n\n{link}\n\nThis link acts as your password, do not share it."
     
     subject = "Manage Your Sir Kothay Notifications"
-    body = f"Click the link below to securely manage your notification subscriptions and direct messages:\n\n{link}\n\nThis link acts as your password, do not share it."
     
-    send_email_async(subject, body, settings.DEFAULT_FROM_EMAIL, [email])
+    send_email_async(
+        subject,
+        body,
+        settings.DEFAULT_FROM_EMAIL,
+        [email],
+        eyebrow='Manage notifications',
+        title='Manage your notifications',
+        intro=['Use the link below to manage notification subscriptions and direct messages connected to this email.'],
+        action_label=action_label,
+        action_url=link,
+        secondary_actions=secondary_actions,
+        footer_note=footer_note,
+    )
     
     return Response({'status': 'ok'})

@@ -6,251 +6,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Broadcast - Sir Kothay</title>
     <meta name="description" content="Sir Kothay - Faculty broadcast page. See availability and send messages.">
-    <link rel="stylesheet" href="../static/css/style.css?v=ui-fix-14">
+    <link rel="stylesheet" href="../static/css/style.css?v=frosted-broadcast-2">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-      /* Broadcast-specific styles */
-      .bc-page {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        background: var(--sk-bg-base);
-        position: relative;
-      }
-      .bc-page::before {
-        content: '';
-        display: none;
-      }
-      .bc-page::after {
-        content: '';
-        display: none;
-      }
-      .bc-container {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem 1rem;
-        position: relative;
-        z-index: 1;
-      }
-      .bc-card {
-        width: 100%;
-        max-width: 420px;
-        background: var(--sk-card-bg);
-        border: 1px solid var(--sk-card-border);
-        border-radius: var(--sk-radius-xl);
-        overflow: hidden;
-        box-shadow: var(--sk-shadow-md);
-        animation: sk-fade-in 220ms ease both;
-      }
-      .bc-hero {
-        padding: 2rem 1.5rem;
-        text-align: center;
-        color: white;
-        background: var(--sk-primary);
-        position: relative;
-        overflow: hidden;
-      }
-      .bc-hero::before {
-        content: '';
-        display: none;
-      }
-      .bc-hero::after {
-        content: '';
-        display: none;
-      }
-      .bc-avatar {
-        width: 56px;
-        height: 56px;
-        border-radius: var(--sk-radius-lg);
-        object-fit: cover;
-        border: 2px solid rgba(255,255,255,0.5);
-        margin: 0 auto 0.75rem;
-        display: block;
-        position: relative;
-        z-index: 1;
-      }
-      .bc-name {
-        font-size: var(--sk-text-xl);
-        font-weight: var(--sk-font-bold);
-        letter-spacing: -0.01em;
-        position: relative;
-        z-index: 1;
-      }
-      /* Broadcast message section */
-      .bc-msg-section {
-        padding: 1.25rem 1.5rem;
-        background: var(--sk-primary-light);
-        text-align: center;
-      }
-      .bc-msg-label {
-        font-size: var(--sk-text-xs);
-        font-weight: var(--sk-font-semibold);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--sk-primary-text);
-        opacity: 0.7;
-        margin-bottom: 0.75rem;
-      }
-      .bc-msg-panel {
-        border-radius: var(--sk-radius-xl);
-        padding: 1.25rem;
-        border: 1px solid var(--sk-primary-muted);
-        background: var(--sk-card-bg);
-      }
-      .bc-msg-panel:focus {
-        outline: none;
-      }
-      .bc-msg-panel:focus-visible {
-        box-shadow: 0 0 0 3px var(--sk-primary-muted);
-      }
-      .bc-toast {
-        position: fixed;
-        right: 1rem;
-        bottom: 1rem;
-        z-index: 9999;
-        padding: 0.625rem 0.875rem;
-        background: var(--sk-bg-surface);
-        border: 1px solid var(--sk-border);
-        border-radius: var(--sk-radius-lg);
-        box-shadow: var(--sk-shadow-sm);
-        color: var(--sk-text-primary);
-        font-size: var(--sk-text-sm);
-      }
-      .bc-msg-text {
-        color: var(--sk-text-primary);
-        font-weight: var(--sk-font-semibold);
-        font-size: var(--sk-text-base);
-        line-height: 1.6;
-      }
-      /* Info row */
-      .bc-info-list {
-        padding: 1.25rem 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-      }
-      .bc-info-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .bc-info-left {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
-      .bc-info-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: var(--sk-radius-lg);
-        background: var(--sk-primary-light);
-        color: var(--sk-primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.125rem;
-        flex-shrink: 0;
-      }
-      .bc-info-label {
-        font-size: var(--sk-text-xs);
-        color: var(--sk-text-tertiary);
-      }
-      .bc-info-value {
-        font-size: var(--sk-text-sm);
-        font-weight: var(--sk-font-medium);
-        color: var(--sk-text-primary);
-        text-decoration: none;
-        transition: color var(--sk-transition-fast);
-      }
-      a.bc-info-value:hover {
-        color: var(--sk-primary);
-      }
-      .bc-copy-btn {
-        opacity: 0;
-        transition: opacity var(--sk-transition-fast);
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0.375rem;
-        border-radius: var(--sk-radius-md);
-        color: var(--sk-text-tertiary);
-        font-size: 1rem;
-      }
-      .bc-info-row:hover .bc-copy-btn {
-        opacity: 1;
-      }
-      .bc-copy-btn:hover {
-        background: var(--sk-bg-muted);
-        color: var(--sk-text-primary);
-      }
-      /* Availability badge */
-      .bc-avail-badge {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.625rem 1rem;
-        border-radius: var(--sk-radius-xl);
-        font-size: var(--sk-text-sm);
-        font-weight: var(--sk-font-semibold);
-      }
-      .bc-avail-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-      /* Sections */
-      .bc-section {
-        padding: 0.75rem 1.5rem;
-        border-top: 1px solid var(--sk-border);
-      }
-      .bc-section-form {
-        padding: 1rem 1.5rem;
-        border-top: 1px solid var(--sk-border);
-        background: var(--sk-bg-muted);
-      }
-      /* Notify toggle buttons */
-      .bc-notify-btn {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.375rem;
-        padding: 0.5rem;
-        border-radius: var(--sk-radius-xl);
-        font-size: var(--sk-text-xs);
-        font-weight: var(--sk-font-semibold);
-        border: 1px solid var(--sk-border);
-        background: none;
-        color: var(--sk-text-placeholder);
-        cursor: pointer;
-        transition: all var(--sk-transition-base);
-        font-family: var(--sk-font-sans);
-      }
-      .bc-notify-btn:hover {
-        background: var(--sk-bg-muted);
-      }
-      /* Responsive footer padding */
-      @media (max-width: 767px) {
-        .bc-page > footer {
-          margin-bottom: 5rem;
-        }
-      }
-    </style>
   </head>
-  <body>
+  <body class="sk-broadcast-page">
     <div class="sk-app">
       <!-- Sidebar injected by layout.js -->
       <main class="sk-main">
-        <div class="sk-page" style="padding-top: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
-          <div class="bc-page" style="min-height: auto; width: 100%;">
+        <div class="sk-page sk-ex-2b3d603e">
+          <div class="bc-page sk-ex-55d5f214">
       
 
       <!-- Main Content -->
       <main id="broadcastMain" class="bc-container">
-        <div class="bc-card">
+        <div id="broadcastSkeleton" class="bc-card bc-loading-card" aria-hidden="true">
+          <div class="bc-hero bc-loading-hero">
+            <span class="sk-skeleton bc-loading-avatar"></span>
+            <span class="sk-skeleton bc-loading-title"></span>
+          </div>
+          <div class="bc-msg-section bc-loading-message">
+            <span class="sk-skeleton bc-loading-label"></span>
+            <span class="sk-skeleton bc-loading-panel"></span>
+          </div>
+          <div class="bc-info-list">
+            <div class="bc-info-row">
+              <div class="bc-info-left">
+                <span class="sk-skeleton bc-loading-icon"></span>
+                <span class="bc-loading-copy">
+                  <span class="sk-skeleton bc-loading-text bc-loading-text-sm"></span>
+                  <span class="sk-skeleton bc-loading-text"></span>
+                </span>
+              </div>
+              <span class="bc-info-actions">
+                <span class="sk-skeleton bc-loading-action"></span>
+              </span>
+            </div>
+            <div class="bc-info-row">
+              <div class="bc-info-left">
+                <span class="sk-skeleton bc-loading-icon"></span>
+                <span class="bc-loading-copy">
+                  <span class="sk-skeleton bc-loading-text bc-loading-text-sm"></span>
+                  <span class="sk-skeleton bc-loading-text bc-loading-text-wide"></span>
+                </span>
+              </div>
+              <span class="bc-info-actions">
+                <span class="sk-skeleton bc-loading-action"></span>
+              </span>
+            </div>
+            <div class="bc-info-row">
+              <div class="bc-info-left">
+                <span class="sk-skeleton bc-loading-icon"></span>
+                <span class="bc-loading-copy">
+                  <span class="sk-skeleton bc-loading-text bc-loading-text-sm"></span>
+                  <span class="sk-skeleton bc-loading-text bc-loading-text-mid"></span>
+                </span>
+              </div>
+              <span class="bc-info-actions">
+                <span class="sk-skeleton bc-loading-action"></span>
+              </span>
+            </div>
+          </div>
+          <div class="bc-section">
+            <span class="sk-skeleton bc-loading-pill"></span>
+          </div>
+          <div class="bc-section bc-loading-buttons">
+            <span class="sk-skeleton bc-loading-button"></span>
+            <span class="sk-skeleton bc-loading-button"></span>
+          </div>
+        </div>
+
+        <div id="broadcastBackendState" class="bc-card hidden"></div>
+
+        <div id="broadcastCard" class="bc-card hidden">
           <!-- Hero Section -->
           <div class="bc-hero">
             <img id="userImage" src="../static/images/image.png" alt="User" class="bc-avatar">
@@ -275,7 +102,9 @@
                   <a id="userPhone" href="tel:" class="bc-info-value">Loading...</a>
                 </div>
               </div>
-              <button id="copyPhone" class="bc-copy-btn" title="Copy"><i class="bi bi-clipboard"></i></button>
+              <div class="bc-info-actions">
+                <button type="button" id="copyPhone" class="bc-action-btn bc-copy-btn" title="Copy Phone" aria-label="Copy Phone"><i class="bi bi-clipboard"></i></button>
+              </div>
             </div>
 
             <div class="bc-info-row">
@@ -286,7 +115,9 @@
                   <a id="userEmail" href="mailto:" class="bc-info-value">Loading...</a>
                 </div>
               </div>
-              <button id="copyEmail" class="bc-copy-btn" title="Copy"><i class="bi bi-clipboard"></i></button>
+              <div class="bc-info-actions">
+                <button type="button" id="copyEmail" class="bc-action-btn bc-copy-btn" title="Copy Email" aria-label="Copy Email"><i class="bi bi-clipboard"></i></button>
+              </div>
             </div>
 
             <div class="bc-info-row">
@@ -294,42 +125,44 @@
                 <div class="bc-info-icon"><i class="bi bi-building"></i></div>
                 <div>
                   <p class="bc-info-label">Organization</p>
-                  <p id="userOrg" class="bc-info-value" style="cursor:default">Loading...</p>
+                  <p id="userOrg" class="bc-info-value sk-ex-2a9295c3">Loading...</p>
                 </div>
               </div>
-              <button id="copyOrg" class="bc-copy-btn" title="Copy"><i class="bi bi-clipboard"></i></button>
+              <div class="bc-info-actions">
+                <button type="button" id="copyOrg" class="bc-action-btn bc-copy-btn" title="Copy Organization" aria-label="Copy Organization"><i class="bi bi-clipboard"></i></button>
+              </div>
             </div>
           </div>
 
           <!-- Availability Status Badge -->
           <div id="availabilityBadge" class="bc-section">
-            <div id="availBadgeContent" class="bc-avail-badge" style="background:var(--sk-error-bg);color:var(--sk-error);border:1px solid var(--sk-error-bg)">
-              <span class="bc-avail-dot" style="background:var(--sk-error)"></span>
+            <div id="availBadgeContent" class="bc-avail-badge sk-ex-c203b65e">
+              <span class="bc-avail-dot sk-ex-a1548914"></span>
               <span>Currently Unavailable</span>
             </div>
           </div>
 
           <!-- Action Buttons (role-aware — rendered by JS) -->
-          <div id="actionBtnsSection" class="bc-section" style="display:flex;gap:0.5rem">
-            <button id="notifyMeBtn" onclick="document.getElementById('subscribeForm').classList.toggle('hidden')" class="sk-btn sk-btn-primary" style="flex:1;font-size:var(--sk-text-sm)">
+          <div id="actionBtnsSection" class="bc-section sk-ex-306a4cf9">
+            <button type="button" id="notifyMeBtn" onclick="document.getElementById('subscribeForm').classList.toggle('hidden')" class="sk-btn sk-btn-primary sk-ex-aadea816">
               <i class="bi bi-bell-fill"></i><span id="notifyBtnLabel">Notify Me When Available</span>
             </button>
-            <button id="sendMsgBtn" onclick="document.getElementById('dmModal').classList.remove('hidden')" class="sk-btn sk-btn-secondary" style="flex:1;font-size:var(--sk-text-sm)">
+            <button type="button" id="sendMsgBtn" onclick="document.getElementById('dmModal').classList.remove('hidden')" class="sk-btn sk-btn-secondary sk-ex-aadea816">
               <i class="bi bi-envelope-fill"></i>Send Message
             </button>
           </div>
 
           <!-- Student-specific: Notification preference (hidden by default) -->
           <div id="studentNotifyToggleSection" class="bc-section hidden">
-            <p style="font-size:var(--sk-text-xs);color:var(--sk-text-placeholder);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem">Status Notifications</p>
-            <div style="display:flex;gap:0.5rem">
-              <button onclick="setBroadcastNotifyPref('all')" id="bcNotifyAll" class="bc-notify-btn">
+            <p class="sk-ex-d50b5632">Status Notifications</p>
+            <div class="sk-ex-306a4cf9">
+              <button type="button" onclick="setBroadcastNotifyPref('all')" id="bcNotifyAll" class="bc-notify-btn">
                 <i class="bi bi-bell-fill"></i> All updates
               </button>
-              <button onclick="setBroadcastNotifyPref('available')" id="bcNotifyAvail" class="bc-notify-btn">
+              <button type="button" onclick="setBroadcastNotifyPref('available')" id="bcNotifyAvail" class="bc-notify-btn">
                 <i class="bi bi-bell"></i> When available
               </button>
-              <button onclick="setBroadcastNotifyPref('none')" id="bcNotifyNone" class="bc-notify-btn">
+              <button type="button" onclick="setBroadcastNotifyPref('none')" id="bcNotifyNone" class="bc-notify-btn">
                 <i class="bi bi-bell-slash"></i> Off
               </button>
             </div>
@@ -337,33 +170,33 @@
 
           <!-- Student-specific: Chat button (hidden by default) -->
           <div id="studentChatSection" class="bc-section hidden">
-            <button id="studentChatBtn" onclick="handleStudentChat()" class="sk-btn sk-btn-gradient" style="width:100%">
+            <button type="button" id="studentChatBtn" onclick="handleStudentChat()" class="sk-btn sk-btn-gradient sk-ex-0466783d">
               <i class="bi bi-chat-dots"></i>Send Message
             </button>
           </div>
 
           <!-- Owner message (hidden by default) -->
-          <div id="ownerSection" class="bc-section hidden" style="text-align:center;background:var(--sk-bg-muted)">
-            <p style="font-size:var(--sk-text-xs);color:var(--sk-text-tertiary)"><i class="bi bi-eye-slash" style="margin-right:0.25rem"></i>This is your broadcast page. Visitors see the buttons above.</p>
+          <div id="ownerSection" class="bc-section hidden sk-ex-901a73c2">
+            <p class="sk-ex-b437390b"><i class="bi bi-eye-slash sk-ex-9b7040ae"></i>This is your broadcast page. Visitors see the buttons above.</p>
           </div>
 
           <!-- Subscribe Form (hidden by default) -->
           <div id="subscribeForm" class="bc-section-form hidden">
-            <p id="subCopy" style="font-size:var(--sk-text-xs);color:var(--sk-text-secondary);margin-bottom:0.5rem">Get an email notification when this person updates their status:</p>
-            <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
-              <button onclick="setAnonNotifyPref('all')" id="anonNotifyAll" class="bc-notify-btn">
+            <p id="subCopy" class="sk-ex-5e15b51c">Get an email notification when this person updates their status:</p>
+            <div class="sk-ex-e0175258">
+              <button type="button" onclick="setAnonNotifyPref('all')" id="anonNotifyAll" class="bc-notify-btn">
                 <i class="bi bi-bell-fill"></i> All updates
               </button>
-              <button onclick="setAnonNotifyPref('available')" id="anonNotifyAvail" class="bc-notify-btn" style="background:var(--sk-success-bg);color:var(--sk-success);border-color:var(--sk-success)">
+              <button type="button" onclick="setAnonNotifyPref('available')" id="anonNotifyAvail" class="bc-notify-btn sk-ex-38e9b9c6">
                 <i class="bi bi-bell"></i> When available
               </button>
               <input type="hidden" id="anonNotifyPref" value="available">
             </div>
-            <div style="display:flex;gap:0.5rem">
-              <input id="subEmail" type="email" placeholder="your@email.com" class="sk-input" style="flex:1">
-              <button onclick="doSubscribe()" class="sk-btn sk-btn-primary sk-btn-sm">Subscribe</button>
+            <div class="sk-ex-306a4cf9">
+              <input id="subEmail" type="email" placeholder="your@email.com" class="sk-input sk-ex-97445a8d">
+              <button type="button" onclick="doSubscribe()" class="sk-btn sk-btn-primary sk-btn-sm">Subscribe</button>
             </div>
-            <p id="subResult" class="hidden" style="font-size:var(--sk-text-xs);margin-top:0.5rem"></p>
+            <p id="subResult" class="hidden sk-ex-55a1318a"></p>
           </div>
 
           <!-- DM Form moved to Modal below -->
@@ -387,47 +220,47 @@
 
     <!-- DM Form Modal -->
     <div id="dmModal" onclick="if(event.target===this) this.classList.add('hidden')" class="sk-modal-overlay hidden">
-      <div class="sk-modal-panel" style="max-width:420px">
+      <div class="sk-modal-panel sk-ex-0fd8744d">
         <div class="sk-modal-header">
           <h3 class="sk-modal-title">Send a private message</h3>
-          <button class="sk-modal-close" onclick="document.getElementById('dmModal').classList.add('hidden')"><i class="bi bi-x-lg"></i></button>
+          <button type="button" class="sk-modal-close" onclick="document.getElementById('dmModal').classList.add('hidden')" aria-label="Close message dialog" title="Close message dialog"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="sk-modal-body">
-          <p style="font-size:var(--sk-text-sm);color:var(--sk-text-secondary);margin-bottom:1rem">Send a direct message to this faculty.</p>
-          <input id="dmName" type="text" placeholder="Your name" class="sk-input" style="margin-bottom:0.75rem">
-          <input id="dmEmail" type="email" placeholder="Your email" class="sk-input" style="margin-bottom:0.75rem">
-          <input id="dmSubject" type="text" placeholder="Subject (optional)" class="sk-input" style="margin-bottom:0.75rem">
-          <textarea id="dmBody" placeholder="Your message..." class="sk-textarea" rows="4" style="margin-bottom:1rem"></textarea>
-          <button onclick="doSendDm()" class="sk-btn sk-btn-primary" style="width:100%">Send Message</button>
-          <p id="dmResult" class="hidden" style="font-size:var(--sk-text-sm);margin-top:0.75rem"></p>
+          <p class="sk-ex-6d02023b">Send a direct message to this faculty.</p>
+          <input id="dmName" type="text" placeholder="Your name" class="sk-input sk-ex-c05a3c6e">
+          <input id="dmEmail" type="email" placeholder="Your email" class="sk-input sk-ex-c05a3c6e">
+          <input id="dmSubject" type="text" placeholder="Subject (optional)" class="sk-input sk-ex-c05a3c6e">
+          <textarea id="dmBody" placeholder="Your message..." class="sk-textarea sk-ex-363cdaa2" rows="4"></textarea>
+          <button type="button" onclick="doSendDm()" class="sk-btn sk-btn-primary sk-ex-0466783d">Send Message</button>
+          <p id="dmResult" class="hidden sk-ex-2f39e39a"></p>
         </div>
       </div>
     </div>
 
     <!-- Student Chat Modal -->
     <div id="studentChatModal" onclick="if(event.target===this) this.classList.add('hidden')" class="sk-modal-overlay hidden">
-      <div class="sk-modal-panel" style="max-width:420px">
+      <div class="sk-modal-panel sk-ex-0fd8744d">
         <div class="sk-modal-header">
           <h3 class="sk-modal-title">Start a chat with this faculty</h3>
-          <button class="sk-modal-close" onclick="document.getElementById('studentChatModal').classList.add('hidden')"><i class="bi bi-x-lg"></i></button>
+          <button type="button" class="sk-modal-close" onclick="document.getElementById('studentChatModal').classList.add('hidden')" aria-label="Close chat dialog" title="Close chat dialog"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="sk-modal-body">
-          <p style="font-size:var(--sk-text-sm);color:var(--sk-text-secondary);margin-bottom:1rem">Send a direct message to this faculty.</p>
-          <input type="text" id="bcChatSubject" placeholder="Subject (e.g. Office hours)" class="sk-input" style="margin-bottom:0.75rem">
-          <textarea id="bcChatBody" placeholder="Your message..." class="sk-textarea" rows="4" style="margin-bottom:1rem"></textarea>
-          <button onclick="submitBroadcastChat()" class="sk-btn sk-btn-gradient" style="width:100%">Send Message</button>
-          <p id="bcChatResult" class="hidden" style="font-size:var(--sk-text-sm);margin-top:0.75rem"></p>
+          <p class="sk-ex-6d02023b">Send a direct message to this faculty.</p>
+          <input type="text" id="bcChatSubject" placeholder="Subject (e.g. Office hours)" class="sk-input sk-ex-c05a3c6e">
+          <textarea id="bcChatBody" placeholder="Your message..." class="sk-textarea sk-ex-363cdaa2" rows="4"></textarea>
+          <button type="button" onclick="submitBroadcastChat()" class="sk-btn sk-btn-gradient sk-ex-0466783d">Send Message</button>
+          <p id="bcChatResult" class="hidden sk-ex-2f39e39a"></p>
         </div>
       </div>
     </div>
 
     <!-- API Config -->
-    <script src="../static/js/api-config.js?v=3"></script>
+    <script src="../static/js/api-config.js?v=backend-sync-1"></script>
     <script src="../static/js/utils.js"></script>
     <script src="../static/js/api.js"></script>
     <script src="../static/js/components.js"></script>
-    <script src="../static/js/theme.js"></script>
-    <script src="../static/js/layout.js"></script>
+    <script src="../static/js/theme.js?v=live-status-2"></script>
+    <script src="../static/js/layout.js?v=backend-state-1"></script>
     <script>
       // Initialize Layout
       document.addEventListener('DOMContentLoaded', () => {
@@ -443,72 +276,230 @@
       const userSlug =
         urlParams.get("user") ||
         window.location.pathname.split("/").pop().replace(".html", "");
+      const BROADCAST_LIVE_INTERVAL_MS = 10000;
+      let broadcastLiveTimer = null;
+      let broadcastLiveInFlight = false;
+      let broadcastReconnectInFlight = false;
+      let broadcastHasLoaded = false;
+      let broadcastPageViewTracked = false;
 
       // Load user data
-      async function loadUserData() {
+      async function loadUserData(options) {
+        options = options || {};
+        var silent = !!options.silent;
+        if (!silent) showBroadcastLoading();
+        if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() === 'offline') {
+          showBroadcastBackendUnavailable();
+          return;
+        }
+
         try {
-          const response = await fetch(
-            `${API_BASE_URL}/api/broadcast/${userSlug}/`,
-          );
+          const data = await fetchBroadcastData();
 
-          if (!response.ok) {
-            throw new Error(
-              `API returned ${response.status}: Endpoint not implemented`,
-            );
+          applyBroadcastData(data, { focusMessage: !silent && !broadcastHasLoaded });
+          if (!broadcastPageViewTracked) {
+            trackPageVisit();
+            broadcastPageViewTracked = true;
           }
-
-          const data = await response.json();
-
-          // Update user information
-          document.getElementById("userName").textContent =
-            data.username || data.user_username || "User";
-          document.getElementById("userPhone").textContent =
-            data.phone_number || "N/A";
-          document.getElementById("userPhone").href =
-            `tel:${data.phone_number || ""}`;
-          document.getElementById("userEmail").textContent =
-            data.email || data.user_email || "N/A";
-          document.getElementById("userEmail").href =
-            `mailto:${data.email || data.user_email || ""}`;
-          document.getElementById("userOrg").textContent =
-            data.organization || "N/A";
-
-          if (data.profile_image) {
-            document.getElementById("userImage").src =
-              resolveProfileImage(data.profile_image);
-          }
-
-          // Show broadcast message or default status if exists
-          const displayMsg = data.active_message || data.default_status;
-          if (displayMsg) {
-            document.getElementById("broadcastMessage").textContent = displayMsg;
-            document.getElementById("broadcastSection").classList.remove("hidden");
-            focusBroadcastMessage();
-          }
-
-          // Update availability badge
-          updateAvailBadge(data.is_available, displayMsg);
-
-          // Track this page view for analytics
-          trackPageVisit();
-
-          // Setup copy buttons
-          document.getElementById("copyPhone").onclick = () =>
-            copyToClipboard(data.phone_number || "N/A");
-          document.getElementById("copyEmail").onclick = () =>
-            copyToClipboard(data.email || data.user_email || "N/A");
-          document.getElementById("copyOrg").onclick = () =>
-            copyToClipboard(data.organization || "N/A");
 
           // Apply role-aware behavior (hides/shows buttons based on who's viewing)
-          applyRoleAwareBehavior(data);
+          await applyRoleAwareBehavior(data);
+          showBroadcastContent();
+          broadcastHasLoaded = true;
+          if (!silent) startBroadcastLive();
         } catch (error) {
           console.error("Error loading user data:", error);
+          if (window.SKBackendStatus && SKBackendStatus.getState && SKBackendStatus.getState() !== 'online') {
+            showBroadcastBackendUnavailable();
+            return;
+          }
+          if (silent && broadcastHasLoaded) return;
           showErrorState(error.message);
         }
       }
 
+      async function fetchBroadcastData() {
+        const response = await fetch(`${API_BASE_URL}/api/broadcast/${userSlug}/`, {
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `API returned ${response.status}: Endpoint not implemented`,
+          );
+        }
+
+        return response.json();
+      }
+
+      function applyBroadcastData(data, options) {
+        options = options || {};
+        var displayName = data.username || data.user_username || "User";
+        var phone = data.phone_number || "N/A";
+        var email = data.email || data.user_email || "N/A";
+        var org = data.organization || "N/A";
+        var image = document.getElementById("userImage");
+        var imageSrc = resolveProfileImage(data.profile_image_url || data.profile_image, '../static/images/image.png');
+        var displayMsg = data.active_message || data.default_status || '';
+        var broadcastSection = document.getElementById("broadcastSection");
+        var broadcastMessage = document.getElementById("broadcastMessage");
+
+        document.getElementById("userName").textContent = displayName;
+        document.getElementById("userPhone").textContent = phone;
+        document.getElementById("userPhone").href = data.phone_number ? `tel:${data.phone_number}` : "tel:";
+        document.getElementById("userEmail").textContent = email;
+        document.getElementById("userEmail").href = (data.email || data.user_email) ? `mailto:${data.email || data.user_email}` : "mailto:";
+        document.getElementById("userOrg").textContent = org;
+
+        if (image) {
+          image.alt = displayName;
+          image.onerror = function () {
+            image.onerror = null;
+            image.src = '../static/images/image.png';
+          };
+          if (image.src !== imageSrc) image.src = imageSrc;
+        }
+
+        if (displayMsg) {
+          broadcastMessage.textContent = displayMsg;
+          broadcastSection.classList.remove("hidden");
+          if (options.focusMessage) focusBroadcastMessage();
+        } else {
+          broadcastMessage.textContent = '';
+          broadcastSection.classList.add("hidden");
+        }
+
+        updateAvailBadge(data.is_available, displayMsg);
+
+        document.getElementById("copyPhone").onclick = () =>
+          copyToClipboard(data.phone_number || "N/A");
+        document.getElementById("copyEmail").onclick = () =>
+          copyToClipboard(data.email || data.user_email || "N/A");
+        document.getElementById("copyOrg").onclick = () =>
+          copyToClipboard(data.organization || "N/A");
+      }
+
+      async function refreshBroadcastLive() {
+        if (document.visibilityState === 'hidden') return;
+        if (window.SKBackendStatus && window.SKBackendStatus.getState && window.SKBackendStatus.getState() === 'offline') return;
+        await loadUserData({ silent: true });
+      }
+
+      function scheduleBroadcastLive() {
+        if (broadcastLiveTimer) window.clearTimeout(broadcastLiveTimer);
+        if (document.visibilityState === 'hidden') return;
+        if (!broadcastHasLoaded) return;
+        broadcastLiveTimer = window.setTimeout(broadcastLiveTick, BROADCAST_LIVE_INTERVAL_MS);
+      }
+
+      async function broadcastLiveTick() {
+        if (broadcastLiveInFlight) {
+          scheduleBroadcastLive();
+          return;
+        }
+        broadcastLiveInFlight = true;
+        try {
+          await refreshBroadcastLive();
+        } catch (e) {
+          // Global backend status handles connection failures.
+        } finally {
+          broadcastLiveInFlight = false;
+          scheduleBroadcastLive();
+        }
+      }
+
+      function startBroadcastLive() {
+        scheduleBroadcastLive();
+      }
+
+      function stopBroadcastLive() {
+        if (broadcastLiveTimer) window.clearTimeout(broadcastLiveTimer);
+        broadcastLiveTimer = null;
+      }
+
+      async function refreshBroadcastAfterReconnect() {
+        if (broadcastReconnectInFlight) return;
+        broadcastReconnectInFlight = true;
+        try {
+          await loadUserData({ silent: broadcastHasLoaded });
+          startBroadcastLive();
+        } finally {
+          broadcastReconnectInFlight = false;
+        }
+      }
+
+      window.addEventListener('sk:backend-restored', function () {
+        refreshBroadcastAfterReconnect();
+      });
+      window.addEventListener('sk:backend-status', function (event) {
+        if (event.detail && event.detail.status === 'offline') {
+          stopBroadcastLive();
+          showBroadcastBackendUnavailable();
+        }
+      });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+          startBroadcastLive();
+          if (broadcastHasLoaded) refreshBroadcastLive();
+        } else {
+          stopBroadcastLive();
+        }
+      });
+
+      function backendUnavailableHtml() {
+        if (window.SKLayout && SKLayout.backendUnavailableStateHtml) {
+          return SKLayout.backendUnavailableStateHtml({
+            subtitle: 'Sir Kothay will reconnect automatically.'
+          });
+        }
+        return '<div class="sk-empty-state compact">' +
+          '<div class="sk-empty-icon"><i class="bi bi-wifi-off"></i></div>' +
+          '<div class="sk-empty-title">Backend unavailable</div>' +
+          '<div class="sk-empty-subtitle">Sir Kothay will reconnect automatically.</div>' +
+          '<button type="button" class="sk-btn sk-btn-primary sk-btn-sm" onclick="SKLayout.retryBackend()">' +
+          '<i class="bi bi-arrow-clockwise"></i> Retry</button>' +
+          '</div>';
+      }
+
+      function showBroadcastLoading() {
+        var skeleton = document.getElementById("broadcastSkeleton");
+        var card = document.getElementById("broadcastCard");
+        var backendState = document.getElementById("broadcastBackendState");
+        if (skeleton) skeleton.classList.remove("hidden");
+        if (card) card.classList.add("hidden");
+        if (backendState) backendState.classList.add("hidden");
+      }
+
+      function showBroadcastContent() {
+        var skeleton = document.getElementById("broadcastSkeleton");
+        var card = document.getElementById("broadcastCard");
+        var backendState = document.getElementById("broadcastBackendState");
+        if (skeleton) skeleton.classList.add("hidden");
+        if (backendState) backendState.classList.add("hidden");
+        if (card) card.classList.remove("hidden");
+      }
+
+      function showBroadcastBackendUnavailable() {
+        stopBroadcastLive();
+        if (window.SKBackendStatus && SKBackendStatus.markOffline && (!SKBackendStatus.getState || SKBackendStatus.getState() !== 'offline')) {
+          SKBackendStatus.markOffline({ reason: 'broadcast-page' });
+        }
+        if (window.SKLayout && SKLayout.renderOfflineStaticNav) {
+          SKLayout.renderOfflineStaticNav('home', { hideAuth: true });
+        }
+        var skeleton = document.getElementById("broadcastSkeleton");
+        var card = document.getElementById("broadcastCard");
+        var backendState = document.getElementById("broadcastBackendState");
+        if (backendState) {
+          backendState.innerHTML = backendUnavailableHtml();
+          backendState.classList.remove("hidden");
+        }
+        if (skeleton) skeleton.classList.add("hidden");
+        if (card) card.classList.add("hidden");
+      }
+
       function showErrorState(errorMsg) {
+        showBroadcastContent();
         document.getElementById("userName").textContent = "User Not Found";
         document.getElementById("userPhone").textContent = "Endpoint Missing";
         document.getElementById("userEmail").textContent = "See Console";
@@ -596,16 +587,16 @@
           badge.style.background = 'var(--sk-success-bg)';
           badge.style.color = 'var(--sk-success)';
           badge.style.border = '1px solid var(--sk-success-bg)';
-          badge.innerHTML = '<span class="bc-avail-dot animate-pulse" style="background:var(--sk-success)"></span><span>Currently Available</span>' +
-            (activeMessage ? '<span style="font-size:var(--sk-text-xs);opacity:0.8;margin-left:0.5rem">— ' + activeMessage + '</span>' : '');
+          badge.innerHTML = '<span class="bc-avail-dot animate-pulse sk-ex-10c5b914"></span><span>Currently Available</span>' +
+            (activeMessage ? '<span class="sk-ex-b6964f30">— ' + activeMessage + '</span>' : '');
           if (notifyLabel) notifyLabel.textContent = 'Get Notifications';
           if (subCopy) subCopy.textContent = 'Get an email notification when this person updates their status:';
         } else {
           badge.style.background = 'var(--sk-error-bg)';
           badge.style.color = 'var(--sk-error)';
           badge.style.border = '1px solid var(--sk-error-bg)';
-          badge.innerHTML = '<span class="bc-avail-dot" style="background:var(--sk-error)"></span><span>Currently Unavailable</span>' +
-            (activeMessage ? '<span style="font-size:var(--sk-text-xs);opacity:0.8;margin-left:0.5rem">— ' + activeMessage + '</span>' : '');
+          badge.innerHTML = '<span class="bc-avail-dot sk-ex-a1548914"></span><span>Currently Unavailable</span>' +
+            (activeMessage ? '<span class="sk-ex-b6964f30">— ' + activeMessage + '</span>' : '');
           if (notifyLabel) notifyLabel.textContent = 'Get Notifications';
           if (subCopy) subCopy.textContent = 'Get an email notification when this person updates their status:';
         }
@@ -629,8 +620,8 @@
         document.getElementById('anonNotifyPref').value = pref;
         var map = { all: 'anonNotifyAll', available: 'anonNotifyAvail' };
         var activeStyles = {
-          all: 'background:var(--sk-info-bg);color:var(--sk-info);border-color:var(--sk-info)',
-          available: 'background:var(--sk-success-bg);color:var(--sk-success);border-color:var(--sk-success)'
+          all: 'background:rgba(59,130,246,0.16);color:var(--sk-info);border-color:rgba(59,130,246,0.34);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)',
+          available: 'background:rgba(34,197,94,0.16);color:var(--sk-success);border-color:rgba(34,197,94,0.34);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)'
         };
         Object.keys(map).forEach(function (k) {
           var el = document.getElementById(map[k]);
@@ -773,9 +764,9 @@
       function _highlightBcNotifyPref(pref) {
         var map = { all: 'bcNotifyAll', available: 'bcNotifyAvail', none: 'bcNotifyNone' };
         var activeStyles = {
-          all: 'background:var(--sk-info-bg);color:var(--sk-info);border-color:var(--sk-info)',
-          available: 'background:var(--sk-success-bg);color:var(--sk-success);border-color:var(--sk-success)',
-          none: 'background:var(--sk-bg-muted);color:var(--sk-text-tertiary);border-color:var(--sk-border)'
+          all: 'background:rgba(59,130,246,0.16);color:var(--sk-info);border-color:rgba(59,130,246,0.34);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)',
+          available: 'background:rgba(34,197,94,0.16);color:var(--sk-success);border-color:rgba(34,197,94,0.34);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)',
+          none: 'background:rgba(255,255,255,0.07);color:var(--sk-text-tertiary);border-color:var(--sk-border-light);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)'
         };
         Object.keys(map).forEach(function (k) {
           var el = document.getElementById(map[k]);
@@ -829,7 +820,7 @@
             SKComponents.toast('Chat started! Waiting for faculty to accept.', 'success');
             setTimeout(function () {
               var section = document.getElementById('studentChatSection');
-              section.innerHTML = '<button onclick="window.location.href=\'../dashboard/student.html?tab=messages&thread=' + data.id + '\'" class="sk-btn sk-btn-gradient" style="width:100%"><i class="bi bi-chat-dots" style="margin-right:0.25rem"></i>Continue Chat</button>';
+              section.innerHTML = '<button type="button" onclick="window.location.href=\'../dashboard/student.html?tab=messages&thread=' + data.id + '\'" class="sk-btn sk-btn-gradient sk-ex-0466783d"><i class="bi bi-chat-dots sk-ex-9b7040ae"></i>Continue Chat</button>';
               document.getElementById('studentChatModal').classList.add('hidden');
             }, 1500);
           } else {
@@ -862,8 +853,8 @@
               .slice(0, 6)
               .map(
                 (c) =>
-                  `<a href="${c.html_url}" target="_blank" style="display:inline-block;width:24px;height:24px;border-radius:50%;overflow:hidden;border:1px solid var(--sk-border)">
-                    <img src="${c.avatar_url}" style="width:100%;height:100%;object-fit:cover" alt="${c.login}">
+                  `<a href="${c.html_url}" target="_blank" rel="noopener" class="sk-ex-a13b095e">
+                    <img src="${c.avatar_url}" alt="${c.login}" class="sk-ex-3b1d0762">
                   </a>`,
               )
               .join("");

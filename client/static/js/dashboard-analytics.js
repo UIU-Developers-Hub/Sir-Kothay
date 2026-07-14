@@ -43,7 +43,7 @@ function renderSubscriberList(subs) {
         '<span class="text-gray-600"><i class="bi bi-envelope text-gray-400 mr-1"></i>' + escapeHtml(s.email) + '</span>' +
         '<div class="flex items-center gap-2">' +
         '<span class="text-gray-400">' + (s.is_active ? '<span class="text-green-500">Active</span>' : '<span class="text-gray-400">Inactive</span>') + '</span>' +
-        '<button onclick="removeSubscriber(' + s.id + ')" class="text-gray-300 hover:text-red-500"><i class="bi bi-x-lg"></i></button></div></div>';
+        '<button type="button" onclick="removeSubscriber(' + s.id + ')" class="text-gray-300 hover:text-red-500" aria-label="Remove subscriber" title="Remove subscriber"><i class="bi bi-x-lg"></i></button></div></div>';
     }).join('');
 }
 

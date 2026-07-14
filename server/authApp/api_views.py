@@ -11,7 +11,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.conf import settings
-from notifications.services import send_email_async
+from notifications.services import reset_password_url, send_email_async, verify_email_url
 from .models import CustomUser, EmailVerificationToken
 from .serializers import UserSerializer, UserLoginSerializer, ChangePasswordSerializer
 import random
@@ -51,11 +51,25 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response({'message': 'OK'}, status=status.HTTP_200_OK)
 
     def _send_verification_email(self, user, token_obj):
-        client_base = getattr(settings, 'CLIENT_PUBLIC_BASE_URL', 'http://127.0.0.1:5500/client')
-        verify_url = f"{client_base}/auth/verify-email.html?token={token_obj.token}"
+        verify_url = verify_email_url(token_obj.token)
         subject = "Verify your Sir Kothay Account"
         body = f"Hello {user.username},\n\nThank you for signing up for Sir Kothay!\n\nYour 6-digit verification code is: {token_obj.code}\n\nOr, you can click the link below to verify your email address:\n{verify_url}\n\nThanks,\nSir Kothay Team"
-        send_email_async(subject, body, settings.DEFAULT_FROM_EMAIL, [user.email])
+        send_email_async(
+            subject,
+            body,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            eyebrow='Account verification',
+            title='Verify your Sir Kothay account',
+            greeting=user.username,
+            intro=[
+                'Thanks for signing up. Use the code below or open the secure verification link to finish setting up your account.'
+            ],
+            code=token_obj.code,
+            action_label='Verify email',
+            action_url=verify_url,
+            footer_note='This verification link and code expire in 10 minutes.',
+        )
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def register(self, request):
@@ -154,13 +168,27 @@ class UserViewSet(viewsets.ModelViewSet):
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             
-            client_base = getattr(settings, 'CLIENT_PUBLIC_BASE_URL', 'http://127.0.0.1:5500/client')
-            reset_url = f"{client_base}/auth/reset-password.html?uidb64={uid}&token={token}"
+            reset_url = reset_password_url(uid, token)
             
             subject = "Reset your Sir Kothay Password"
             body = f"Hello,\n\nWe received a request to reset the password for your Sir Kothay account.\n\nClick the link below to set a new password:\n{reset_url}\n\nIf you did not request this, please ignore this email.\n\nThanks,\nSir Kothay Team"
             
-            send_email_async(subject, body, settings.DEFAULT_FROM_EMAIL, [user.email])
+            send_email_async(
+                subject,
+                body,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                eyebrow='Password reset',
+                title='Reset your password',
+                greeting=user.username,
+                intro=[
+                    'We received a request to reset the password for your Sir Kothay account.',
+                    'If this was you, open the link below and set a new password.'
+                ],
+                action_label='Set new password',
+                action_url=reset_url,
+                footer_note='If you did not request this, you can safely ignore this email.',
+            )
             
         return Response({'message': 'If that email is registered, a password reset link has been sent.'})
 
