@@ -1,6 +1,6 @@
 """Management command to process all scheduled tasks.
 
-Run via PythonAnywhere scheduled tasks or cron:
+Run via cron or scheduled tasks:
     python manage.py process_schedules
 
 Processes:
