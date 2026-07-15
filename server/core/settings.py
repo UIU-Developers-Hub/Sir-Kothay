@@ -80,6 +80,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'cloudinary_storage',
+    'cloudinary',
     'authApp',
     'qrcodeApp',
     'dashboard',
@@ -203,6 +205,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = '/media/'  # URL to access media files
 MEDIA_ROOT = BASE_DIR / 'media'  # Physical location on the server
+
+# Cloud media storage (Render / ephemeral filesystems).
+# When CLOUDINARY_CLOUD_NAME is set, uploaded files go to Cloudinary instead of local disk.
+# On PythonAnywhere / local dev, leave these env vars unset → files stay on local disk.
+if os.getenv('CLOUDINARY_CLOUD_NAME'):
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+        'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+    }
 
 AUTH_USER_MODEL = 'authApp.CustomUser'
 

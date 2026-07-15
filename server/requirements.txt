@@ -16,3 +16,5 @@ django-cors-headers
 reportlab
 whitenoise
 psycopg2-binary==2.9.10
+cloudinary
+django-cloudinary-storage
