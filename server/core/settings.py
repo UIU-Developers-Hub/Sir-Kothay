@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'cloudinary_storage',
     'cloudinary',
+    'gmailapi_backend',
     'authApp',
     'qrcodeApp',
     'dashboard',
@@ -251,13 +252,21 @@ SIMPLE_JWT = {
 # Email backend — auto-switches to SMTP when EMAIL_HOST_USER is set.
 # For dev (no creds): prints to console. For prod: real SMTP delivery.
 _email_user = os.getenv('EMAIL_HOST_USER', '')
-if _email_user:
+_gmail_refresh_token = os.getenv('GMAIL_API_REFRESH_TOKEN')
+
+if _gmail_refresh_token:
+    EMAIL_BACKEND = 'gmailapi_backend.mail.GmailBackend'
+    GMAIL_API_CLIENT_ID = os.getenv('GMAIL_API_CLIENT_ID')
+    GMAIL_API_CLIENT_SECRET = os.getenv('GMAIL_API_CLIENT_SECRET')
+    GMAIL_API_REFRESH_TOKEN = _gmail_refresh_token
+elif _email_user:
     EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes')
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() in ('1', 'true', 'yes')
 EMAIL_HOST_USER = _email_user
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', _email_user or 'noreply@sirkothay.com')

@@ -191,6 +191,9 @@ server/staticfiles/
 # Test scripts (local debugging only, not part of codebase)
 server/test_*.py
 
+# Gmail OAuth (one-time token generation, never commit)
+server/credentials.json
+
 # OS files
 .DS_Store
 Thumbs.db
