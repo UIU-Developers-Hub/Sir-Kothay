@@ -29,13 +29,25 @@ class SchedulerConfig(AppConfig):
     name = 'scheduler'
 
     def ready(self):
-        # Prevent running during migrations or management commands (except runserver)
+        # Start the background scheduler for runserver and gunicorn,
+        # but skip it for management commands like migrate, collectstatic, etc.
         import sys
         import os
-        is_management_command = len(sys.argv) > 1 and sys.argv[1] != 'runserver'
-        
-        if not is_management_command:
-            # If using runserver, prevent running twice due to the auto-reloader
-            if 'runserver' in sys.argv and os.environ.get('RUN_MAIN') != 'true':
-                return
-            start_scheduler_thread()
+
+        # Known management commands that should NOT start the scheduler
+        skip_commands = {
+            'migrate', 'makemigrations', 'collectstatic', 'createsuperuser',
+            'shell', 'dbshell', 'test', 'check', 'showmigrations',
+            'createcachetable', 'flush', 'loaddata', 'dumpdata',
+            'process_schedules',
+        }
+        is_management_command = len(sys.argv) > 1 and sys.argv[1] in skip_commands
+
+        if is_management_command:
+            return
+
+        # If using runserver, prevent running twice due to the auto-reloader
+        if 'runserver' in sys.argv and os.environ.get('RUN_MAIN') != 'true':
+            return
+
+        start_scheduler_thread()
