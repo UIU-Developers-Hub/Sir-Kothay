@@ -73,13 +73,25 @@ class UserDetails(models.Model):
     def save(self, *args, **kwargs):
         is_new = self.pk is None
         old_is_available = None
+        old_image = None
         if not is_new:
             try:
-                old_is_available = UserDetails.objects.get(pk=self.pk).is_available
+                old = UserDetails.objects.get(pk=self.pk)
+                old_is_available = old.is_available
+                # If profile image changed, remember the old one for deletion
+                if old.profile_image and old.profile_image != self.profile_image:
+                    old_image = old.profile_image
             except UserDetails.DoesNotExist:
                 pass
-                
+
         super().save(*args, **kwargs)
+
+        # Delete the old profile image from storage after successful save
+        if old_image:
+            try:
+                old_image.delete(save=False)
+            except Exception:
+                pass
         
         if not is_new and old_is_available is not None and old_is_available != self.is_available:
             title = "Now Available" if self.is_available else "Now Unavailable"
