@@ -176,6 +176,16 @@ window.SKDashboardProfile = (() => {
             </div>
           </div>
         </form>
+
+        <div class="sk-profile-form-section sk-ex-danger-zone">
+          <div class="sk-section-title" style="color:var(--clr-danger,#ef4444)">
+            <i class="bi bi-exclamation-triangle-fill"></i> Danger Zone
+          </div>
+          <p class="sk-help-text" style="margin-bottom:.75rem">Permanently delete your account and all associated data. This action cannot be undone.</p>
+          <button type="button" data-profile-action="deleteAccount" class="sk-btn sk-btn-danger">
+            <i class="bi bi-trash3 me-1"></i> Delete My Account
+          </button>
+        </div>
       </div>
     `;
   }
@@ -220,6 +230,11 @@ window.SKDashboardProfile = (() => {
       cancel.addEventListener('click', function () {
         backToDashboard();
       });
+    }
+
+    var deleteBtn = root.querySelector('[data-profile-action="deleteAccount"]');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', deleteAccount);
     }
   }
 
@@ -471,6 +486,46 @@ window.SKDashboardProfile = (() => {
     if (dashboardEmail && (!activeRoot || !activeRoot.contains(dashboardEmail))) dashboardEmail.textContent = email;
     var dashboardImage = document.getElementById('userImage');
     if (dashboardImage && (!activeRoot || !activeRoot.contains(dashboardImage)) && imageUrl) dashboardImage.src = imageUrl;
+  }
+
+  async function deleteAccount() {
+    // Show a confirmation prompt with password input
+    var password = prompt('⚠️ This will PERMANENTLY delete your account and all data.\n\nType your password to confirm:');
+    if (!password) return;
+
+    var deleteBtn = action('deleteAccount');
+    if (deleteBtn) {
+      deleteBtn.disabled = true;
+      deleteBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Deleting...';
+    }
+
+    try {
+      var token = localStorage.getItem('access_token');
+      var res = await fetch(API_ENDPOINTS.DELETE_ACCOUNT, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password: password })
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete account.');
+
+      // Clear all auth data and redirect
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.clear();
+      alert('Your account has been permanently deleted.');
+      window.location.href = '../auth/login.html';
+    } catch (error) {
+      console.error(error);
+      notify(error.message || 'Failed to delete account.', 'error');
+      if (deleteBtn) {
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = '<i class="bi bi-trash3 me-1"></i> Delete My Account';
+      }
+    }
   }
 
   function backToDashboard() {

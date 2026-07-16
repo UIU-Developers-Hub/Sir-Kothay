@@ -302,3 +302,21 @@ class UserViewSet(viewsets.ModelViewSet):
         EmailVerificationToken.objects.filter(user=user_to_verify).delete()
         
         return Response({'message': f'User {user_to_verify.email} manually verified.'})
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def delete_account(self, request):
+        """
+        Allow any user to permanently delete their own account.
+        Requires current password for confirmation.
+        Media cleanup is handled by the pre_delete signal in authApp/signals.py.
+        """
+        password = request.data.get('password')
+        if not password:
+            return Response({'error': 'Password is required to confirm account deletion.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+        if not user.check_password(password):
+            return Response({'error': 'Incorrect password.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.delete()
+        return Response({'message': 'Your account has been permanently deleted.'})
