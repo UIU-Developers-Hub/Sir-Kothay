@@ -489,43 +489,155 @@ window.SKDashboardProfile = (() => {
   }
 
   async function deleteAccount() {
-    // Show a confirmation prompt with password input
-    var password = prompt('⚠️ This will PERMANENTLY delete your account and all data.\n\nType your password to confirm:');
-    if (!password) return;
+    // Build two-step modal HTML
+    var modalId = 'deleteAccountModal';
+    var existing = document.getElementById(modalId);
+    if (existing) existing.remove();
 
-    var deleteBtn = action('deleteAccount');
-    if (deleteBtn) {
-      deleteBtn.disabled = true;
-      deleteBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Deleting...';
-    }
+    var overlay = document.createElement('div');
+    overlay.id = modalId;
+    overlay.className = 'sk-modal-overlay';
+    overlay.style.display = 'flex';
+    overlay.innerHTML =
+      '<div class="sk-modal-panel" style="max-width:440px">' +
+        '<div class="sk-modal-header">' +
+          '<h3 class="sk-modal-title"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Delete Account</h3>' +
+          '<button type="button" class="sk-modal-close" id="delAcctClose" aria-label="Close" title="Close"><i class="bi bi-x-lg"></i></button>' +
+        '</div>' +
+        '<div class="sk-modal-body">' +
+          '<!-- Step 1: Password -->' +
+          '<div id="delStep1">' +
+            '<p style="margin-bottom:.75rem;color:var(--clr-text-muted,#999)">This will <strong style="color:var(--clr-danger,#ef4444)">permanently delete</strong> your account and all associated data. This action cannot be undone.</p>' +
+            '<div class="sk-form-group">' +
+              '<label class="sk-label">Enter your password to continue</label>' +
+              '<div class="sk-password-input-wrap">' +
+                '<input type="password" id="delAcctPassword" class="sk-input" placeholder="Your current password" required>' +
+                '<button type="button" id="delAcctTogglePw" aria-label="Show password" title="Show password"><i class="bi bi-eye"></i></button>' +
+              '</div>' +
+            '</div>' +
+            '<p id="delStep1Error" class="sk-help-text" style="color:var(--clr-danger,#ef4444);display:none"></p>' +
+          '</div>' +
+          '<!-- Step 2: Code -->' +
+          '<div id="delStep2" style="display:none">' +
+            '<p style="margin-bottom:.75rem;color:var(--clr-text-muted,#999)">A 6-digit confirmation code has been sent to your email. Enter it below to confirm deletion.</p>' +
+            '<div class="sk-form-group">' +
+              '<label class="sk-label">Confirmation Code</label>' +
+              '<input type="text" id="delAcctCode" class="sk-input" placeholder="e.g. 482901" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" style="letter-spacing:.25em;text-align:center;font-size:1.25rem;font-weight:600" required>' +
+            '</div>' +
+            '<p id="delStep2Error" class="sk-help-text" style="color:var(--clr-danger,#ef4444);display:none"></p>' +
+            '<p class="sk-help-text" style="margin-top:.5rem"><i class="bi bi-clock me-1"></i>Code expires in 10 minutes.</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="sk-modal-footer">' +
+          '<button type="button" class="sk-btn sk-btn-secondary" id="delAcctCancel">Cancel</button>' +
+          '<button type="button" class="sk-btn sk-btn-danger" id="delAcctSubmit"><i class="bi bi-arrow-right me-1"></i>Continue</button>' +
+        '</div>' +
+      '</div>';
 
-    try {
-      var token = localStorage.getItem('access_token');
-      var res = await fetch(API_ENDPOINTS.DELETE_ACCOUNT, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ password: password })
-      });
-      var data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to delete account.');
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
 
-      // Clear all auth data and redirect
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.clear();
-      alert('Your account has been permanently deleted.');
-      window.location.href = '../auth/login.html';
-    } catch (error) {
-      console.error(error);
-      notify(error.message || 'Failed to delete account.', 'error');
-      if (deleteBtn) {
-        deleteBtn.disabled = false;
-        deleteBtn.innerHTML = '<i class="bi bi-trash3 me-1"></i> Delete My Account';
+    var step = 1;
+    var closeModal = function () {
+      overlay.remove();
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', onEscKey);
+    };
+
+    // Close on Escape key
+    function onEscKey(e) { if (e.key === 'Escape') closeModal(); }
+    document.addEventListener('keydown', onEscKey);
+
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+    overlay.querySelector('#delAcctClose').addEventListener('click', closeModal);
+    overlay.querySelector('#delAcctCancel').addEventListener('click', closeModal);
+
+    // Password visibility toggle
+    overlay.querySelector('#delAcctTogglePw').addEventListener('click', function () {
+      var pw = overlay.querySelector('#delAcctPassword');
+      var icon = this.querySelector('i');
+      if (pw.type === 'password') { pw.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+      else { pw.type = 'password'; icon.className = 'bi bi-eye'; }
+    });
+
+    // Only allow digits in code field
+    overlay.querySelector('#delAcctCode').addEventListener('input', function () {
+      this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    // Allow Enter key to submit
+    overlay.querySelector('#delAcctPassword').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); overlay.querySelector('#delAcctSubmit').click(); }
+    });
+    overlay.querySelector('#delAcctCode').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); overlay.querySelector('#delAcctSubmit').click(); }
+    });
+
+    overlay.querySelector('#delAcctSubmit').addEventListener('click', async function () {
+      var btn = this;
+      var errEl;
+      btn.disabled = true;
+
+      if (step === 1) {
+        // Step 1: Verify password → send code
+        errEl = overlay.querySelector('#delStep1Error');
+        errEl.style.display = 'none';
+        var password = overlay.querySelector('#delAcctPassword').value;
+        if (!password) { errEl.textContent = 'Password is required.'; errEl.style.display = ''; btn.disabled = false; return; }
+
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Sending code...';
+        try {
+          var token = localStorage.getItem('access_token');
+          var res = await fetch(API_ENDPOINTS.REQUEST_DELETE_ACCOUNT, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: password })
+          });
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed.');
+
+          // Switch to step 2
+          step = 2;
+          overlay.querySelector('#delStep1').style.display = 'none';
+          overlay.querySelector('#delStep2').style.display = '';
+          btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Delete My Account';
+          overlay.querySelector('#delAcctCode').focus();
+        } catch (err) {
+          errEl.textContent = err.message; errEl.style.display = '';
+          btn.innerHTML = '<i class="bi bi-arrow-right me-1"></i>Continue';
+        } finally {
+          btn.disabled = false;
+        }
+      } else {
+        // Step 2: Verify code → delete account
+        errEl = overlay.querySelector('#delStep2Error');
+        errEl.style.display = 'none';
+        var code = overlay.querySelector('#delAcctCode').value.trim();
+        if (!code || code.length !== 6) { errEl.textContent = 'Enter the 6-digit code from your email.'; errEl.style.display = ''; btn.disabled = false; return; }
+
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Deleting...';
+        try {
+          var token = localStorage.getItem('access_token');
+          var res = await fetch(API_ENDPOINTS.CONFIRM_DELETE_ACCOUNT, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code })
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(data.error || 'Failed to delete account.');
+
+          closeModal();
+          localStorage.clear();
+          notify('Your account has been permanently deleted.', 'success');
+          setTimeout(function () { window.location.href = '../auth/login.html'; }, 1500);
+        } catch (err) {
+          errEl.textContent = err.message; errEl.style.display = '';
+          btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Delete My Account';
+        } finally {
+          btn.disabled = false;
+        }
       }
-    }
+    });
   }
 
   function backToDashboard() {

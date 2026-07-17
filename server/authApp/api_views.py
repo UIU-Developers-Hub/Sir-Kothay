@@ -304,19 +304,78 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response({'message': f'User {user_to_verify.email} manually verified.'})
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-    def delete_account(self, request):
+    def request_delete_account(self, request):
         """
-        Allow any user to permanently delete their own account.
-        Requires current password for confirmation.
-        Media cleanup is handled by the pre_delete signal in authApp/signals.py.
+        Step 1: Verify password and send a 6-digit deletion code to the user's email.
         """
         password = request.data.get('password')
         if not password:
-            return Response({'error': 'Password is required to confirm account deletion.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = request.user
         if not user.check_password(password):
             return Response({'error': 'Incorrect password.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        from .models import AccountDeletionToken
+        # Create or refresh deletion token
+        code = generate_verification_code()
+        token = str(uuid.uuid4())
+        AccountDeletionToken.objects.filter(user=user).delete()
+        AccountDeletionToken.objects.create(user=user, token=token, code=code)
+
+        # Send deletion confirmation email
+        subject = "Confirm Account Deletion — Sir Kothay"
+        body = (
+            f"Hello {user.username},\n\n"
+            f"We received a request to permanently delete your Sir Kothay account.\n\n"
+            f"Your 6-digit confirmation code is: {code}\n\n"
+            f"If you did not request this, please ignore this email and change your password immediately.\n\n"
+            f"Thanks,\nSir Kothay Team"
+        )
+        send_email_async(
+            subject,
+            body,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            eyebrow='Account deletion',
+            title='Confirm account deletion',
+            greeting=user.username,
+            intro=[
+                'We received a request to permanently delete your Sir Kothay account.',
+                'Enter the code below in the app to confirm. This action cannot be undone.',
+            ],
+            code=code,
+            footer_note='This code expires in 10 minutes. If you did not request this, change your password immediately.',
+        )
+
+        return Response({'message': 'A confirmation code has been sent to your email.'})
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def confirm_delete_account(self, request):
+        """
+        Step 2: Verify the 6-digit code and permanently delete the account.
+        Media cleanup is handled by the pre_delete signal in authApp/signals.py.
+        """
+        code = request.data.get('code')
+        if not code:
+            return Response({'error': 'Confirmation code is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from .models import AccountDeletionToken
+        user = request.user
+        try:
+            token_obj = AccountDeletionToken.objects.get(user=user)
+        except AccountDeletionToken.DoesNotExist:
+            return Response({'error': 'No deletion request found. Please start over.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check expiry (10 minutes)
+        if timezone.now() > token_obj.created_at + timedelta(minutes=10):
+            token_obj.delete()
+            return Response({'error': 'Confirmation code expired. Please start over.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if token_obj.code != code:
+            return Response({'error': 'Invalid confirmation code.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Code is valid — delete the account
         user.delete()
         return Response({'message': 'Your account has been permanently deleted.'})
+

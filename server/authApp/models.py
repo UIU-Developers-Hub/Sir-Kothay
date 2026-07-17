@@ -64,3 +64,13 @@ class EmailVerificationToken(models.Model):
 
     def __str__(self):
         return f"Verification for {self.user.email}"
+
+
+class AccountDeletionToken(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='deletion_token')
+    token = models.CharField(max_length=64, unique=True)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Deletion token for {self.user.email}"

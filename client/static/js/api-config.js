@@ -42,7 +42,8 @@ var API_ENDPOINTS = {
     REGISTER: API_BASE_URL + '/api/auth/users/register/',
     CURRENT_USER: API_BASE_URL + '/api/auth/users/me/',
     CHANGE_PASSWORD: API_BASE_URL + '/api/auth/users/change_password/',
-    DELETE_ACCOUNT: API_BASE_URL + '/api/auth/users/delete_account/',
+    REQUEST_DELETE_ACCOUNT: API_BASE_URL + '/api/auth/users/request_delete_account/',
+    CONFIRM_DELETE_ACCOUNT: API_BASE_URL + '/api/auth/users/confirm_delete_account/',
 
     // Dashboard
     USER_DETAILS: API_BASE_URL + '/api/dashboard/user-details/my_details/',
