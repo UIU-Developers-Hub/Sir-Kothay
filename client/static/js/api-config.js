@@ -43,7 +43,11 @@ var API_ENDPOINTS = {
     CURRENT_USER: API_BASE_URL + '/api/auth/users/me/',
     CHANGE_PASSWORD: API_BASE_URL + '/api/auth/users/change_password/',
     REQUEST_DELETE_ACCOUNT: API_BASE_URL + '/api/auth/users/request_delete_account/',
+    RESEND_DELETION_CODE: API_BASE_URL + '/api/auth/users/resend_deletion_code/',
     CONFIRM_DELETE_ACCOUNT: API_BASE_URL + '/api/auth/users/confirm_delete_account/',
+    FINALIZE_DELETE_ACCOUNT: API_BASE_URL + '/api/auth/users/finalize_delete_account/',
+    VERIFY_DELETION_LINK: API_BASE_URL + '/api/auth/users/verify_deletion_link/',
+    CONFIRM_DELETE_BY_LINK: API_BASE_URL + '/api/auth/users/confirm_delete_by_link/',
 
     // Dashboard
     USER_DETAILS: API_BASE_URL + '/api/dashboard/user-details/my_details/',

@@ -488,8 +488,7 @@ window.SKDashboardProfile = (() => {
     if (dashboardImage && (!activeRoot || !activeRoot.contains(dashboardImage)) && imageUrl) dashboardImage.src = imageUrl;
   }
 
-  async function deleteAccount() {
-    // Build two-step modal HTML
+  function deleteAccount() {
     var modalId = 'deleteAccountModal';
     var existing = document.getElementById(modalId);
     if (existing) existing.remove();
@@ -502,140 +501,237 @@ window.SKDashboardProfile = (() => {
       '<div class="sk-modal-panel" style="max-width:440px">' +
         '<div class="sk-modal-header">' +
           '<h3 class="sk-modal-title"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Delete Account</h3>' +
-          '<button type="button" class="sk-modal-close" id="delAcctClose" aria-label="Close" title="Close"><i class="bi bi-x-lg"></i></button>' +
+          '<button type="button" class="sk-modal-close" data-del="close" aria-label="Close" title="Close"><i class="bi bi-x-lg"></i></button>' +
         '</div>' +
         '<div class="sk-modal-body">' +
-          '<!-- Step 1: Password -->' +
-          '<div id="delStep1">' +
+
+          /* ── Step 1: Password ── */
+          '<div data-del="step1">' +
             '<p style="margin-bottom:.75rem;color:var(--clr-text-muted,#999)">This will <strong style="color:var(--clr-danger,#ef4444)">permanently delete</strong> your account and all associated data. This action cannot be undone.</p>' +
             '<div class="sk-form-group">' +
               '<label class="sk-label">Enter your password to continue</label>' +
               '<div class="sk-password-input-wrap">' +
-                '<input type="password" id="delAcctPassword" class="sk-input" placeholder="Your current password" required>' +
-                '<button type="button" id="delAcctTogglePw" aria-label="Show password" title="Show password"><i class="bi bi-eye"></i></button>' +
+                '<input type="password" data-del="password" class="sk-input" placeholder="Your current password" required>' +
+                '<button type="button" data-del="togglePw" aria-label="Show password" title="Show password"><i class="bi bi-eye"></i></button>' +
               '</div>' +
             '</div>' +
-            '<p id="delStep1Error" class="sk-help-text" style="color:var(--clr-danger,#ef4444);display:none"></p>' +
+            '<p data-del="step1Err" class="sk-help-text" style="color:var(--clr-danger,#ef4444);display:none"></p>' +
           '</div>' +
-          '<!-- Step 2: Code -->' +
-          '<div id="delStep2" style="display:none">' +
-            '<p style="margin-bottom:.75rem;color:var(--clr-text-muted,#999)">A 6-digit confirmation code has been sent to your email. Enter it below to confirm deletion.</p>' +
+
+          /* ── Step 2: OTP Code (mirrors verify-email.html) ── */
+          '<div data-del="step2" style="display:none">' +
+            '<div style="text-align:center;margin-bottom:.5rem"><i class="bi bi-envelope-check" style="font-size:2.5rem;color:var(--sk-primary,#f68b1f)"></i></div>' +
+            '<p data-del="step2Subtitle" style="text-align:center;margin-bottom:.5rem;color:var(--clr-text-muted,#999)">We sent a 6-digit code to your email.</p>' +
+            '<p style="text-align:center;margin-bottom:.75rem;font-size:.85rem">Code expires in <span data-del="timer" style="font-weight:700;color:var(--sk-primary,#f68b1f)">10:00</span></p>' +
+            '<p data-del="step2Msg" style="display:none;text-align:center;padding:.5rem .75rem;border-radius:.5rem;margin-bottom:.75rem;font-size:.85rem"></p>' +
             '<div class="sk-form-group">' +
-              '<label class="sk-label">Confirmation Code</label>' +
-              '<input type="text" id="delAcctCode" class="sk-input" placeholder="e.g. 482901" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" style="letter-spacing:.25em;text-align:center;font-size:1.25rem;font-weight:600" required>' +
+              '<label class="sk-label" style="text-align:center;display:block">Enter 6-digit Code</label>' +
+              '<input type="text" data-del="code" class="sk-input" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" style="letter-spacing:.3em;text-align:center;font-size:1.35rem;font-weight:700" required>' +
             '</div>' +
-            '<p id="delStep2Error" class="sk-help-text" style="color:var(--clr-danger,#ef4444);display:none"></p>' +
-            '<p class="sk-help-text" style="margin-top:.5rem"><i class="bi bi-clock me-1"></i>Code expires in 10 minutes.</p>' +
+            '<button type="button" data-del="verifyBtn" class="sk-btn sk-btn-danger" style="width:100%;margin-top:.5rem"><i class="bi bi-shield-check me-1"></i>Verify &amp; Continue</button>' +
+            '<div style="display:flex;justify-content:center;gap:.5rem;margin-top:.75rem">' +
+              '<button type="button" data-del="resendBtn" class="sk-btn sk-btn-secondary" style="font-size:.85rem"><i class="bi bi-arrow-repeat me-1"></i>Resend Code</button>' +
+            '</div>' +
           '</div>' +
+
+          /* ── Step 3: Final Yes/No Confirmation ── */
+          '<div data-del="step3" style="display:none">' +
+            '<div style="text-align:center;margin-bottom:.75rem"><i class="bi bi-shield-exclamation" style="font-size:2.5rem;color:var(--clr-danger,#ef4444)"></i></div>' +
+            '<p style="text-align:center;font-weight:600;font-size:1.05rem;margin-bottom:.5rem;color:var(--clr-danger,#ef4444)">Are you absolutely sure?</p>' +
+            '<p style="text-align:center;color:var(--clr-text-muted,#999);margin-bottom:1rem;font-size:.9rem">Your account, profile, QR code, messages, and all data will be <strong>permanently</strong> erased. There is no undo.</p>' +
+            '<p data-del="step3Err" class="sk-help-text" style="color:var(--clr-danger,#ef4444);display:none;text-align:center"></p>' +
+          '</div>' +
+
         '</div>' +
-        '<div class="sk-modal-footer">' +
-          '<button type="button" class="sk-btn sk-btn-secondary" id="delAcctCancel">Cancel</button>' +
-          '<button type="button" class="sk-btn sk-btn-danger" id="delAcctSubmit"><i class="bi bi-arrow-right me-1"></i>Continue</button>' +
+        '<div class="sk-modal-footer" data-del="footer1">' +
+          '<button type="button" class="sk-btn sk-btn-secondary" data-del="cancel">Cancel</button>' +
+          '<button type="button" class="sk-btn sk-btn-danger" data-del="step1Btn"><i class="bi bi-arrow-right me-1"></i>Continue</button>' +
+        '</div>' +
+        '<div class="sk-modal-footer" data-del="footer2" style="display:none"></div>' +
+        '<div class="sk-modal-footer" data-del="footer3" style="display:none">' +
+          '<button type="button" class="sk-btn sk-btn-secondary" data-del="noBtn" style="flex:1">No, keep my account</button>' +
+          '<button type="button" class="sk-btn sk-btn-danger" data-del="yesBtn" style="flex:1"><i class="bi bi-trash3 me-1"></i>Yes, delete</button>' +
         '</div>' +
       '</div>';
 
     document.body.appendChild(overlay);
     document.body.style.overflow = 'hidden';
 
-    var step = 1;
+    // helpers
+    var $ = function (sel) { return overlay.querySelector('[data-del="' + sel + '"]'); };
+    var timerInterval = null;
+
     var closeModal = function () {
+      if (timerInterval) clearInterval(timerInterval);
       overlay.remove();
       document.body.style.overflow = '';
       document.removeEventListener('keydown', onEscKey);
     };
-
-    // Close on Escape key
     function onEscKey(e) { if (e.key === 'Escape') closeModal(); }
     document.addEventListener('keydown', onEscKey);
 
     overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
-    overlay.querySelector('#delAcctClose').addEventListener('click', closeModal);
-    overlay.querySelector('#delAcctCancel').addEventListener('click', closeModal);
+    $('close').addEventListener('click', closeModal);
+    $('cancel').addEventListener('click', closeModal);
 
     // Password visibility toggle
-    overlay.querySelector('#delAcctTogglePw').addEventListener('click', function () {
-      var pw = overlay.querySelector('#delAcctPassword');
+    $('togglePw').addEventListener('click', function () {
+      var pw = $('password');
       var icon = this.querySelector('i');
       if (pw.type === 'password') { pw.type = 'text'; icon.className = 'bi bi-eye-slash'; }
       else { pw.type = 'password'; icon.className = 'bi bi-eye'; }
     });
 
-    // Only allow digits in code field
-    overlay.querySelector('#delAcctCode').addEventListener('input', function () {
-      this.value = this.value.replace(/[^0-9]/g, '');
-    });
+    // Only digits in code field
+    $('code').addEventListener('input', function () { this.value = this.value.replace(/[^0-9]/g, ''); });
 
-    // Allow Enter key to submit
-    overlay.querySelector('#delAcctPassword').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); overlay.querySelector('#delAcctSubmit').click(); }
-    });
-    overlay.querySelector('#delAcctCode').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); overlay.querySelector('#delAcctSubmit').click(); }
-    });
+    // Enter key submits
+    $('password').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('step1Btn').click(); } });
+    $('code').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('verifyBtn').click(); } });
 
-    overlay.querySelector('#delAcctSubmit').addEventListener('click', async function () {
+    // ── OTP Timer (mirrors verify-email.html) ──
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      var expiresAt = Date.now() + 10 * 60 * 1000;
+      var timerEl = $('timer');
+      function tick() {
+        var diff = expiresAt - Date.now();
+        if (diff <= 0) {
+          clearInterval(timerInterval);
+          timerEl.textContent = '00:00 (Expired)';
+          timerEl.style.color = 'var(--sk-error, #ef4444)';
+          return;
+        }
+        var s = Math.floor(diff / 1000);
+        timerEl.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+        timerEl.style.color = 'var(--sk-primary, #f68b1f)';
+      }
+      tick();
+      timerInterval = setInterval(tick, 1000);
+    }
+
+    function showStep2Msg(text, isError) {
+      var el = $('step2Msg');
+      el.textContent = text;
+      el.style.display = 'block';
+      el.style.background = isError ? 'var(--sk-error-bg, rgba(239,68,68,.12))' : 'var(--sk-success-bg, rgba(34,197,94,.12))';
+      el.style.color = isError ? 'var(--sk-error, #ef4444)' : 'var(--sk-success, #22c55e)';
+    }
+
+    // ── Step 1: Password → send code ──
+    $('step1Btn').addEventListener('click', async function () {
       var btn = this;
-      var errEl;
+      var errEl = $('step1Err');
+      errEl.style.display = 'none';
+      var password = $('password').value;
+      if (!password) { errEl.textContent = 'Password is required.'; errEl.style.display = ''; return; }
+
       btn.disabled = true;
+      btn.innerHTML = '<span class="sk-spinner sk-spinner-sm me-2"></span>Sending code...';
+      try {
+        var token = localStorage.getItem('access_token');
+        var res = await fetch(API_ENDPOINTS.REQUEST_DELETE_ACCOUNT, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: password })
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed.');
 
-      if (step === 1) {
-        // Step 1: Verify password → send code
-        errEl = overlay.querySelector('#delStep1Error');
-        errEl.style.display = 'none';
-        var password = overlay.querySelector('#delAcctPassword').value;
-        if (!password) { errEl.textContent = 'Password is required.'; errEl.style.display = ''; btn.disabled = false; return; }
+        // Switch to step 2
+        $('step1').style.display = 'none';
+        $('step2').style.display = '';
+        $('footer1').style.display = 'none';
+        startTimer();
+        $('code').focus();
+      } catch (err) {
+        errEl.textContent = err.message; errEl.style.display = '';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-right me-1"></i>Continue';
+      }
+    });
 
-        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Sending code...';
-        try {
-          var token = localStorage.getItem('access_token');
-          var res = await fetch(API_ENDPOINTS.REQUEST_DELETE_ACCOUNT, {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: password })
-          });
-          var data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Failed.');
+    // ── Step 2: Verify code → final confirmation ──
+    $('verifyBtn').addEventListener('click', async function () {
+      var btn = this;
+      var code = $('code').value.trim();
+      $('step2Msg').style.display = 'none';
+      if (!code || code.length !== 6) { showStep2Msg('Enter the 6-digit code from your email.', true); return; }
 
-          // Switch to step 2
-          step = 2;
-          overlay.querySelector('#delStep1').style.display = 'none';
-          overlay.querySelector('#delStep2').style.display = '';
-          btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Delete My Account';
-          overlay.querySelector('#delAcctCode').focus();
-        } catch (err) {
-          errEl.textContent = err.message; errEl.style.display = '';
-          btn.innerHTML = '<i class="bi bi-arrow-right me-1"></i>Continue';
-        } finally {
-          btn.disabled = false;
-        }
-      } else {
-        // Step 2: Verify code → delete account
-        errEl = overlay.querySelector('#delStep2Error');
-        errEl.style.display = 'none';
-        var code = overlay.querySelector('#delAcctCode').value.trim();
-        if (!code || code.length !== 6) { errEl.textContent = 'Enter the 6-digit code from your email.'; errEl.style.display = ''; btn.disabled = false; return; }
+      btn.disabled = true;
+      btn.innerHTML = '<span class="sk-spinner sk-spinner-sm me-2"></span>Verifying...';
+      try {
+        var token = localStorage.getItem('access_token');
+        var res = await fetch(API_ENDPOINTS.CONFIRM_DELETE_ACCOUNT, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code })
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || 'Verification failed.');
 
-        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Deleting...';
-        try {
-          var token = localStorage.getItem('access_token');
-          var res = await fetch(API_ENDPOINTS.CONFIRM_DELETE_ACCOUNT, {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: code })
-          });
-          var data = await res.json().catch(function () { return {}; });
-          if (!res.ok) throw new Error(data.error || 'Failed to delete account.');
+        // Code valid → move to final yes/no
+        if (timerInterval) clearInterval(timerInterval);
+        $('step2').style.display = 'none';
+        $('step3').style.display = '';
+        $('footer2').style.display = 'none';
+        $('footer3').style.display = '';
+      } catch (err) {
+        showStep2Msg(err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Verify & Continue';
+      }
+    });
 
-          closeModal();
-          localStorage.clear();
-          notify('Your account has been permanently deleted.', 'success');
-          setTimeout(function () { window.location.href = '../auth/login.html'; }, 1500);
-        } catch (err) {
-          errEl.textContent = err.message; errEl.style.display = '';
-          btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Delete My Account';
-        } finally {
-          btn.disabled = false;
-        }
+    // ── Resend Code ──
+    $('resendBtn').addEventListener('click', async function () {
+      var btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat me-1 sk-spin"></i>Sending...';
+      try {
+        var token = localStorage.getItem('access_token');
+        var res = await fetch(API_ENDPOINTS.RESEND_DELETION_CODE, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to resend.');
+        startTimer();
+        showStep2Msg('A new code has been sent to your email.', false);
+      } catch (err) {
+        showStep2Msg(err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Resend Code';
+      }
+    });
+
+    // ── Step 3: Final Decision ──
+    $('noBtn').addEventListener('click', closeModal);
+    $('yesBtn').addEventListener('click', async function () {
+      var btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="sk-spinner sk-spinner-sm me-2"></span>Deleting...';
+      try {
+        var token = localStorage.getItem('access_token');
+        var res = await fetch(API_ENDPOINTS.FINALIZE_DELETE_ACCOUNT, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || 'Failed to delete.');
+
+        closeModal();
+        localStorage.clear();
+        notify('Your account has been permanently deleted.', 'success');
+        setTimeout(function () { window.location.href = '../auth/login.html'; }, 1500);
+      } catch (err) {
+        $('step3Err').textContent = err.message;
+        $('step3Err').style.display = '';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Yes, delete';
       }
     });
   }

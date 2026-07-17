@@ -70,6 +70,7 @@ class AccountDeletionToken(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='deletion_token')
     token = models.CharField(max_length=64, unique=True)
     code = models.CharField(max_length=6)
+    verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

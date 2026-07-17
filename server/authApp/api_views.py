@@ -11,7 +11,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.conf import settings
-from notifications.services import reset_password_url, send_email_async, verify_email_url
+from notifications.services import reset_password_url, send_email_async, verify_email_url, delete_account_url
 from .models import CustomUser, EmailVerificationToken
 from .serializers import UserSerializer, UserLoginSerializer, ChangePasswordSerializer
 import random
@@ -31,7 +31,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     
     def get_permissions(self):
-        if self.action in ('create', 'login', 'register', 'request_password_reset', 'confirm_password_reset', 'verify_email_link', 'check_existence'):
+        if self.action in ('create', 'login', 'register', 'request_password_reset', 'confirm_password_reset', 'verify_email_link', 'check_existence', 'verify_deletion_link', 'confirm_delete_by_link'):
             return [AllowAny()]
         return [IsAuthenticated()]
     
@@ -303,32 +303,15 @@ class UserViewSet(viewsets.ModelViewSet):
         
         return Response({'message': f'User {user_to_verify.email} manually verified.'})
 
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-    def request_delete_account(self, request):
-        """
-        Step 1: Verify password and send a 6-digit deletion code to the user's email.
-        """
-        password = request.data.get('password')
-        if not password:
-            return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = request.user
-        if not user.check_password(password):
-            return Response({'error': 'Incorrect password.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        from .models import AccountDeletionToken
-        # Create or refresh deletion token
-        code = generate_verification_code()
-        token = str(uuid.uuid4())
-        AccountDeletionToken.objects.filter(user=user).delete()
-        AccountDeletionToken.objects.create(user=user, token=token, code=code)
-
-        # Send deletion confirmation email
+    def _send_deletion_email(self, user, token_obj):
+        """Send the account deletion confirmation email with code + link."""
+        confirm_url = delete_account_url(token_obj.token)
         subject = "Confirm Account Deletion — Sir Kothay"
         body = (
             f"Hello {user.username},\n\n"
             f"We received a request to permanently delete your Sir Kothay account.\n\n"
-            f"Your 6-digit confirmation code is: {code}\n\n"
+            f"Your 6-digit confirmation code is: {token_obj.code}\n\n"
+            f"Or, you can click the link below to confirm deletion:\n{confirm_url}\n\n"
             f"If you did not request this, please ignore this email and change your password immediately.\n\n"
             f"Thanks,\nSir Kothay Team"
         )
@@ -342,19 +325,91 @@ class UserViewSet(viewsets.ModelViewSet):
             greeting=user.username,
             intro=[
                 'We received a request to permanently delete your Sir Kothay account.',
-                'Enter the code below in the app to confirm. This action cannot be undone.',
+                'Use the code below or open the secure link to confirm. This action cannot be undone.',
             ],
-            code=code,
-            footer_note='This code expires in 10 minutes. If you did not request this, change your password immediately.',
+            code=token_obj.code,
+            action_label='Confirm deletion',
+            action_url=confirm_url,
+            footer_note='This code and link expire in 10 minutes. If you did not request this, change your password immediately.',
         )
 
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def request_delete_account(self, request):
+        """
+        Step 1: Verify password, create deletion token, send code + link email.
+        """
+        password = request.data.get('password')
+        if not password:
+            return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+        if not user.check_password(password):
+            return Response({'error': 'Incorrect password.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from .models import AccountDeletionToken
+        AccountDeletionToken.objects.filter(user=user).delete()
+        token_obj = AccountDeletionToken.objects.create(
+            user=user,
+            token=str(uuid.uuid4()),
+            code=generate_verification_code()
+        )
+
+        self._send_deletion_email(user, token_obj)
         return Response({'message': 'A confirmation code has been sent to your email.'})
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def resend_deletion_code(self, request):
+        """
+        Resend the deletion code + link (regenerates both). Mirrors resend_verification.
+        """
+        from .models import AccountDeletionToken
+        user = request.user
+
+        token_obj, created = AccountDeletionToken.objects.get_or_create(
+            user=user,
+            defaults={'token': str(uuid.uuid4()), 'code': generate_verification_code()}
+        )
+        if not created:
+            token_obj.token = str(uuid.uuid4())
+            token_obj.code = generate_verification_code()
+            token_obj.created_at = timezone.now()
+            token_obj.save()
+
+        self._send_deletion_email(user, token_obj)
+        return Response({'message': 'A new deletion code has been sent to your email.'})
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def verify_deletion_link(self, request):
+        """
+        Verify deletion via email link token. Does NOT delete yet — just validates
+        the token so the frontend can show a final Yes/No confirmation.
+        """
+        token = request.data.get('token')
+        if not token:
+            return Response({'error': 'Token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from .models import AccountDeletionToken
+        try:
+            token_obj = AccountDeletionToken.objects.get(token=token)
+        except AccountDeletionToken.DoesNotExist:
+            return Response({'error': 'Invalid or expired deletion link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if timezone.now() > token_obj.created_at + timedelta(minutes=10):
+            token_obj.delete()
+            return Response({'error': 'Deletion link expired.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Token is valid — return user info for the confirmation page
+        return Response({
+            'message': 'Token verified. Please confirm deletion.',
+            'username': token_obj.user.username,
+            'email': token_obj.user.email,
+        })
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def confirm_delete_account(self, request):
         """
-        Step 2: Verify the 6-digit code and permanently delete the account.
-        Media cleanup is handled by the pre_delete signal in authApp/signals.py.
+        Verify the 6-digit code. Marks token as verified but does NOT delete yet.
+        Frontend shows a final Yes/No after this succeeds.
         """
         code = request.data.get('code')
         if not code:
@@ -367,7 +422,6 @@ class UserViewSet(viewsets.ModelViewSet):
         except AccountDeletionToken.DoesNotExist:
             return Response({'error': 'No deletion request found. Please start over.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check expiry (10 minutes)
         if timezone.now() > token_obj.created_at + timedelta(minutes=10):
             token_obj.delete()
             return Response({'error': 'Confirmation code expired. Please start over.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -375,7 +429,56 @@ class UserViewSet(viewsets.ModelViewSet):
         if token_obj.code != code:
             return Response({'error': 'Invalid confirmation code.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Code is valid — delete the account
+        # Mark as verified — deletion happens in finalize_delete_account
+        token_obj.verified = True
+        token_obj.save()
+        return Response({'message': 'Code verified. Please confirm final deletion.'})
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def finalize_delete_account(self, request):
+        """
+        Final step: Actually delete the account. Only works if token is verified.
+        Called when user clicks 'Yes, delete' in the final confirmation.
+        """
+        from .models import AccountDeletionToken
+        user = request.user
+        try:
+            token_obj = AccountDeletionToken.objects.get(user=user)
+        except AccountDeletionToken.DoesNotExist:
+            return Response({'error': 'No deletion request found. Please start over.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not token_obj.verified:
+            return Response({'error': 'Deletion not verified. Please verify first.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if timezone.now() > token_obj.created_at + timedelta(minutes=10):
+            token_obj.delete()
+            return Response({'error': 'Deletion request expired. Please start over.'}, status=status.HTTP_400_BAD_REQUEST)
+
         user.delete()
         return Response({'message': 'Your account has been permanently deleted.'})
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def confirm_delete_by_link(self, request):
+        """
+        Final step for link-based deletion. Uses the token string (not code)
+        since the user may not be logged in when clicking from email.
+        """
+        token = request.data.get('token')
+        if not token:
+            return Response({'error': 'Token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from .models import AccountDeletionToken
+        try:
+            token_obj = AccountDeletionToken.objects.get(token=token)
+        except AccountDeletionToken.DoesNotExist:
+            return Response({'error': 'Invalid or expired deletion link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if timezone.now() > token_obj.created_at + timedelta(minutes=10):
+            token_obj.delete()
+            return Response({'error': 'Deletion link expired.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = token_obj.user
+        user.delete()
+        return Response({'message': 'Your account has been permanently deleted.'})
+
 

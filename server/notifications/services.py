@@ -51,6 +51,10 @@ def reset_password_url(uidb64, token):
     return build_client_url('auth/reset-password.html', {'uidb64': uidb64, 'token': token})
 
 
+def delete_account_url(token):
+    return build_client_url('auth/confirm-delete.html', {'token': token})
+
+
 def dashboard_url_for_user(user, tab=None, thread_id=None, dm_id=None, extra_params=None):
     """Return the right dashboard entry point for a registered account."""
     if getattr(user, 'role', '') == 'STUDENT':
