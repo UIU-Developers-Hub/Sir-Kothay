@@ -11,11 +11,11 @@
         host === '[::1]' ||
         host.startsWith('192.168.') ||
         host.startsWith('10.');
-        
+
     // Always map local development to port 8000 on the same IP so `python manage.py runserver 0.0.0.0:8000` works on mobile
     var defaultBase = isLocal
         ? 'http://' + (host || '127.0.0.1') + ':8000'
-        : 'https://sir-kothay-server.onrender.com';
+        : 'https://sir-kothay-server-0cxg.onrender.com';
     var raw =
         (typeof window !== 'undefined' && window.SIR_KOTHAY_API_BASE) ||
         defaultBase;
