@@ -216,6 +216,12 @@ Set `window.SIR_KOTHAY_API_BASE = 'https://your-api.example.com'` in an inline s
 
 This project uses a split-stack architecture for production: the static frontend is hosted on Firebase Hosting, and the Django backend API is hosted on PythonAnywhere.
 
+### Backend: Render (automatic migrations)
+
+Use `server` as the Root Directory, `bash build.sh` as the Build Command, and `gunicorn core.wsgi:application` as the Start Command. Enable Auto-Deploy on commit and use `/api/health/` as the health-check path. The existing Render configuration shown for this project already has these values.
+
+On every first deploy and GitHub-triggered redeploy, `server/build.sh` installs dependencies, checks that required migration files are committed, collects static files, applies all pending migrations, and creates the database cache table. No manual `manage.py migrate` command or pre-deploy command is required. A failure stops the new deploy instead of starting partially migrated code.
+
 ### 1. Frontend: Firebase Hosting
 1. Install the Firebase CLI: `npm install -g firebase-tools`
 2. Login and initialize:

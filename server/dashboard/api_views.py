@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
 from .models import UserDetails, StudentInterest
 from .serializers import UserDetailsSerializer, StudentInterestSerializer, AdminUserSerializer
 from authApp.models import CustomUser
@@ -54,6 +55,49 @@ class StudentInterestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return StudentInterest.objects.filter(student=self.request.user).select_related('student', 'faculty')
+
+    def create(self, request, *args, **kwargs):
+        if request.user.role != 'STUDENT':
+            return Response({'error': 'Only student accounts can add faculty.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+    @action(detail=False, methods=['post'])
+    def set_preference(self, request):
+        """Atomically set a public-page notification preference.
+
+        Enabling notifications also follows the faculty in the student's
+        dashboard. Choosing Off does not create a new dashboard entry, but it
+        updates one when it already exists.
+        """
+        if request.user.role != 'STUDENT':
+            return Response({'error': 'Only student accounts can follow faculty.'}, status=status.HTTP_403_FORBIDDEN)
+
+        faculty_id = request.data.get('faculty')
+        preference = request.data.get('notify_preference')
+        if preference not in dict(StudentInterest.NOTIFY_CHOICES):
+            return Response({'error': 'Invalid notification preference.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        faculty = get_object_or_404(CustomUser, pk=faculty_id, role='FACULTY')
+        interest = StudentInterest.objects.filter(student=request.user, faculty=faculty).first()
+        created = False
+
+        if interest is None and preference != StudentInterest.NOTIFY_NONE:
+            interest, created = StudentInterest.objects.get_or_create(
+                student=request.user,
+                faculty=faculty,
+                defaults={'notify_preference': preference},
+            )
+
+        if interest is not None and interest.notify_preference != preference:
+            interest.notify_preference = preference
+            interest.save(update_fields=['notify_preference'])
+
+        return Response({
+            'interest_id': interest.id if interest else None,
+            'created': created,
+            'notify_preference': preference,
+            'added_to_dashboard': interest is not None,
+        })
 
 
     @action(detail=False, methods=['get'])

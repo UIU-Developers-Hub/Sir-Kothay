@@ -86,6 +86,67 @@
   <script src="../static/js/layout.js?v=nav-skeleton-1"></script>
   <script>
     let otpInterval = null;
+    let verificationPollInterval = null;
+    let verificationRedirectStarted = false;
+
+    function dashboardUrlForUser(user) {
+      const role = user && user.role ? user.role : '';
+      if (role === 'STUDENT') return '../dashboard/student.html';
+      if (!role && user && user.is_staff) return '../dashboard/admin.html';
+      return '../dashboard/home.html';
+    }
+
+    function saveVerifiedSession(data) {
+      if (data && data.tokens) {
+        localStorage.setItem('access_token', data.tokens.access);
+        localStorage.setItem('refresh_token', data.tokens.refresh);
+      } else {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+      }
+      if (data && data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      } else {
+        updateLocalUserStatus();
+      }
+      localStorage.removeItem('sk_otp_expires_at');
+    }
+
+    function finishVerification(user, message) {
+      if (verificationRedirectStarted) return;
+      verificationRedirectStarted = true;
+      if (verificationPollInterval) clearInterval(verificationPollInterval);
+      if (otpInterval) clearInterval(otpInterval);
+      showMessage(message || 'Email verified successfully! Redirecting...', false);
+      window.setTimeout(function () {
+        window.location.href = dashboardUrlForUser(user);
+      }, 700);
+    }
+
+    async function checkVerificationStatus() {
+      if (verificationRedirectStarted || document.hidden) return;
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) return;
+      try {
+        const res = await fetch(API_ENDPOINTS.CURRENT_USER, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        if (!res.ok) return;
+        const user = await res.json();
+        if (user.is_email_verified) {
+          localStorage.setItem('user', JSON.stringify(user));
+          finishVerification(user, 'Your email was verified in another browser. Redirecting...');
+        }
+      } catch (e) {
+        // The normal backend reconnect UI handles temporary network failures.
+      }
+    }
+
+    function startVerificationPolling() {
+      if (verificationPollInterval || !localStorage.getItem('access_token')) return;
+      verificationPollInterval = window.setInterval(checkVerificationStatus, 2000);
+      checkVerificationStatus();
+    }
 
     function startOtpTimer() {
       if (otpInterval) clearInterval(otpInterval);
@@ -154,6 +215,8 @@
         document.getElementById('actionButtons').style.display = 'none';
         document.getElementById('tokenLoading').style.display = 'block';
         await verifyWithToken(token);
+      } else {
+        startVerificationPolling();
       }
     });
 
@@ -175,9 +238,13 @@
         
         const data = await res.json();
         if (res.ok) {
-          showMessage('Email verified successfully! Redirecting...', false);
-          updateLocalUserStatus();
-          setTimeout(() => { window.location.href = '../dashboard/home.html'; }, 2000);
+          saveVerifiedSession(data);
+          if (data.tokens) {
+            finishVerification(data.user, 'Email verified successfully! Redirecting...');
+          } else {
+            showMessage('Email verified. This account cannot be signed in right now. Redirecting to login...', false);
+            window.setTimeout(function () { window.location.href = 'login.html'; }, 1200);
+          }
         } else {
           showMessage(data.error || 'Invalid or expired verification link.');
           document.getElementById('verifyForm').style.display = 'block';
@@ -218,9 +285,10 @@
         
         const data = await res.json();
         if (res.ok) {
-          showMessage('Email verified successfully! Redirecting...', false);
           updateLocalUserStatus();
-          setTimeout(() => { window.location.href = '../dashboard/home.html'; }, 2000);
+          let user = null;
+          try { user = JSON.parse(localStorage.getItem('user')); } catch (e) {}
+          finishVerification(user, 'Email verified successfully! Redirecting...');
         } else {
           showMessage(data.error || 'Invalid verification code.');
         }

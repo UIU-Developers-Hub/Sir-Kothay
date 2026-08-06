@@ -11,6 +11,8 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'username', 'password', 'first_name', 'last_name', 'is_active', 'is_staff', 'date_joined', 'role', 'student_id', 'is_banned', 'is_email_verified']
         extra_kwargs = {
             'password': {'write_only': True},
+            'is_active': {'read_only': True},
+            'is_staff': {'read_only': True},
             'is_banned': {'read_only': True},
             'is_email_verified': {'read_only': True}
         }
@@ -19,7 +21,19 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, data):
         # student_id is no longer required at registration;
         # students are prompted to set it on first dashboard load.
+        role = data.get('role', getattr(self.instance, 'role', 'FACULTY'))
+        if role != 'STUDENT':
+            data['student_id'] = None
         return data
+
+    def validate_email(self, value):
+        normalized = value.strip().lower()
+        existing = CustomUser.objects.filter(email__iexact=normalized)
+        if self.instance:
+            existing = existing.exclude(pk=self.instance.pk)
+        if existing.exists():
+            raise serializers.ValidationError('A user with this email already exists.')
+        return normalized
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -43,6 +57,9 @@ class UserSerializer(serializers.ModelSerializer):
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+
+    def validate_email(self, value):
+        return value.strip().lower()
 
 
 class ChangePasswordSerializer(serializers.Serializer):
