@@ -40,7 +40,10 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             user.username = new_username
             changed = True
         if new_email is not None:
-            user.email = new_email
+            normalized_email = new_email.strip().lower()
+            if CustomUser.objects.filter(email__iexact=normalized_email).exclude(pk=user.pk).exists():
+                raise serializers.ValidationError({'email': 'This Email is already taken.'})
+            user.email = normalized_email
             changed = True
         if new_student_id is not None:
             if new_student_id == '':
@@ -94,6 +97,14 @@ class StudentInterestSerializer(serializers.ModelSerializer):
         model = StudentInterest
         fields = ['id', 'student', 'faculty', 'faculty_username', 'faculty_details', 'open_chat', 'notify_preference', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+    def validate_faculty(self, faculty):
+        request = self.context.get('request')
+        if faculty.role != 'FACULTY':
+            raise serializers.ValidationError('Only faculty accounts can be added.')
+        if request and request.user == faculty:
+            raise serializers.ValidationError('You cannot add your own account.')
+        return faculty
 
     def get_faculty_details(self, obj):
         try:

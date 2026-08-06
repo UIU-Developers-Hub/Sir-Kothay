@@ -247,6 +247,42 @@ document.addEventListener('DOMContentLoaded', function () {
 // --- Profile & Dashboard Load ---
 var userSlug = null;
 var facultyInboxBadgeRefreshInFlight = false;
+var _defaultFallbackDraftDirty = { status: false, availability: false };
+var _savedDefaultStatus = '';
+var _savedDefaultAvailability = false;
+
+function hydrateDefaultFallback(data, force) {
+  if (!data) return;
+  var statusEl = document.getElementById('defaultStatusInput');
+  var availEl = document.getElementById('defaultAvailInput');
+  if (data.default_status !== undefined) {
+    _savedDefaultStatus = data.default_status || '';
+    if (statusEl && (force || !_defaultFallbackDraftDirty.status)) {
+      statusEl.value = _savedDefaultStatus;
+    }
+  }
+  if (data.default_availability !== undefined && data.default_availability !== null) {
+    _savedDefaultAvailability = !!data.default_availability;
+    if (availEl && (force || !_defaultFallbackDraftDirty.availability)) {
+      availEl.value = _savedDefaultAvailability.toString();
+    }
+  }
+}
+
+function bindDefaultFallbackDraftTracking() {
+  var statusEl = document.getElementById('defaultStatusInput');
+  var availEl = document.getElementById('defaultAvailInput');
+  if (statusEl) {
+    statusEl.addEventListener('input', function () {
+      _defaultFallbackDraftDirty.status = true;
+    });
+  }
+  if (availEl) {
+    availEl.addEventListener('change', function () {
+      _defaultFallbackDraftDirty.availability = true;
+    });
+  }
+}
 
 function queueFacultyInboxBadgeRefresh() {
   if (typeof loadUnreadCount !== 'function') return;
@@ -316,10 +352,7 @@ async function loadDashboard() {
       document.getElementById('userPhone').textContent = data.phone_number || '';
       document.getElementById('userOrg').textContent = data.organization || 'N/A';
       document.getElementById('userImage').src = resolveProfileImage(data.profile_image_url || data.profile_image);
-      var statusEl = document.getElementById('defaultStatusInput');
-      if (statusEl && data.default_status !== undefined) statusEl.value = data.default_status;
-      var availEl = document.getElementById('defaultAvailInput');
-      if (availEl && data.default_availability !== undefined && data.default_availability !== null) availEl.value = data.default_availability.toString();
+      hydrateDefaultFallback(data, false);
       userSlug = data.slug;
       updateAvailabilityUI(data.is_available);
       showFacultyDashboardShell();
@@ -344,6 +377,10 @@ async function saveDefaultSettings() {
       method: 'PATCH', body: JSON.stringify({ default_status: statusVal, default_availability: availVal })
     });
     if (res.ok) {
+      var data = await res.json();
+      _defaultFallbackDraftDirty.status = false;
+      _defaultFallbackDraftDirty.availability = false;
+      hydrateDefaultFallback(data, true);
       await skNotify('Fallback settings saved! These take effect when a timed status expires.', { variant: 'success', title: 'Settings' });
       if (_facultyActiveTab() === 'messages' && typeof loadMessages === 'function') loadMessages();
     }
@@ -404,10 +441,7 @@ async function refreshSidebarInfo() {
     if (!res.ok) return;
     var data = await res.json();
     updateAvailabilityUI(data.is_available);
-    var statusEl = document.getElementById('defaultStatusInput');
-    if (statusEl && data.default_status !== undefined) statusEl.value = data.default_status;
-    var availEl = document.getElementById('defaultAvailInput');
-    if (availEl && data.default_availability !== undefined && data.default_availability !== null) availEl.value = data.default_availability.toString();
+    hydrateDefaultFallback(data, false);
   } catch (e) { /* silent — sidebar refresh is non-critical */ }
 }
 
@@ -556,10 +590,23 @@ function renderStatusBadge(msg) {
     var untilText = msg.active_until ? ' · expires ' + timeAgo(msg.active_until) : '';
     return '<span class="sk-status-badge live"><span class="sk-availability-dot sk-pulse-dot"></span>Live' + untilText + '</span>';
   }
-  if (msg.scheduled_for) {
+  if (msg.manually_stopped && msg.source_type !== 'manual') {
+    return '<span class="sk-status-badge inactive"><i class="bi bi-stop-circle"></i>Stopped for this occurrence</span>';
+  }
+  if (msg.scheduled_for && !msg.started_at) {
     return '<span class="sk-status-badge scheduled"><i class="bi bi-clock"></i>Scheduled · ' + new Date(msg.scheduled_for).toLocaleString() + '</span>';
   }
   return '<span class="sk-status-badge inactive">Inactive</span>';
+}
+
+function renderBroadcastSourceBadge(msg) {
+  if (msg.source_type === 'recurring') {
+    return '<span class="sk-inline-note"><i class="bi bi-arrow-repeat"></i> Recurring schedule</span>';
+  }
+  if (msg.source_type === 'calendar') {
+    return '<span class="sk-inline-note"><i class="bi bi-calendar-event"></i> Calendar event</span>';
+  }
+  return '';
 }
 
 async function loadMessages() {
@@ -572,7 +619,7 @@ async function loadMessages() {
     var el = document.getElementById('messagesList');
     if (data && data.length > 0) {
       var hasActive = data.some(function(m) { return m.active; });
-      var fallbackText = document.getElementById('defaultStatusInput') ? document.getElementById('defaultStatusInput').value.trim() : '';
+      var fallbackText = _savedDefaultStatus.trim();
       var fallbackHtml = '';
       if (!hasActive && fallbackText) {
         fallbackHtml = '<div class="sk-card sk-ex-197ca223"><div class="sk-ex-1ba7f2e7"><div class="sk-ex-a525f07f"><i class="bi bi-arrow-return-right"></i></div><div class="sk-ex-634a28be"><h4 class="sk-ex-1fef9869">Fallback Status Live</h4><p class="sk-ex-12d00521">' + escapeHtml(fallbackText) + '</p></div></div></div>';
@@ -580,18 +627,21 @@ async function loadMessages() {
       
       el.innerHTML = fallbackHtml + '<div class="sk-broadcast-list">' + data.map(function (msg) {
         var durLabel = msg.duration_seconds ? (msg.duration_seconds < 60 ? msg.duration_seconds + ' s' : (msg.duration_seconds < 3600 ? (msg.duration_seconds / 60) + ' min' : (msg.duration_seconds / 3600) + ' h')) : '∞';
+        var isGenerated = msg.source_type && msg.source_type !== 'manual';
+        var secondaryActions = isGenerated ? '' :
+          '<button type="button" onclick="openEditModal(' + msg.id + ',\'' + escapeHtml(msg.message).replace(/'/g, "\\'") + '\',' + (msg.scheduled_for ? "'" + msg.scheduled_for + "'" : 'null') + ',' + (msg.duration_seconds || 'null') + ',\'' + (msg.set_availability || '') + '\')" class="sk-btn sk-action-icon" aria-label="Edit status" title="Edit status"><i class="bi bi-pencil-square"></i></button>' +
+          '<button type="button" onclick="confirmDeleteMsg(' + msg.id + ')" class="sk-btn sk-action-icon danger" aria-label="Delete status" title="Delete status"><i class="bi bi-trash3"></i></button>';
         return '<div class="sk-broadcast-item">' +
           '<div class="sk-broadcast-main"><p class="sk-broadcast-message">' + escapeHtml(msg.message) + '</p>' +
           '<div class="sk-broadcast-meta">' + renderStatusBadge(msg) +
-          '<span class="sk-inline-note"><i class="bi bi-hourglass-split"></i> ' + durLabel + '</span></div></div>' +
+          '<span class="sk-inline-note"><i class="bi bi-hourglass-split"></i> ' + durLabel + '</span>' + renderBroadcastSourceBadge(msg) + '</div></div>' +
           '<div class="sk-broadcast-actions">' +
           '<button type="button" onclick="toggleMsg(' + msg.id + ',' + msg.active + ')" class="sk-btn sk-action-main ' + (msg.active ? 'sk-action-stop' : 'sk-action-live') + '">' + (msg.active ? '<i class="bi bi-pause-circle-fill"></i> Stop' : '<i class="bi bi-play-circle-fill"></i> Go Live') + '</button>' +
-          '<button type="button" onclick="openEditModal(' + msg.id + ',\'' + escapeHtml(msg.message).replace(/'/g, "\\'") + '\',' + (msg.scheduled_for ? "'" + msg.scheduled_for + "'" : 'null') + ',' + (msg.duration_seconds || 'null') + ',\'' + (msg.set_availability || '') + '\')" class="sk-btn sk-action-icon" aria-label="Edit status" title="Edit status"><i class="bi bi-pencil-square"></i></button>' +
-          '<button type="button" onclick="confirmDeleteMsg(' + msg.id + ')" class="sk-btn sk-action-icon danger" aria-label="Delete status" title="Delete status"><i class="bi bi-trash3"></i></button>' +
+          secondaryActions +
           '</div></div>';
       }).join('') + '</div>';
     } else {
-      var fallbackText = document.getElementById('defaultStatusInput') ? document.getElementById('defaultStatusInput').value.trim() : '';
+      var fallbackText = _savedDefaultStatus.trim();
       var fallbackHtml = '';
       if (fallbackText) {
         fallbackHtml = '<div class="sk-card sk-ex-197ca223"><div class="sk-ex-1ba7f2e7"><div class="sk-ex-a525f07f"><i class="bi bi-arrow-return-right"></i></div><div class="sk-ex-634a28be"><h4 class="sk-ex-1fef9869">Fallback Status Live</h4><p class="sk-ex-12d00521">' + escapeHtml(fallbackText) + '</p></div></div></div>';
@@ -897,6 +947,7 @@ async function loadFooterContributors() {
   } catch (e) {}
 }
 document.addEventListener('DOMContentLoaded', function () {
+  bindDefaultFallbackDraftTracking();
   loadFooterContributors();
   loadDashboard();
   _startBackgroundPoll(); // Start periodic state sync

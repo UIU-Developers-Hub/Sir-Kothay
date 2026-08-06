@@ -29,6 +29,13 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated and self.request.user.is_staff:
+            return CustomUser.objects.all()
+        if self.request.user.is_authenticated:
+            return CustomUser.objects.filter(pk=self.request.user.pk)
+        return CustomUser.objects.none()
     
     def get_permissions(self):
         if self.action in ('create', 'login', 'register', 'request_password_reset', 'confirm_password_reset', 'verify_email_link', 'check_existence', 'verify_deletion_link', 'confirm_delete_by_link'):
@@ -41,7 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
         student_id = request.data.get('student_id')
         
         errors = {}
-        if email and CustomUser.objects.filter(email=email).exists():
+        if email and CustomUser.objects.filter(email__iexact=email.strip()).exists():
             errors['email'] = 'A user with this email already exists.'
         if student_id and CustomUser.objects.filter(student_id=student_id).exists():
             errors['student_id'] = 'A user with this Student ID already exists.'
@@ -105,7 +112,9 @@ class UserViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
-            user = authenticate(username=email, password=password)
+            existing_user = CustomUser.objects.filter(email__iexact=email).first()
+            auth_email = existing_user.email if existing_user else email
+            user = authenticate(username=auth_email, password=password)
             
             if user:
                 if not user.is_email_verified:
@@ -163,7 +172,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if not email:
             return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
             
-        user = CustomUser.objects.filter(email=email).first()
+        user = CustomUser.objects.filter(email__iexact=email.strip()).first()
         if user:
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -240,7 +249,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def verify_email_link(self, request):
-        """Verify email using URL token"""
+        """Verify email using a URL token and sign the verified account in.
+
+        The verification URL is already a short-lived bearer credential sent to
+        the account's email address.  Returning a fresh JWT pair lets the link
+        work consistently when it is opened in a different browser.
+        """
         token = request.data.get('token')
         if not token:
             return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -252,9 +266,20 @@ class UserViewSet(viewsets.ModelViewSet):
                 
             user = token_obj.user
             user.is_email_verified = True
-            user.save()
+            user.save(update_fields=['is_email_verified'])
             token_obj.delete()
-            return Response({'message': 'Email verified successfully'})
+
+            response_data = {
+                'message': 'Email verified successfully',
+                'user': UserSerializer(user).data,
+            }
+            if user.is_active and not user.is_banned:
+                refresh = RefreshToken.for_user(user)
+                response_data['tokens'] = {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                }
+            return Response(response_data)
         except EmailVerificationToken.DoesNotExist:
             return Response({'error': 'Invalid or expired verification token'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -268,7 +293,8 @@ class UserViewSet(viewsets.ModelViewSet):
         # Optional: Allow changing email before resending
         new_email = request.data.get('email')
         if new_email and new_email != user.email:
-            if CustomUser.objects.filter(email=new_email).exists():
+            new_email = new_email.strip().lower()
+            if CustomUser.objects.filter(email__iexact=new_email).exclude(pk=user.pk).exists():
                 return Response({'error': 'This email is already in use.'}, status=status.HTTP_400_BAD_REQUEST)
             user.email = new_email
             user.save()

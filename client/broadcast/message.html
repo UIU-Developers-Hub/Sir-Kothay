@@ -734,6 +734,9 @@
                 if (match) {
                   _broadcastStudentInterestId = match.id;
                   _highlightBcNotifyPref(match.notify_preference || 'none');
+                } else {
+                  _broadcastStudentInterestId = null;
+                  _highlightBcNotifyPref('none');
                 }
               }
             } catch (e) {}
@@ -780,17 +783,23 @@
       }
 
       async function setBroadcastNotifyPref(pref) {
-        if (!_broadcastStudentInterestId) return;
         var token = localStorage.getItem('access_token');
         try {
-          var res = await fetch(API_BASE_URL + '/api/dashboard/student-interests/' + _broadcastStudentInterestId + '/', {
-            method: 'PATCH',
+          var res = await fetch(API_BASE_URL + '/api/dashboard/student-interests/set_preference/', {
+            method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ notify_preference: pref })
+            body: JSON.stringify({
+              faculty: _broadcastFacultyUserId,
+              notify_preference: pref
+            })
           });
+          var data = await res.json();
           if (res.ok) {
-            SKComponents.toast('Subscription updated.', 'success');
+            _broadcastStudentInterestId = data.interest_id || null;
             _highlightBcNotifyPref(pref);
+            var label = pref === 'all' ? 'All updates' : (pref === 'available' ? 'When available' : 'Off');
+            var suffix = data.created ? ' Faculty added to your dashboard.' : '';
+            SKComponents.toast('Notifications: ' + label + '.' + suffix, 'success');
           } else {
             SKComponents.toast(data.error || 'Failed to update subscription.', 'error');
           }

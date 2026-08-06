@@ -14,9 +14,13 @@ class BroadcastMessageSerializer(serializers.ModelSerializer):
         model = BroadcastMessage
         fields = [
             'id', 'user', 'user_email', 'user_username', 'message', 'active',
-            'scheduled_for', 'duration_seconds', 'active_until', 'set_availability'
+            'scheduled_for', 'duration_seconds', 'active_until', 'set_availability',
+            'source_type', 'source_id', 'occurrence_key', 'started_at', 'manually_stopped',
         ]
-        read_only_fields = ['id', 'user']
+        read_only_fields = [
+            'id', 'user', 'source_type', 'source_id', 'occurrence_key',
+            'started_at', 'manually_stopped',
+        ]
 
     def validate(self, attrs):
         scheduled_for = attrs.get('scheduled_for')

@@ -49,7 +49,12 @@ class BroadcastMessageViewSet(viewsets.ModelViewSet):
         if message.user != request.user and not request.user.is_staff:
             return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
         
-        message.activate_now()
+        preserve_window = message.source_type != BroadcastMessage.SOURCE_MANUAL
+        if not message.activate_now(preserve_window=preserve_window):
+            return Response(
+                {'error': 'This schedule occurrence has already ended.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response({'message': 'Message set as active'})
 
 

@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from django.db.models import F
 from django.utils import timezone
 
 from rest_framework import status, viewsets
@@ -18,7 +17,7 @@ from .serializers import (
     QuickStatusTemplateSerializer,
     RecurringScheduleSerializer,
 )
-from .services import run_all
+from .services import remove_source_occurrences, resync_user, run_all
 
 
 class RecurringScheduleViewSet(viewsets.ModelViewSet):
@@ -28,10 +27,23 @@ class RecurringScheduleViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return RecurringSchedule.objects.filter(user=self.request.user)
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        resync_user(instance.user)
+
     def perform_update(self, serializer):
         # When a schedule is edited (e.g. paused/resumed or time changed),
         # wipe its trigger history so it can fire immediately if it's currently due.
-        serializer.save(last_triggered_at=None)
+        instance = serializer.save(last_triggered_at=None)
+        _, had_active = remove_source_occurrences(BroadcastMessage.SOURCE_RECURRING, instance.pk)
+        resync_user(instance.user, fallback_if_empty=had_active)
+
+    def perform_destroy(self, instance):
+        user = instance.user
+        source_id = instance.pk
+        instance.delete()
+        _, had_active = remove_source_occurrences(BroadcastMessage.SOURCE_RECURRING, source_id)
+        resync_user(user, fallback_if_empty=had_active)
 
 
 class CalendarEventViewSet(viewsets.ModelViewSet):
@@ -48,14 +60,21 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
             qs = qs.filter(start_time__lte=end)
         return qs
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        resync_user(instance.user)
+
     def perform_update(self, serializer):
         instance = serializer.save()
-        if not instance.is_active:
-            BroadcastMessage.objects.filter(
-                user=instance.user,
-                active=True,
-                message=instance.title
-            ).update(active=False, message=F('message') + ' (Paused)')
+        _, had_active = remove_source_occurrences(BroadcastMessage.SOURCE_CALENDAR, instance.pk)
+        resync_user(instance.user, fallback_if_empty=had_active)
+
+    def perform_destroy(self, instance):
+        user = instance.user
+        source_id = instance.pk
+        instance.delete()
+        _, had_active = remove_source_occurrences(BroadcastMessage.SOURCE_CALENDAR, source_id)
+        resync_user(user, fallback_if_empty=had_active)
 
 
 class QuickStatusTemplateViewSet(viewsets.ModelViewSet):
@@ -69,20 +88,12 @@ class QuickStatusTemplateViewSet(viewsets.ModelViewSet):
     def activate(self, request, pk=None):
         """One-click activate a quick template as the current broadcast status."""
         template = self.get_object()
-        BroadcastMessage.objects.filter(user=request.user, active=True).update(active=False)
         msg = BroadcastMessage.objects.create(
             user=request.user,
             message=template.message,
             active=True,
+            set_availability=template.set_availability,
         )
-        # Also set availability if configured
-        if template.set_availability:
-            try:
-                details, _ = UserDetails.objects.get_or_create(user=request.user)
-                details.is_available = (template.set_availability == 'true')
-                details.save()
-            except Exception:
-                pass
         return Response({
             'message': f'Status set to: {template.label}',
             'broadcast_id': msg.id,
