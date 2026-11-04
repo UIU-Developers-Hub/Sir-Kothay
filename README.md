@@ -4,8 +4,6 @@
 
 Built with **Django REST Framework** (backend API) and a **static HTML + Tailwind CSS** client. Deployable to **PythonAnywhere** or any WSGI host.
 
-This is a new commit from naeemsadik's fork
-
 ---
 
 ## ✨ Features

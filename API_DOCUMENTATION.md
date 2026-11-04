@@ -5,7 +5,6 @@
 http://127.0.0.1:8000/api/
 ```
 
-This is another line
 > On LAN, replace `127.0.0.1` with your PC's IP (e.g. `192.168.1.100`).
 
 ## Authentication
